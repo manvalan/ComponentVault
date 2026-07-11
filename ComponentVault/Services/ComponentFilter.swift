@@ -84,11 +84,15 @@ struct ComponentFilter {
     }
 
     private func matchesDigiKey(_ component: Component) -> Bool {
-        component.migrateLegacySnapshotsIfNeeded()
-        if requireDigiKeyData && !component.hasDigiKeySnapshot { return false }
+        if requireDigiKeyData && !component.hasDigiKeyEnrichment { return false }
         if digikeyOutOfStockOnly {
-            guard let stock = component.digikeySnapshot?.supplierStock else { return false }
-            return stock == 0
+            if let stock = component.digikeySnapshot?.supplierStock {
+                return stock == 0
+            }
+            if component.source == .digikey || component.digikeyPartNumber != nil {
+                return component.supplierStock == 0
+            }
+            return false
         }
         return true
     }

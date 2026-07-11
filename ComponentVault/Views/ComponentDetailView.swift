@@ -1,17 +1,27 @@
 import SwiftUI
+import SwiftData
 
 struct ComponentDetailView: View {
     @Bindable var component: Component
     var store: ComponentStore?
 
+    @Query(sort: \Component.lcscCode) private var inventory: [Component]
+
     @State private var selectedImageIndex = 0
     @State private var isEnriching = false
     @State private var errorMessage: String?
     @State private var digiKeyPicker: DigiKeyCandidatePicker?
+    @State private var mpnLookupResults: [CatalogMatchCard] = []
+    @State private var showMPNLookup = false
+    @State private var isLookingUpMPN = false
+    @State private var infoMessage: String?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                if component.isToOrder {
+                    toOrderBanner
+                }
                 header
                 HStack(alignment: .top, spacing: 24) {
                     imageGallery
@@ -29,7 +39,18 @@ struct ComponentDetailView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle(component.displayTitle)
-        .onAppear { component.migrateLegacySnapshotsIfNeeded() }
+        .onAppear {
+            component.migrateLegacySnapshotsIfNeeded()
+            guard component.needsLCSCCodeResolution,
+                  !component.mpn.isEmpty,
+                  let store else { return }
+            Task {
+                if let updated = try? await store.assignLCSCFromMPN(component),
+                   updated.lcscCode != component.lcscCode {
+                    infoMessage = "Codice LCSC assegnato: \(updated.lcscCode)"
+                }
+            }
+        }
         .toolbar {
             ToolbarItemGroup {
                 Button {
@@ -58,6 +79,20 @@ struct ComponentDetailView: View {
                 .disabled(isEnriching || store == nil || component.mpn.isEmpty)
                 .help(component.mpn.isEmpty ? "Serve un MPN" : "Arricchisci da DigiKey (richiede token in Impostazioni)")
 
+                if !component.mpn.isEmpty {
+                    Button {
+                        Task { await lookupLCSCFromMPN() }
+                    } label: {
+                        if isLookingUpMPN {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Label("Trova LCSC", systemImage: "number")
+                        }
+                    }
+                    .disabled(isLookingUpMPN)
+                    .help("Cerca codice LCSC Cxxxxx dal MPN \(component.mpn)")
+                }
+
                 Link(destination: lcscURL) {
                     Label("Apri su LCSC", systemImage: "safari")
                 }
@@ -79,11 +114,38 @@ struct ComponentDetailView: View {
                 onCancel: { digiKeyPicker = nil }
             )
         }
+        .sheet(isPresented: $showMPNLookup) {
+            mpnLookupSheet
+        }
         .alert("Errore", isPresented: .constant(errorMessage != nil)) {
             Button("OK") { errorMessage = nil }
         } message: {
             Text(errorMessage ?? "")
         }
+        .alert("LCSC", isPresented: .constant(infoMessage != nil)) {
+            Button("OK") { infoMessage = nil }
+        } message: {
+            Text(infoMessage ?? "")
+        }
+    }
+
+    private var toOrderBanner: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "cart.badge.clock")
+                .font(.title2)
+                .foregroundStyle(.orange)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Da ordinare")
+                    .font(.headline)
+                Text("Non presente in magazzino. La scheda è salvata per riferimento; lo stock DigiKey/LCSC è del fornitore, non del tuo inventario.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     private var header: some View {
@@ -92,6 +154,14 @@ struct ComponentDetailView: View {
                 Text(component.lcscCode)
                     .font(.title2.monospaced())
                 SourceBadge(source: component.source)
+                if component.isToOrder {
+                    ToOrderBadge()
+                }
+                if component.needsLCSCCodeResolution {
+                    Text("codice provvisorio")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                }
             }
             if !component.displayCommonName.isEmpty {
                 Text(component.displayCommonName)
@@ -156,7 +226,7 @@ struct ComponentDetailView: View {
     private var inventoryCard: some View {
         GroupBox("Inventario") {
             VStack(alignment: .leading, spacing: 12) {
-                LabeledContent("Quantità") {
+                LabeledContent("Quantità in magazzino") {
                     HStack {
                         Button { adjust(by: -1) } label: {
                             Image(systemName: "minus.circle")
@@ -198,6 +268,10 @@ struct ComponentDetailView: View {
                     )
                     .font(.caption)
                     .foregroundStyle(component.quantity == 0 ? .red : .orange)
+                } else if component.isToOrder {
+                    Label("Da ordinare — qty 0 in magazzino", systemImage: "cart.badge.clock")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
                 }
 
                 if !component.value.isEmpty && component.value != "N/A" {
@@ -417,6 +491,65 @@ struct ComponentDetailView: View {
         component.lcscProductURL ?? URL(string: "https://www.lcsc.com/product-detail/\(component.lcscCode).html")!
     }
 
+    private var mpnLookupSheet: some View {
+        NavigationStack {
+            Group {
+                if mpnLookupResults.isEmpty {
+                    ContentUnavailableView("Nessun risultato", systemImage: "number")
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 12) {
+                            ForEach(mpnLookupResults) { card in
+                                CatalogMatchCardView(
+                                    card: card,
+                                    canAddToProject: false,
+                                    onImport: { Task { await importMPNLookupCard(card) } },
+                                    onAddToProject: {}
+                                )
+                            }
+                        }
+                        .padding(16)
+                    }
+                }
+            }
+            .navigationTitle("LCSC da \(component.mpn)")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Chiudi") { showMPNLookup = false }
+                }
+            }
+        }
+        .frame(minWidth: 680, minHeight: 480)
+    }
+
+    private func lookupLCSCFromMPN() async {
+        isLookingUpMPN = true
+        defer { isLookingUpMPN = false }
+        do {
+            let (cards, _) = try await MPNLookupService.search(
+                mpn: component.mpn,
+                inventory: inventory
+            )
+            mpnLookupResults = cards
+            showMPNLookup = true
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func importMPNLookupCard(_ card: CatalogMatchCard) async {
+        guard let store else { return }
+        do {
+            let updated = try await store.applyCatalogMatchToExisting(component, card: card)
+            if updated.lcscCode != component.lcscCode {
+                infoMessage = "Codice LCSC assegnato: \(updated.lcscCode)"
+            }
+            showMPNLookup = false
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     private func enrichBoth() async {
         guard let store else { return }
         isEnriching = true
@@ -548,5 +681,36 @@ struct ComponentThumbnail: View {
             Image(systemName: "cpu")
                 .foregroundStyle(.secondary)
         }
+    }
+}
+
+struct ToOrderBadge: View {
+    var body: some View {
+        Text("DA ORDINARE")
+            .font(.caption2.weight(.bold))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(Color.orange.opacity(0.2))
+            .foregroundStyle(.orange)
+            .clipShape(Capsule())
+    }
+}
+
+struct ComponentDetailSheet: View {
+    @Bindable var component: Component
+    var store: ComponentStore?
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ComponentDetailView(component: component, store: store)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Chiudi") { dismiss() }
+                    }
+                }
+        }
+        .frame(minWidth: 720, minHeight: 600)
     }
 }

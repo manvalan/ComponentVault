@@ -116,6 +116,65 @@ Ogni arricchimento salva uno **snapshot** separato (`lcscSnapshot`, `digikeySnap
 
 Nel dettaglio, la sezione **Confronto fornitori** mostra le due card affiancate con riepilogo risparmio. Filtri inventario: **Con dati DigiKey**, **DigiKey stock 0**.
 
+### Ricerca progettazione — catalogo fornitori (v0.8)
+
+**Catalogo → LCSC + DigiKey** — flusso per trovare componenti in fase di design:
+
+1. Imposti **tipo + valore + footprint** (es. Resistenze · 10kΩ · 0805)
+2. **DigiKey** cerca nel catalogo live → restituisce MPN e codice DigiKey
+3. Con l'**MPN**, **LCSC** cerca nel catalogo live → restituisce codice `Cxxxxx`
+4. Scheda con **entrambi i codici** affiancati
+5. **Nel progetto** → importa in inventario e aggiunge alla BOM con designator
+
+Requisiti LCSC live: `pip3 install gmssl requests` e script `Tools/lcsc_catalog_search.py`.
+
+### Ricerca LCSC da MPN (v0.9)
+
+Per ottenere il codice **Cxxxxx** a partire dal Manufacturer Part Number:
+
+| Fonte | Come funziona |
+|-------|----------------|
+| **Inventario** | match esatto MPN normalizzato |
+| **Archivio locale** | scan `~/LCSC/json_full_data/*.json` |
+| **LCSC live** | `POST wmsc.lcsc.com/.../search/v3/global` con keyword=MPN (criptazione SM2) |
+
+**In app:** Catalogo → Progettazione → scheda **Da MPN**, oppure dettaglio componente → **Trova LCSC**.
+
+```bash
+pip3 install gmssl requests
+python3 ~/Documents/Develop/ComponentVault/Tools/lcsc_catalog_search.py --keyword "INA219AIDR"
+```
+
+L'API pubblica LCSC richiede la chiave SM2 dalla homepage; senza `gmssl` funziona solo l'archivio JSON locale.
+
+### Esplora DigiKey — discovery (v0.9)
+
+**Catalogo → Esplora DigiKey** — ricerca avanzata nel catalogo DigiKey:
+
+| Modalità | Endpoint | Uso |
+|----------|----------|-----|
+| **Keyword** | `POST /products/v4/search/keyword` | MPN, descrizione, manufacturer |
+| **Barcode** | stessa keyword search | lookup da codice a barre |
+| **Sostituti** | `GET /products/v4/search/{pn}/substitutions` | cross-reference per parti obsolete |
+| **Packaging** | `GET /products/v4/search/{pn}/alternatepackaging` | reel/cut-tape/tray alternativi |
+
+Ogni risultato può essere **importato** in inventario con codice sintetico `DK-{partNumber}`.
+
+### Progetti e alert DigiKey (v0.9)
+
+**Progetti → dettaglio BOM**
+
+- Barra riepilogo con **costo totale DigiKey** (somma righe con prezzo)
+- Colonne **DigiKey PN** e **Prezzo DK** per riga
+- Badge **OBS** per componenti obsoleti/NRND
+- Pulsante **sostituti** su righe obsolete (cross-reference live)
+- **Esporta BOM → BOM DigiKey (costi)** — CSV con prezzi, link ordine, stato, obsolescenza
+
+**Alert scorte**
+
+- Ogni riga mostra il **suggerimento riordino DigiKey** (stock + prezzo alla soglia)
+- **Esporta DigiKey** — CSV alert con dati commerciali DigiKey
+
 ### Dati commerciali (v0.6)
 
 Dopo l'arricchimento, l'app chiama automaticamente:

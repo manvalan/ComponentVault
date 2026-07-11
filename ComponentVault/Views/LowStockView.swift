@@ -8,7 +8,9 @@ struct LowStockView: View {
     @State private var store: ComponentStore?
     @State private var selection: Component?
     @State private var showExport = false
+    @State private var showDigiKeyExport = false
     @State private var exportDocument = CSVDocument()
+    @State private var digikeyExportDocument = CSVDocument()
 
     @Environment(\.modelContext) private var modelContext
 
@@ -33,12 +35,20 @@ struct LowStockView: View {
                     }
                 }
 
-                HStack {
+                HStack(spacing: 12) {
                     Button("Esporta alert") {
                         exportDocument = CSVDocument(text: ExportService.lowStockCSV(components: components))
                         showExport = true
                     }
                     .disabled(lowStock.isEmpty)
+
+                    Button("Esporta DigiKey") {
+                        digikeyExportDocument = CSVDocument(text: ExportService.lowStockDigiKeyCSV(components: components))
+                        showDigiKeyExport = true
+                    }
+                    .disabled(lowStock.isEmpty)
+                    .help("CSV con stock, prezzo e suggerimento riordino DigiKey")
+
                     Spacer()
                     Text("\(lowStock.count) alert")
                         .font(.caption)
@@ -73,11 +83,21 @@ struct LowStockView: View {
             contentType: .commaSeparatedText,
             defaultFilename: "scorte-basse.csv"
         ) { _ in }
+        .fileExporter(
+            isPresented: $showDigiKeyExport,
+            document: digikeyExportDocument,
+            contentType: .commaSeparatedText,
+            defaultFilename: "scorte-basse-digikey.csv"
+        ) { _ in }
     }
 }
 
 struct LowStockRow: View {
     let component: Component
+
+    private var reorderHint: String? {
+        BOMPricingService.reorderSuggestion(for: component)
+    }
 
     var body: some View {
         HStack {
@@ -91,6 +111,12 @@ struct LowStockRow: View {
                     Text(component.displayCommonName)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+                if let reorderHint {
+                    Text(reorderHint)
+                        .font(.caption2)
+                        .foregroundStyle(.purple)
                         .lineLimit(2)
                 }
             }

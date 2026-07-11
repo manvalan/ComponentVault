@@ -8,67 +8,74 @@ struct RootView: View {
     @AppStorage("autoSyncOnLaunch") private var autoSyncOnLaunch = false
     @AppStorage("autoSyncIntervalMinutes") private var autoSyncIntervalMinutes = 0
 
-    @State private var isReady = false
+    @State private var isBootstrapping = false
     @State private var bootstrapError: String?
 
     var body: some View {
-        Group {
-            if isReady {
-                ContentView()
-            } else {
-                VStack(spacing: 16) {
-                    ProgressView()
-                    Text("Caricamento inventario…")
-                        .foregroundStyle(.secondary)
-                    if let bootstrapError {
-                        Text(bootstrapError)
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                        Button("Riprova") {
-                            Task { await loadInventory(force: true) }
+        ContentView()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay {
+                if isBootstrapping {
+                    ZStack {
+                        Color.black.opacity(0.12)
+                        VStack(spacing: 12) {
+                            ProgressView()
+                            Text("Importazione inventario…")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
                         }
+                        .padding(24)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    }
+                } else if let bootstrapError, components.isEmpty {
+                    ZStack {
+                        Color.black.opacity(0.08)
+                        VStack(spacing: 10) {
+                            Text(bootstrapError)
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                                .multilineTextAlignment(.center)
+                            Button("Riprova") {
+                                Task { await loadInventoryIfNeeded() }
+                            }
+                        }
+                        .padding(20)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .task {
-            await loadInventory(force: false)
-            await runAutoSyncIfNeeded()
-        }
-        .task(id: autoSyncIntervalMinutes) {
-            guard autoSyncIntervalMinutes > 0, SyncSettings.isConfigured else { return }
-            while !Task.isCancelled {
-                _ = try? await Task.sleep(for: .seconds(autoSyncIntervalMinutes * 60))
-                guard !Task.isCancelled else { return }
-                _ = try? await SyncRunner.runFullSync(modelContext: modelContext)
+            .task {
+                await loadInventoryIfNeeded()
+                await runAutoSyncIfNeeded()
             }
-        }
+            .task(id: autoSyncIntervalMinutes) {
+                guard autoSyncIntervalMinutes > 0, SyncSettings.isConfigured else { return }
+                while !Task.isCancelled {
+                    _ = try? await Task.sleep(for: .seconds(autoSyncIntervalMinutes * 60))
+                    guard !Task.isCancelled else { return }
+                    _ = try? await SyncRunner.runFullSync(modelContext: modelContext)
+                }
+            }
     }
 
-    private func loadInventory(force: Bool) async {
-        guard force || components.isEmpty else {
-            isReady = true
+    private func loadInventoryIfNeeded() async {
+        guard components.isEmpty else { return }
+
+        guard DatabaseBootstrap.isDatabaseAvailable() else {
+            bootstrapError = "Database non trovato in /Users/michelebigi/LCSC"
             return
         }
 
+        isBootstrapping = true
+        defer { isBootstrapping = false }
+
         let store = ComponentStore(modelContext: modelContext)
         do {
-            if DatabaseBootstrap.isDatabaseAvailable() {
-                _ = try await store.bootstrapFromDefaultLocation()
-            } else if components.isEmpty {
-                bootstrapError = "Database non trovato in /Users/michelebigi/LCSC"
-                isReady = true
-                return
-            }
+            _ = try await store.bootstrapFromDefaultLocation()
             bootstrapError = nil
         } catch {
             bootstrapError = error.localizedDescription
         }
-        isReady = true
     }
 
     private func runAutoSyncIfNeeded() async {

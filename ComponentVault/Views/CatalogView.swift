@@ -14,6 +14,8 @@ struct CatalogView: View {
     @State private var selectedGroupID: String?
     @State private var selectedComponent: Component?
     @State private var searchText = ""
+    @State private var showSupplierLookup = false
+    @State private var showDigiKeyExplorer = false
     @State private var store: ComponentStore?
 
     @Environment(\.modelContext) private var modelContext
@@ -78,6 +80,16 @@ struct CatalogView: View {
         }
         .onChange(of: components.count) { _, _ in
             syncSelection()
+        }
+        .sheet(isPresented: $showSupplierLookup) {
+            NavigationStack {
+                CatalogLookupView()
+            }
+        }
+        .sheet(isPresented: $showDigiKeyExplorer) {
+            NavigationStack {
+                DigiKeyExplorerView()
+            }
         }
     }
 
@@ -208,6 +220,20 @@ struct CatalogView: View {
                 }
 
                 Spacer()
+
+                Button {
+                    showSupplierLookup = true
+                } label: {
+                    Label("Progettazione", systemImage: "magnifyingglass.circle")
+                }
+                .help("Cerca nei cataloghi LCSC e DigiKey per tipo, valore e footprint")
+
+                Button {
+                    showDigiKeyExplorer = true
+                } label: {
+                    Label("Esplora DigiKey", systemImage: "shippingbox")
+                }
+                .help("Ricerca keyword, barcode, sostituti e packaging alternativo DigiKey")
 
                 TextField("Cerca valore, footprint, MPN…", text: $searchText)
                     .textFieldStyle(.roundedBorder)

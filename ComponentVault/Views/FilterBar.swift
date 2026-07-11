@@ -4,6 +4,10 @@ struct FilterBar: View {
     @Binding var filter: ComponentFilter
     let components: [Component]
     @State private var isExpanded = false
+    @State private var categoryOptions: [String] = ["Tutte"]
+    @State private var footprintOptions: [String] = ["Tutti"]
+    @State private var brandOptions: [String] = ["Tutti"]
+    @State private var tagOptions: [String] = ["Tutti"]
 
     var body: some View {
         VStack(spacing: 8) {
@@ -21,12 +25,12 @@ struct FilterBar: View {
             if isExpanded {
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 8) {
                     GridRow {
-                        filterPicker("Categoria", selection: $filter.category, options: ComponentFilter.categories(from: components))
-                        filterPicker("Footprint", selection: $filter.footprint, options: ComponentFilter.footprints(from: components))
+                        filterPicker("Categoria", selection: $filter.category, options: categoryOptions)
+                        filterPicker("Footprint", selection: $filter.footprint, options: footprintOptions)
                     }
                     GridRow {
-                        filterPicker("Brand", selection: $filter.brand, options: ComponentFilter.brands(from: components))
-                        filterPicker("Tag", selection: $filter.tag, options: ComponentFilter.tags(from: components))
+                        filterPicker("Brand", selection: $filter.brand, options: brandOptions)
+                        filterPicker("Tag", selection: $filter.tag, options: tagOptions)
                     }
                     GridRow {
                         Toggle("Solo scorte basse", isOn: $filter.showLowStockOnly)
@@ -41,6 +45,15 @@ struct FilterBar: View {
             }
         }
         .padding(8)
+        .onAppear { rebuildFilterOptions() }
+        .onChange(of: components.count) { _, _ in rebuildFilterOptions() }
+    }
+
+    private func rebuildFilterOptions() {
+        categoryOptions = ComponentFilter.categories(from: components)
+        footprintOptions = ComponentFilter.footprints(from: components)
+        brandOptions = ComponentFilter.brands(from: components)
+        tagOptions = ComponentFilter.tags(from: components)
     }
 
     private func filterPicker(_ title: String, selection: Binding<String>, options: [String]) -> some View {

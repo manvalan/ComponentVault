@@ -160,10 +160,17 @@ final class Component {
     }
 
     var isLowStock: Bool {
+        if isToOrder { return false }
         if minQuantity > 0 {
             return quantity <= minQuantity
         }
         return quantity == 0
+    }
+
+    static let toOrderTag = "da ordinare"
+
+    var isToOrder: Bool {
+        tags.contains { $0.compare(Self.toOrderTag, options: .caseInsensitive) == .orderedSame }
     }
 
     var priceBreaks: [PriceBreak] {
@@ -186,11 +193,19 @@ final class Component {
         set { digikeySnapshotJSON = SupplierSnapshotCodec.encode(newValue) }
     }
 
-    var hasLCSCSnapshot: Bool { lcscSnapshot != nil }
-    var hasDigiKeySnapshot: Bool { digikeySnapshot != nil }
+    var hasLCSCSnapshot: Bool { !lcscSnapshotJSON.isEmpty }
+    var hasDigiKeySnapshot: Bool { !digikeySnapshotJSON.isEmpty }
+
+    var hasDigiKeyEnrichment: Bool {
+        hasDigiKeySnapshot
+            || digikeyPartNumber != nil
+            || digikeyLastFetched != nil
+            || (!priceBreaksJSON.isEmpty && priceBreaksJSON != "[]")
+    }
 
     var supplierComparison: SupplierComparison? {
-        SupplierComparisonBuilder.compare(
+        guard hasLCSCSnapshot, hasDigiKeySnapshot else { return nil }
+        return SupplierComparisonBuilder.compare(
             quantity: quantity,
             lcsc: lcscSnapshot,
             digikey: digikeySnapshot
@@ -199,6 +214,10 @@ final class Component {
 
     var categoryRoot: String {
         category.components(separatedBy: "/").first ?? category
+    }
+
+    var needsLCSCCodeResolution: Bool {
+        DigiKeySyntheticCode.isDigiKeyOnly(lcscCode) || !lcscCode.uppercased().hasPrefix("C")
     }
 
     func apply(_ record: ComponentRecord, preserveQuantity: Bool = true) {
@@ -326,7 +345,9 @@ final class Component {
     }
 
     func migrateLegacySnapshotsIfNeeded() {
-        if lcscSnapshot == nil,
+        var changed = false
+
+        if lcscSnapshotJSON.isEmpty,
            (source == .lcsc || source == .manual),
            price != nil || supplierStock != nil {
             lcscSnapshot = SupplierSnapshot(
@@ -341,10 +362,12 @@ final class Component {
                 digikeyPartNumber: nil,
                 productStatus: nil
             )
+            changed = true
         }
 
-        if digikeySnapshot == nil,
-           digikeyPartNumber != nil || digikeyLastFetched != nil || !priceBreaks.isEmpty {
+        if digikeySnapshotJSON.isEmpty,
+           digikeyPartNumber != nil || digikeyLastFetched != nil
+            || (!priceBreaksJSON.isEmpty && priceBreaksJSON != "[]") {
             digikeySnapshot = SupplierSnapshot(
                 price: price,
                 currency: currency,
@@ -357,9 +380,12 @@ final class Component {
                 digikeyPartNumber: digikeyPartNumber,
                 productStatus: digikeyProductStatus
             )
+            changed = true
         }
 
-        refreshDisplayFields()
+        if changed {
+            refreshDisplayFields()
+        }
     }
 
     func toRecord() -> ComponentRecord {

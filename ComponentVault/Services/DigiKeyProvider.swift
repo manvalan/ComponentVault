@@ -36,6 +36,79 @@ struct DigiKeyProvider: ComponentDataProvider {
         )
     }
 
+    func searchCatalog(keyword: String, recordCount: Int = 8) async throws -> [DigiKeyCandidate] {
+        let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { throw ProviderError.invalidCode }
+
+        let data = try await searchRequest(mpn: trimmed, recordCount: recordCount)
+        return try DigiKeyParser.parseCandidates(
+            data: data,
+            mpn: trimmed,
+            lcscCode: "DK-SEARCH",
+            currency: config.currency
+        )
+    }
+
+    func searchBarcode(_ barcode: String) async throws -> [DigiKeyCandidate] {
+        try await searchCatalog(keyword: barcode, recordCount: 5)
+    }
+
+    func fetchSubstitutions(partNumber: String, referenceMPN: String) async throws -> [DigiKeyCrossReference] {
+        let data = try await apiRequest(
+            path: "products/v4/search/\(encodedPartNumber(partNumber))/substitutions",
+            method: "GET"
+        )
+        return try DigiKeyDiscoveryParser.parseCrossReferences(
+            data: data,
+            currency: config.currency,
+            referenceMPN: referenceMPN
+        )
+    }
+
+    func fetchAlternatePackaging(partNumber: String) async throws -> [DigiKeyAlternatePackage] {
+        let data = try await apiRequest(
+            path: "products/v4/search/\(encodedPartNumber(partNumber))/alternatepackaging",
+            method: "GET"
+        )
+        return try DigiKeyDiscoveryParser.parseAlternatePackaging(data: data)
+    }
+
+    func importCandidate(_ candidate: DigiKeyCandidate) async throws -> ComponentRecord {
+        let source = candidate.record
+        let record = ComponentRecord(
+            lcscCode: DigiKeySyntheticCode.make(from: candidate.digikeyPartNumber),
+            mpn: source.mpn,
+            name: source.name,
+            description: source.description,
+            footprint: source.footprint,
+            quantity: source.quantity,
+            category: source.category,
+            value: source.value,
+            brand: source.brand,
+            datasheetURL: source.datasheetURL,
+            imageURLs: source.imageURLs,
+            price: source.price,
+            currency: source.currency,
+            supplierStock: source.supplierStock,
+            dataSource: .digikey,
+            parameters: source.parameters,
+            notes: source.notes,
+            minQuantity: source.minQuantity,
+            tags: source.tags,
+            updatedAt: source.updatedAt,
+            digikeyPartNumber: source.digikeyPartNumber ?? candidate.digikeyPartNumber,
+            supplierProductURL: source.supplierProductURL,
+            priceBreaks: source.priceBreaks,
+            minimumOrderQuantity: source.minimumOrderQuantity,
+            leadTimeWeeks: source.leadTimeWeeks,
+            digikeyProductStatus: source.digikeyProductStatus,
+            digikeyLastFetched: source.digikeyLastFetched,
+            lcscSnapshot: source.lcscSnapshot,
+            digikeySnapshot: source.digikeySnapshot
+        )
+        return try await enrichRecord(record)
+    }
+
     func fetchByMPN(_ mpn: String, lcscCode: String) async throws -> ComponentRecord {
         let candidates = try await searchCandidates(mpn: mpn, lcscCode: lcscCode, recordCount: 1)
         return candidates[0].record

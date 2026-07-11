@@ -113,9 +113,10 @@ struct InventoryView: View {
     @State private var exportDocument = CSVDocument()
     @State private var enrichProgress: (label: String, current: Int, total: Int)?
     @State private var importError: String?
+    @State private var filteredComponents: [Component] = []
 
-    private var filteredComponents: [Component] {
-        filter.apply(to: components)
+    private func refreshFilteredComponents() {
+        filteredComponents = filter.apply(to: components)
     }
 
     var body: some View {
@@ -139,7 +140,22 @@ struct InventoryView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             if store == nil { store = ComponentStore(modelContext: modelContext) }
+            refreshFilteredComponents()
         }
+        .onChange(of: components.count) { _, _ in
+            refreshFilteredComponents()
+        }
+        .onChange(of: filter.searchText) { _, _ in
+            refreshFilteredComponents()
+        }
+        .onChange(of: filter.category) { _, _ in refreshFilteredComponents() }
+        .onChange(of: filter.footprint) { _, _ in refreshFilteredComponents() }
+        .onChange(of: filter.brand) { _, _ in refreshFilteredComponents() }
+        .onChange(of: filter.tag) { _, _ in refreshFilteredComponents() }
+        .onChange(of: filter.showLowStockOnly) { _, _ in refreshFilteredComponents() }
+        .onChange(of: filter.showOutOfStockOnly) { _, _ in refreshFilteredComponents() }
+        .onChange(of: filter.requireDigiKeyData) { _, _ in refreshFilteredComponents() }
+        .onChange(of: filter.digikeyOutOfStockOnly) { _, _ in refreshFilteredComponents() }
         .onReceive(NotificationCenter.default.publisher(for: .importCSV)) { _ in
             showImportPanel = true
         }
@@ -290,13 +306,10 @@ struct InventoryView: View {
                 ).first
             }
             importError = nil
+            refreshFilteredComponents()
         } catch {
             importError = error.localizedDescription
         }
-    }
-
-    private func bootstrapIfNeeded() async {
-        await reloadInventory()
     }
 
     private func importFile(_ result: Result<[URL], Error>) {
@@ -315,6 +328,7 @@ struct InventoryView: View {
                             FetchDescriptor<Component>(sortBy: [SortDescriptor(\.lcscCode)])
                         ).first
                     }
+                    refreshFilteredComponents()
                 } catch {
                     importError = error.localizedDescription
                 }
@@ -338,7 +352,12 @@ struct ComponentRowView: View {
                     Text(component.displayTitle)
                         .font(.headline)
                         .lineLimit(1)
-                    if component.isLowStock {
+                    if component.isToOrder {
+                        Image(systemName: "cart.badge.clock")
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
+                            .help("Da ordinare")
+                    } else if component.isLowStock {
                         Image(systemName: "exclamationmark.circle.fill")
                             .font(.caption2)
                             .foregroundStyle(component.quantity == 0 ? .red : .orange)
@@ -364,12 +383,6 @@ struct ComponentRowView: View {
                     Text(component.footprint)
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
-                }
-                if let comparison = component.supplierComparison {
-                    Text(comparison.summary)
-                        .font(.caption2)
-                        .foregroundStyle(comparison.cheaper == .lcsc ? .orange : .red)
-                        .lineLimit(1)
                 }
             }
 
