@@ -1,7 +1,55 @@
 import SwiftUI
 import SwiftData
+import UniformTypeIdentifiers
+
+enum AppSection: String, CaseIterable, Identifiable {
+    case inventory
+    case projects
+    case alerts
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .inventory: "Inventario"
+        case .projects: "Progetti"
+        case .alerts: "Alert"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .inventory: "tray.full"
+        case .projects: "folder"
+        case .alerts: "exclamationmark.triangle"
+        }
+    }
+}
 
 struct ContentView: View {
+    @State private var section: AppSection = .inventory
+
+    var body: some View {
+        NavigationSplitView {
+            List(AppSection.allCases, selection: $section) { item in
+                Label(item.title, systemImage: item.icon)
+                    .tag(item)
+            }
+            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
+        } detail: {
+            switch section {
+            case .inventory:
+                InventoryView()
+            case .projects:
+                ProjectsView()
+            case .alerts:
+                LowStockView()
+            }
+        }
+    }
+}
+
+struct InventoryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Component.lcscCode) private var components: [Component]
 
@@ -9,33 +57,20 @@ struct ContentView: View {
 
     @State private var store: ComponentStore?
     @State private var selection: Component?
-    @State private var searchText = ""
-    @State private var filterCategory = "Tutte"
+    @State private var filter = ComponentFilter()
     @State private var showImportPanel = false
+    @State private var showExport = false
+    @State private var exportDocument = CSVDocument()
     @State private var enrichProgress: (current: Int, total: Int)?
     @State private var importError: String?
 
-    private var categories: [String] {
-        let values = Set(components.map(\.category).filter { !$0.isEmpty })
-        return ["Tutte"] + values.sorted()
-    }
-
     private var filteredComponents: [Component] {
-        components.filter { component in
-            let matchesSearch = searchText.isEmpty ||
-                component.lcscCode.localizedCaseInsensitiveContains(searchText) ||
-                component.mpn.localizedCaseInsensitiveContains(searchText) ||
-                component.componentDescription.localizedCaseInsensitiveContains(searchText) ||
-                component.footprint.localizedCaseInsensitiveContains(searchText)
-
-            let matchesCategory = filterCategory == "Tutte" || component.category == filterCategory
-            return matchesSearch && matchesCategory
-        }
+        filter.apply(to: components)
     }
 
     var body: some View {
         NavigationSplitView {
-            sidebar
+            inventorySidebar
         } detail: {
             if let selection {
                 ComponentDetailView(component: selection, store: store)
@@ -45,18 +80,13 @@ struct ContentView: View {
                 ContentUnavailableView(
                     "Seleziona un componente",
                     systemImage: "cpu",
-                    description: Text("Scegli un componente dalla lista a sinistra.")
+                    description: Text("Scegli un componente dalla lista.")
                 )
             }
         }
-        .navigationTitle("ComponentVault")
+        .navigationTitle("Inventario")
         .onAppear {
-            if store == nil {
-                store = ComponentStore(modelContext: modelContext)
-            }
-            if components.isEmpty {
-                Task { await bootstrapIfNeeded() }
-            }
+            if store == nil { store = ComponentStore(modelContext: modelContext) }
         }
         .onReceive(NotificationCenter.default.publisher(for: .importCSV)) { _ in
             showImportPanel = true
@@ -68,22 +98,14 @@ struct ContentView: View {
         ) { result in
             importFile(result)
         }
+        .fileExporter(
+            isPresented: $showExport,
+            document: exportDocument,
+            contentType: .commaSeparatedText,
+            defaultFilename: "inventario.csv"
+        ) { _ in }
         .overlay(alignment: .bottom) {
-            VStack(spacing: 8) {
-                if let enrichProgress {
-                    ProgressView("Arricchimento LCSC \(enrichProgress.current)/\(enrichProgress.total)")
-                        .padding()
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
-                }
-                if let status = store?.statusMessage {
-                    Text(status)
-                        .font(.caption)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(.regularMaterial, in: Capsule())
-                }
-            }
-            .padding()
+            statusOverlay
         }
         .alert("Errore import", isPresented: .constant(importError != nil)) {
             Button("OK") { importError = nil }
@@ -92,41 +114,115 @@ struct ContentView: View {
         }
     }
 
+    private var inventorySidebar: some View {
+        VStack(spacing: 0) {
+            if !components.isEmpty {
+                FilterBar(filter: $filter, components: components)
+            }
+
+            if components.isEmpty {
+                emptyState.frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List(filteredComponents, selection: $selection) { component in
+                    ComponentRowView(component: component)
+                        .tag(component)
+                }
+            }
+
+            inventoryToolbar
+        }
+        .navigationSplitViewColumnWidth(min: 300, ideal: 360)
+    }
+
+    private var inventoryToolbar: some View {
+        HStack {
+            Button("Ricarica") {
+                Task { await reloadInventory() }
+            }
+            Button("Importa") { showImportPanel = true }
+            Button("Esporta") {
+                exportDocument = CSVDocument(text: ExportService.inventoryCSV(components: filteredComponents))
+                showExport = true
+            }
+            .disabled(filteredComponents.isEmpty)
+            Button("LCSC") {
+                guard let store else { return }
+                Task {
+                    enrichProgress = (0, filteredComponents.count)
+                    await store.enrichAllFromLCSC(components: filteredComponents) { c, t in
+                        enrichProgress = (c, t)
+                    }
+                    enrichProgress = nil
+                }
+            }
+            .disabled(filteredComponents.isEmpty || store?.isLoading == true)
+
+            Spacer()
+            Text("\(filteredComponents.count)")
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+        }
+        .padding(8)
+        .background(.bar)
+    }
+
+    @ViewBuilder
+    private var statusOverlay: some View {
+        VStack(spacing: 8) {
+            if let enrichProgress {
+                ProgressView("LCSC \(enrichProgress.current)/\(enrichProgress.total)")
+                    .padding(8)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+            }
+            if let status = store?.statusMessage {
+                Text(status)
+                    .font(.caption)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(.regularMaterial, in: Capsule())
+            }
+        }
+        .padding()
+    }
+
     private var emptyState: some View {
         ContentUnavailableView {
             Label("Creazione database…", systemImage: "externaldrive.badge.plus")
         } description: {
             if store?.isLoading == true {
-                Text("Importazione da /Users/michelebigi/LCSC/json_full_data")
+                Text("Importazione da json_full_data…")
+            } else if let importError {
+                Text(importError)
             } else {
-                Text("Database non trovato.\n\nClicca per importare manualmente il CSV\noppure esegui:\npython3 Tools/lcsc_enrich.py")
+                Text("Clicca Ricarica o importa il CSV manualmente.")
             }
         } actions: {
             if store?.isLoading != true {
                 Button("Importa CSV…") { showImportPanel = true }
                     .buttonStyle(.borderedProminent)
-                Button("Ricarica database") { Task { await bootstrapIfNeeded() } }
+                Button("Ricarica") { Task { await reloadInventory() } }
             }
         }
     }
 
-    private func bootstrapIfNeeded() async {
-        guard let store, components.isEmpty else { return }
+    private func reloadInventory() async {
+        guard let store else { return }
         do {
-            let result = try await store.bootstrapFromDefaultLocation()
+            _ = try await store.bootstrapFromDefaultLocation()
             hasCompletedOnboarding = true
-            if selection == nil, let first = try? modelContext.fetch(
-                FetchDescriptor<Component>(sortBy: [SortDescriptor(\.lcscCode)])
-            ).first {
-                selection = first
+            if selection == nil {
+                selection = try? modelContext.fetch(
+                    FetchDescriptor<Component>(sortBy: [SortDescriptor(\.lcscCode)])
+                ).first
             }
-            _ = result
+            importError = nil
         } catch {
-            if !hasCompletedOnboarding {
-                showImportPanel = true
-            }
             importError = error.localizedDescription
         }
+    }
+
+    private func bootstrapIfNeeded() async {
+        await reloadInventory()
     }
 
     private func importFile(_ result: Result<[URL], Error>) {
@@ -140,10 +236,10 @@ struct ContentView: View {
                 do {
                     try await store.importCSV(from: url)
                     hasCompletedOnboarding = true
-                    if selection == nil, let first = try? modelContext.fetch(
-                        FetchDescriptor<Component>(sortBy: [SortDescriptor(\.lcscCode)])
-                    ).first {
-                        selection = first
+                    if selection == nil {
+                        selection = try? modelContext.fetch(
+                            FetchDescriptor<Component>(sortBy: [SortDescriptor(\.lcscCode)])
+                        ).first
                     }
                 } catch {
                     importError = error.localizedDescription
@@ -152,61 +248,6 @@ struct ContentView: View {
         case .failure(let error):
             importError = error.localizedDescription
         }
-    }
-
-    private var sidebar: some View {
-        VStack(spacing: 0) {
-            if !components.isEmpty {
-                HStack {
-                    TextField("Cerca…", text: $searchText)
-                        .textFieldStyle(.roundedBorder)
-                    Picker("Categoria", selection: $filterCategory) {
-                        ForEach(categories, id: \.self) { Text($0).tag($0) }
-                    }
-                    .labelsHidden()
-                    .frame(maxWidth: 160)
-                }
-                .padding(8)
-            }
-
-            if components.isEmpty {
-                emptyState
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                List(filteredComponents, selection: $selection) { component in
-                    ComponentRowView(component: component)
-                        .tag(component)
-                }
-            }
-
-            toolbar
-        }
-        .navigationSplitViewColumnWidth(min: 280, ideal: 340)
-    }
-
-    private var toolbar: some View {
-        HStack {
-            Button("Importa CSV") { showImportPanel = true }
-            Button("Aggiorna tutti LCSC") {
-                guard let store else { return }
-                Task {
-                    enrichProgress = (0, filteredComponents.count)
-                    await store.enrichAllFromLCSC(components: filteredComponents) { current, total in
-                        enrichProgress = (current, total)
-                    }
-                    enrichProgress = nil
-                }
-            }
-            .disabled(filteredComponents.isEmpty || store?.isLoading == true)
-
-            Spacer()
-
-            Text("\(filteredComponents.count) componenti")
-                .foregroundStyle(.secondary)
-                .font(.caption)
-        }
-        .padding(8)
-        .background(.bar)
     }
 }
 
@@ -219,12 +260,26 @@ struct ComponentRowView: View {
                 .frame(width: 36, height: 36)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(component.displayTitle)
-                    .font(.headline)
-                    .lineLimit(1)
-                Text(component.lcscCode)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 4) {
+                    Text(component.displayTitle)
+                        .font(.headline)
+                        .lineLimit(1)
+                    if component.isLowStock {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .font(.caption2)
+                            .foregroundStyle(component.quantity == 0 ? .red : .orange)
+                    }
+                }
+                HStack(spacing: 6) {
+                    Text(component.lcscCode)
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                    if !component.value.isEmpty && component.value != "N/A" {
+                        Text(component.value)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
                 if !component.footprint.isEmpty {
                     Text(component.footprint)
                         .font(.caption2)
@@ -248,5 +303,5 @@ struct ComponentRowView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: Component.self, inMemory: true)
+        .modelContainer(for: [Component.self, Project.self], inMemory: true)
 }

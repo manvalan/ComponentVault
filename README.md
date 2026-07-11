@@ -2,14 +2,16 @@
 
 App macOS per gestire l'archivio personale di componenti elettronici, con schede complete arricchite da LCSC e architettura pronta per DigiKey, iPad e API su michelebigi.it.
 
-## Funzionalità (v0.1)
+## Funzionalità (v0.2)
 
-- Import CSV inventario (`Componenti Elettronici.csv` o `bom_riepilogo.csv`)
-- Scheda completa per ogni componente: immagini, parametri tecnici, datasheet, stock/prezzo LCSC
-- Ricerca e filtro per categoria
-- Aggiornamento singolo o batch da LCSC
-- Modifica quantità in inventario
-- Modello dati estendibile (`ComponentDataProvider`) per DigiKey e altri fornitori
+- Import CSV + JSON LCSC con bootstrap automatico
+- Schede componente complete (immagini, datasheet, parametri)
+- **Gestione stock** con storico movimenti e soglia minima
+- **Tag e note** personali per componente
+- **Filtri avanzati** per categoria, footprint, brand, tag, scorte
+- **Progetti BOM** con verifica disponibilità e riserva stock
+- **Alert scorte** (esauriti / sotto soglia)
+- **Import BOM CSV** in progetti (designator + LCSC + quantità)
 
 ## Requisiti
 
@@ -104,7 +106,7 @@ ComponentVault/
 | Fase | Obiettivo |
 |------|-----------|
 | **v0.1** | App macOS, import CSV, LCSC live |
-| **v0.2** | Import JSON pre-generati, export |
+| **v0.2** | Stock, progetti BOM, filtri, export, alert ✓ |
 | **v0.3** | API REST su michelebigi.it + sync |
 | **v0.4** | DigiKey provider (OAuth2) |
 | **v1.0** | App iPad (SwiftUI condiviso) |

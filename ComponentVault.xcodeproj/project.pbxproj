@@ -21,6 +21,20 @@
 		A1000001000000000000000C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000C /* SettingsView.swift */; };
 		A1000001000000000000000D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000D /* Assets.xcassets */; };
 		A1000001000000000000000E /* DatabaseBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000F /* DatabaseBootstrap.swift */; };
+		A10000010000000000000010 /* StockMovement.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000010 /* StockMovement.swift */; };
+		A10000010000000000000011 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000011 /* Project.swift */; };
+		A10000010000000000000012 /* ComponentFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000012 /* ComponentFilter.swift */; };
+		A10000010000000000000013 /* ExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000013 /* ExportService.swift */; };
+		A10000010000000000000014 /* ProjectStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000014 /* ProjectStore.swift */; };
+		A10000010000000000000015 /* CSVDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000015 /* CSVDocument.swift */; };
+		A10000010000000000000016 /* FilterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000016 /* FilterBar.swift */; };
+		A10000010000000000000017 /* ProjectsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000017 /* ProjectsView.swift */; };
+		A10000010000000000000018 /* ProjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000018 /* ProjectDetailView.swift */; };
+		A10000010000000000000019 /* LowStockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000019 /* LowStockView.swift */; };
+		A1000001000000000000001A /* TagEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000001A /* TagEditor.swift */; };
+		A1000001000000000000001B /* BOMImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000001B /* BOMImporter.swift */; };
+		A1000001000000000000001C /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000001C /* Persistence.swift */; };
+		A1000001000000000000001D /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000001D /* RootView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +53,20 @@
 		A2000001000000000000000D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A2000001000000000000000E /* ComponentVault.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ComponentVault.entitlements; sourceTree = "<group>"; };
 		A2000001000000000000000F /* DatabaseBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseBootstrap.swift; sourceTree = "<group>"; };
+		A20000010000000000000010 /* StockMovement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockMovement.swift; sourceTree = "<group>"; };
+		A20000010000000000000011 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
+		A20000010000000000000012 /* ComponentFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentFilter.swift; sourceTree = "<group>"; };
+		A20000010000000000000013 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportService.swift; sourceTree = "<group>"; };
+		A20000010000000000000014 /* ProjectStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectStore.swift; sourceTree = "<group>"; };
+		A20000010000000000000015 /* CSVDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVDocument.swift; sourceTree = "<group>"; };
+		A20000010000000000000016 /* FilterBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterBar.swift; sourceTree = "<group>"; };
+		A20000010000000000000017 /* ProjectsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsView.swift; sourceTree = "<group>"; };
+		A20000010000000000000018 /* ProjectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDetailView.swift; sourceTree = "<group>"; };
+		A20000010000000000000019 /* LowStockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LowStockView.swift; sourceTree = "<group>"; };
+		A2000001000000000000001A /* TagEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagEditor.swift; sourceTree = "<group>"; };
+		A2000001000000000000001B /* BOMImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BOMImporter.swift; sourceTree = "<group>"; };
+		A2000001000000000000001C /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
+		A2000001000000000000001D /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		A30000010000000000000001 /* ComponentVault.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ComponentVault.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -96,6 +124,8 @@
 				A20000010000000000000002 /* Component.swift */,
 				A20000010000000000000003 /* ComponentParameter.swift */,
 				A20000010000000000000004 /* ComponentRecord.swift */,
+				A20000010000000000000010 /* StockMovement.swift */,
+				A20000010000000000000011 /* Project.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -109,6 +139,12 @@
 				A20000010000000000000008 /* CSVImporter.swift */,
 				A20000010000000000000009 /* ComponentStore.swift */,
 				A2000001000000000000000F /* DatabaseBootstrap.swift */,
+				A20000010000000000000012 /* ComponentFilter.swift */,
+				A20000010000000000000013 /* ExportService.swift */,
+				A20000010000000000000014 /* ProjectStore.swift */,
+				A20000010000000000000015 /* CSVDocument.swift */,
+				A2000001000000000000001B /* BOMImporter.swift */,
+				A2000001000000000000001C /* Persistence.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -119,6 +155,12 @@
 				A2000001000000000000000A /* ContentView.swift */,
 				A2000001000000000000000B /* ComponentDetailView.swift */,
 				A2000001000000000000000C /* SettingsView.swift */,
+				A20000010000000000000016 /* FilterBar.swift */,
+				A20000010000000000000017 /* ProjectsView.swift */,
+				A20000010000000000000018 /* ProjectDetailView.swift */,
+				A20000010000000000000019 /* LowStockView.swift */,
+				A2000001000000000000001A /* TagEditor.swift */,
+				A2000001000000000000001D /* RootView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -206,6 +248,20 @@
 				A1000001000000000000000B /* ComponentDetailView.swift in Sources */,
 				A1000001000000000000000C /* SettingsView.swift in Sources */,
 				A1000001000000000000000E /* DatabaseBootstrap.swift in Sources */,
+				A10000010000000000000010 /* StockMovement.swift in Sources */,
+				A10000010000000000000011 /* Project.swift in Sources */,
+				A10000010000000000000012 /* ComponentFilter.swift in Sources */,
+				A10000010000000000000013 /* ExportService.swift in Sources */,
+				A10000010000000000000014 /* ProjectStore.swift in Sources */,
+				A10000010000000000000015 /* CSVDocument.swift in Sources */,
+				A10000010000000000000016 /* FilterBar.swift in Sources */,
+				A10000010000000000000017 /* ProjectsView.swift in Sources */,
+				A10000010000000000000018 /* ProjectDetailView.swift in Sources */,
+				A10000010000000000000019 /* LowStockView.swift in Sources */,
+				A1000001000000000000001A /* TagEditor.swift in Sources */,
+				A1000001000000000000001B /* BOMImporter.swift in Sources */,
+				A1000001000000000000001C /* Persistence.swift in Sources */,
+				A1000001000000000000001D /* RootView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -271,7 +327,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = it.michelebigi.ComponentVault;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -297,7 +353,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = it.michelebigi.ComponentVault;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

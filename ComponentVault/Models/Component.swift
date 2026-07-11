@@ -36,9 +36,17 @@ final class Component {
     var dataSource: String
     var lastUpdated: Date
     var notes: String
+    var minQuantity: Int
+    var tags: [String]
 
     @Relationship(deleteRule: .cascade, inverse: \ComponentParameter.component)
     var parameters: [ComponentParameter]
+
+    @Relationship(deleteRule: .cascade, inverse: \StockMovement.component)
+    var stockMovements: [StockMovement]
+
+    @Relationship(inverse: \ProjectItem.component)
+    var projectItems: [ProjectItem]
 
     init(
         lcscCode: String,
@@ -57,7 +65,10 @@ final class Component {
         supplierStock: Int? = nil,
         dataSource: DataSource = .manual,
         notes: String = "",
-        parameters: [ComponentParameter] = []
+        minQuantity: Int = 0,
+        tags: [String] = [],
+        parameters: [ComponentParameter] = [],
+        stockMovements: [StockMovement] = []
     ) {
         self.lcscCode = lcscCode
         self.mpn = mpn
@@ -76,7 +87,11 @@ final class Component {
         self.dataSource = dataSource.rawValue
         self.lastUpdated = Date()
         self.notes = notes
+        self.minQuantity = minQuantity
+        self.tags = tags
         self.parameters = parameters
+        self.stockMovements = stockMovements
+        self.projectItems = []
     }
 
     var source: DataSource {
@@ -92,6 +107,17 @@ final class Component {
     var primaryImageURL: URL? {
         guard let first = imageURLs.first else { return nil }
         return URL(string: first)
+    }
+
+    var isLowStock: Bool {
+        if minQuantity > 0 {
+            return quantity <= minQuantity
+        }
+        return quantity == 0
+    }
+
+    var categoryRoot: String {
+        category.components(separatedBy: "/").first ?? category
     }
 
     func apply(_ record: ComponentRecord) {

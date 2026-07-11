@@ -54,6 +54,9 @@ final class ComponentStore {
         defer { isLoading = false }
 
         let records = try DatabaseBootstrap.loadDefaultRecords()
+        guard !records.isEmpty else {
+            throw DatabaseBootstrap.BootstrapError.emptyDatabase
+        }
         try upsert(records: records)
         let source = DatabaseBootstrap.describeSource()
         statusMessage = "Database creato: \(records.count) componenti da \(source)"
@@ -106,8 +109,55 @@ final class ComponentStore {
     }
 
     func updateQuantity(_ component: Component, to quantity: Int) throws {
-        component.quantity = max(0, quantity)
+        let delta = quantity - component.quantity
+        try adjustStock(component, delta: delta, reason: .manual, note: "Aggiornamento manuale")
+    }
+
+    func adjustStock(
+        _ component: Component,
+        delta: Int,
+        reason: StockMovementReason = .manual,
+        note: String = ""
+    ) throws {
+        let newQuantity = max(0, component.quantity + delta)
+        component.quantity = newQuantity
+        component.lastUpdated = Date()
+
+        let movement = StockMovement(
+            delta: delta,
+            quantityAfter: newQuantity,
+            reason: reason,
+            note: note,
+            component: component
+        )
+        component.stockMovements.insert(movement, at: 0)
+        modelContext.insert(movement)
+        try modelContext.save()
+    }
+
+    func updateMinQuantity(_ component: Component, to minQuantity: Int) throws {
+        component.minQuantity = max(0, minQuantity)
         component.lastUpdated = Date()
         try modelContext.save()
+    }
+
+    func updateTags(_ component: Component, tags: [String]) throws {
+        component.tags = tags.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        component.lastUpdated = Date()
+        try modelContext.save()
+    }
+
+    func updateNotes(_ component: Component, notes: String) throws {
+        component.notes = notes
+        component.lastUpdated = Date()
+        try modelContext.save()
+    }
+
+    func lowStockComponents(from components: [Component]) -> [Component] {
+        components.filter(\.isLowStock).sorted { lhs, rhs in
+            if lhs.quantity == rhs.quantity { return lhs.lcscCode < rhs.lcscCode }
+            return lhs.quantity < rhs.quantity
+        }
     }
 }

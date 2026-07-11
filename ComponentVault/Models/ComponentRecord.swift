@@ -21,6 +21,84 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
     var dataSource: DataSource
     var parameters: [String: String]
 
+    enum CodingKeys: String, CodingKey {
+        case lcscCode, mpn, name, description, footprint, quantity
+        case category, value, brand, datasheetURL, imageURLs
+        case price, currency, supplierStock, dataSource, parameters
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        lcscCode = try container.decode(String.self, forKey: .lcscCode)
+        mpn = try container.decodeIfPresent(String.self, forKey: .mpn) ?? ""
+        name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
+        description = try container.decodeIfPresent(String.self, forKey: .description) ?? ""
+        footprint = try container.decodeIfPresent(String.self, forKey: .footprint) ?? ""
+        quantity = try Self.decodeInt(from: container, forKey: .quantity) ?? 0
+        category = try container.decodeIfPresent(String.self, forKey: .category) ?? ""
+        value = try container.decodeIfPresent(String.self, forKey: .value) ?? ""
+        brand = try container.decodeIfPresent(String.self, forKey: .brand) ?? ""
+        datasheetURL = try container.decodeIfPresent(String.self, forKey: .datasheetURL)
+        imageURLs = try container.decodeIfPresent([String].self, forKey: .imageURLs) ?? []
+        price = try Self.decodeDouble(from: container, forKey: .price)
+        currency = try container.decodeIfPresent(String.self, forKey: .currency)
+        supplierStock = try Self.decodeInt(from: container, forKey: .supplierStock)
+        dataSource = try container.decodeIfPresent(DataSource.self, forKey: .dataSource) ?? .manual
+        parameters = try container.decodeIfPresent([String: String].self, forKey: .parameters) ?? [:]
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(lcscCode, forKey: .lcscCode)
+        try container.encode(mpn, forKey: .mpn)
+        try container.encode(name, forKey: .name)
+        try container.encode(description, forKey: .description)
+        try container.encode(footprint, forKey: .footprint)
+        try container.encode(quantity, forKey: .quantity)
+        try container.encode(category, forKey: .category)
+        try container.encode(value, forKey: .value)
+        try container.encode(brand, forKey: .brand)
+        try container.encodeIfPresent(datasheetURL, forKey: .datasheetURL)
+        try container.encode(imageURLs, forKey: .imageURLs)
+        try container.encodeIfPresent(price, forKey: .price)
+        try container.encodeIfPresent(currency, forKey: .currency)
+        try container.encodeIfPresent(supplierStock, forKey: .supplierStock)
+        try container.encode(dataSource, forKey: .dataSource)
+        try container.encode(parameters, forKey: .parameters)
+    }
+
+    private static func decodeDouble<K: CodingKey>(
+        from container: KeyedDecodingContainer<K>,
+        forKey key: K
+    ) throws -> Double? {
+        if let value = try? container.decodeIfPresent(Double.self, forKey: key) {
+            return value
+        }
+        if let text = try? container.decodeIfPresent(String.self, forKey: key) {
+            return Double(text)
+        }
+        if let value = try? container.decodeIfPresent(Int.self, forKey: key) {
+            return Double(value)
+        }
+        return nil
+    }
+
+    private static func decodeInt<K: CodingKey>(
+        from container: KeyedDecodingContainer<K>,
+        forKey key: K
+    ) throws -> Int? {
+        if let value = try? container.decodeIfPresent(Int.self, forKey: key) {
+            return value
+        }
+        if let text = try? container.decodeIfPresent(String.self, forKey: key) {
+            return Int(text)
+        }
+        if let value = try? container.decodeIfPresent(Double.self, forKey: key) {
+            return Int(value)
+        }
+        return nil
+    }
+
     init(
         lcscCode: String,
         mpn: String = "",

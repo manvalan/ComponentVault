@@ -17,7 +17,9 @@ struct ComponentDetailView: View {
                     inventoryCard
                 }
                 descriptionSection
+                tagsSection
                 parametersSection
+                stockHistorySection
                 linksSection
             }
             .padding(24)
@@ -108,17 +110,49 @@ struct ComponentDetailView: View {
         GroupBox("Inventario") {
             VStack(alignment: .leading, spacing: 12) {
                 LabeledContent("Quantità") {
-                    Stepper(value: Binding(
-                        get: { component.quantity },
-                        set: { newValue in
-                            component.quantity = newValue
-                            try? store?.updateQuantity(component, to: newValue)
+                    HStack {
+                        Button { adjust(by: -1) } label: {
+                            Image(systemName: "minus.circle")
                         }
-                    ), in: 0...999_999) {
+                        .buttonStyle(.borderless)
+                        .disabled(component.quantity == 0)
+
                         Text("\(component.quantity)")
                             .font(.title3.monospacedDigit())
+                            .frame(minWidth: 48)
+
+                        Button { adjust(by: 1) } label: {
+                            Image(systemName: "plus.circle")
+                        }
+                        .buttonStyle(.borderless)
+
+                        Stepper("", value: Binding(
+                            get: { component.quantity },
+                            set: { try? store?.updateQuantity(component, to: $0) }
+                        ), in: 0...999_999)
+                        .labelsHidden()
                     }
                 }
+
+                LabeledContent("Soglia minima") {
+                    Stepper(value: Binding(
+                        get: { component.minQuantity },
+                        set: { try? store?.updateMinQuantity(component, to: $0) }
+                    ), in: 0...999_999) {
+                        Text("\(component.minQuantity)")
+                            .monospacedDigit()
+                    }
+                }
+
+                if component.isLowStock {
+                    Label(
+                        component.quantity == 0 ? "Esaurito" : "Sotto soglia",
+                        systemImage: "exclamationmark.triangle.fill"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(component.quantity == 0 ? .red : .orange)
+                }
+
                 if !component.value.isEmpty && component.value != "N/A" {
                     LabeledContent("Valore", value: component.value)
                 }
@@ -143,6 +177,55 @@ struct ComponentDetailView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: 360)
+    }
+
+    private var tagsSection: some View {
+        GroupBox("Tag & Note") {
+            VStack(alignment: .leading, spacing: 10) {
+                TagEditor(tags: component.tags) { newTags in
+                    try? store?.updateTags(component, tags: newTags)
+                }
+                TextField("Note personali…", text: Binding(
+                    get: { component.notes },
+                    set: { try? store?.updateNotes(component, notes: $0) }
+                ), axis: .vertical)
+                .textFieldStyle(.roundedBorder)
+                .lineLimit(2...4)
+            }
+        }
+    }
+
+    private var stockHistorySection: some View {
+        Group {
+            if !component.stockMovements.isEmpty {
+                GroupBox("Storico movimenti") {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(component.stockMovements.sorted(by: { $0.date > $1.date }).prefix(10), id: \.persistentModelID) { movement in
+                            HStack {
+                                Text(movement.date.formatted(date: .abbreviated, time: .shortened))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 130, alignment: .leading)
+                                Text(movement.delta >= 0 ? "+\(movement.delta)" : "\(movement.delta)")
+                                    .font(.caption.monospacedDigit().weight(.semibold))
+                                    .foregroundStyle(movement.delta >= 0 ? .green : .red)
+                                    .frame(width: 40)
+                                Text("→ \(movement.quantityAfter)")
+                                    .font(.caption.monospacedDigit())
+                                Text(movement.note.isEmpty ? movement.movementReason.label : movement.note)
+                                    .font(.caption)
+                                    .lineLimit(1)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func adjust(by delta: Int) {
+        try? store?.adjustStock(component, delta: delta, reason: .manual)
     }
 
     private var descriptionSection: some View {

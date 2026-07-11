@@ -70,11 +70,43 @@ enum CSVImporter {
     /// Carica JSON pre-generati da `json_full_data/{LCSC}.json`.
     static func importJSONArchive(from directory: URL) throws -> [ComponentRecord] {
         let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
-            .filter { $0.pathExtension == "json" }
+            .filter { $0.pathExtension.lowercased() == "json" }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
 
-        return try files.compactMap { file in
-            let data = try Data(contentsOf: file)
-            return try JSONDecoder().decode(ComponentRecord.self, from: data)
+        var records: [ComponentRecord] = []
+        var failures: [String] = []
+
+        for file in files {
+            do {
+                let data = try Data(contentsOf: file)
+                let record = try JSONDecoder().decode(ComponentRecord.self, from: data)
+                records.append(record)
+            } catch {
+                failures.append("\(file.lastPathComponent): \(error.localizedDescription)")
+            }
+        }
+
+        guard !records.isEmpty else {
+            if let first = failures.first {
+                throw ImportError.invalidJSON(first)
+            }
+            throw ImportError.emptyArchive
+        }
+
+        return records
+    }
+
+    enum ImportError: LocalizedError {
+        case emptyArchive
+        case invalidJSON(String)
+
+        var errorDescription: String? {
+            switch self {
+            case .emptyArchive:
+                "Nessun file JSON valido trovato nell'archivio."
+            case .invalidJSON(let detail):
+                "Errore lettura JSON: \(detail)"
+            }
         }
     }
 

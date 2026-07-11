@@ -65,7 +65,7 @@ def parse_lcsc_html(html: str, lcsc_code: str) -> dict:
         "brand": (ld.get("brand") or {}).get("name", ""),
         "datasheetURL": subject.get("url"),
         "imageURLs": ld.get("image", []),
-        "price": offers.get("price"),
+        "price": float(offers.get("price") or 0),
         "currency": offers.get("priceCurrency"),
         "supplierStock": offers.get("inventoryLevel"),
         "dataSource": "lcsc",
