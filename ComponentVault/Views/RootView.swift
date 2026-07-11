@@ -42,9 +42,9 @@ struct RootView: View {
         .task(id: autoSyncIntervalMinutes) {
             guard autoSyncIntervalMinutes > 0, SyncSettings.isConfigured else { return }
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(autoSyncIntervalMinutes * 60))
+                _ = try? await Task.sleep(for: .seconds(autoSyncIntervalMinutes * 60))
                 guard !Task.isCancelled else { return }
-                try? await SyncRunner.runFullSync(modelContext: modelContext)
+                _ = try? await SyncRunner.runFullSync(modelContext: modelContext)
             }
         }
     }
@@ -73,6 +73,6 @@ struct RootView: View {
 
     private func runAutoSyncIfNeeded() async {
         guard autoSyncOnLaunch, SyncSettings.isConfigured else { return }
-        try? await SyncRunner.runFullSync(modelContext: modelContext)
+        _ = try? await SyncRunner.runFullSync(modelContext: modelContext)
     }
 }

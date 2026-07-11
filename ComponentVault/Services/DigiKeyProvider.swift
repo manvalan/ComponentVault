@@ -22,13 +22,32 @@ struct DigiKeyProvider: ComponentDataProvider {
         throw ProviderError.networkFailure("DigiKey cerca per MPN, non per codice LCSC.")
     }
 
+    func searchCandidates(
+        mpn: String,
+        lcscCode: String,
+        recordCount: Int = 5
+    ) async throws -> [DigiKeyCandidate] {
+        let data = try await searchRequest(mpn: mpn, recordCount: recordCount)
+        return try DigiKeyParser.parseCandidates(
+            data: data,
+            mpn: mpn,
+            lcscCode: lcscCode,
+            currency: config.currency
+        )
+    }
+
     func fetchByMPN(_ mpn: String, lcscCode: String) async throws -> ComponentRecord {
+        let candidates = try await searchCandidates(mpn: mpn, lcscCode: lcscCode, recordCount: 1)
+        return candidates[0].record
+    }
+
+    private func searchRequest(mpn: String, recordCount: Int) async throws -> Data {
         let keyword = mpn.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !keyword.isEmpty else { throw ProviderError.invalidCode }
 
         let token = try await auth.accessToken()
 
-        var request = URLRequest(url: URL(string: "https://api.digikey.com/products/v4/search/keyword")!)
+        var request = URLRequest(url: URL(string: "\(config.apiBaseURL)/products/v4/search/keyword")!)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -37,7 +56,10 @@ struct DigiKeyProvider: ComponentDataProvider {
         request.setValue(config.currency, forHTTPHeaderField: "X-DIGIKEY-Locale-Currency")
         request.setValue(config.market, forHTTPHeaderField: "X-DIGIKEY-Locale-Site")
 
-        let body: [String: Any] = ["Keywords": keyword, "RecordCount": 1]
+        let body: [String: Any] = [
+            "Keywords": keyword,
+            "RecordCount": max(1, min(recordCount, 10)),
+        ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         let (data, response) = try await session.data(for: request)
@@ -48,12 +70,6 @@ struct DigiKeyProvider: ComponentDataProvider {
             let detail = String(data: data, encoding: .utf8) ?? "HTTP \(http.statusCode)"
             throw ProviderError.networkFailure(detail)
         }
-
-        return try DigiKeyParser.parse(
-            data: data,
-            mpn: keyword,
-            lcscCode: lcscCode,
-            currency: config.currency
-        )
+        return data
     }
 }

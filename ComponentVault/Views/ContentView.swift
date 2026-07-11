@@ -102,6 +102,8 @@ struct InventoryView: View {
     @Query(sort: \Component.lcscCode) private var components: [Component]
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage("lcscRequestDelayMs") private var lcscRequestDelayMs = 800.0
+    @AppStorage("digikeyRequestDelayMs") private var digikeyRequestDelayMs = 800.0
 
     @State private var store: ComponentStore?
     @State private var selection: Component?
@@ -109,7 +111,7 @@ struct InventoryView: View {
     @State private var showImportPanel = false
     @State private var showExport = false
     @State private var exportDocument = CSVDocument()
-    @State private var enrichProgress: (current: Int, total: Int)?
+    @State private var enrichProgress: (label: String, current: Int, total: Int)?
     @State private var importError: String?
 
     private var filteredComponents: [Component] {
@@ -201,9 +203,28 @@ struct InventoryView: View {
             Button("LCSC") {
                 guard let store else { return }
                 Task {
-                    enrichProgress = (0, filteredComponents.count)
-                    await store.enrichAllFromLCSC(components: filteredComponents) { c, t in
-                        enrichProgress = (c, t)
+                    enrichProgress = ("LCSC", 0, filteredComponents.count)
+                    await store.enrichAllFromLCSC(
+                        components: filteredComponents,
+                        delayMs: Int(lcscRequestDelayMs)
+                    ) { c, t in
+                        enrichProgress = ("LCSC", c, t)
+                    }
+                    enrichProgress = nil
+                }
+            }
+            .disabled(filteredComponents.isEmpty || store?.isLoading == true)
+
+            Button("DigiKey") {
+                guard let store else { return }
+                let eligible = filteredComponents.filter { !$0.mpn.isEmpty }
+                Task {
+                    enrichProgress = ("DigiKey", 0, eligible.count)
+                    _ = await store.enrichAllFromDigiKey(
+                        components: filteredComponents,
+                        delayMs: Int(digikeyRequestDelayMs)
+                    ) { c, t in
+                        enrichProgress = ("DigiKey", c, t)
                     }
                     enrichProgress = nil
                 }
@@ -223,7 +244,7 @@ struct InventoryView: View {
     private var statusOverlay: some View {
         VStack(spacing: 8) {
             if let enrichProgress {
-                ProgressView("LCSC \(enrichProgress.current)/\(enrichProgress.total)")
+                ProgressView("\(enrichProgress.label) \(enrichProgress.current)/\(enrichProgress.total)")
                     .padding(8)
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
             }

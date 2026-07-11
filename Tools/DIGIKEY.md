@@ -36,13 +36,26 @@ sequenceDiagram
 
 1. Vai su [developer.digikey.com](https://developer.digikey.com/) → **My Apps**
 2. Verifica che l'app sia iscritta a **Product Information V4**
-3. **Redirect URI** deve essere identico a `callback_url` in `digikey_config.yml`:
+3. **Sandbox vs Production** — le credenziali non sono intercambiabili:
+   - App **Sandbox** → `environment: sandbox` nel YAML
+   - App **Production** → `environment: production` nel YAML
+4. **Redirect URI** — Production richiede **HTTPS** con porta esplicita:
    ```
-   http://localhost:8000
+   https://localhost:8443/digikey/callback
    ```
-   Se non funziona, prova `https://localhost` (consigliato da DigiKey)
+   Sandbox può usare `http://localhost:8000`
+   - Deve coincidere **esattamente** con `callback_url` nel YAML
 
 ## Autenticazione (prima volta)
+
+### Opzione A — dall'app (consigliata)
+
+1. Apri **Impostazioni → DigiKey**
+2. Clicca **Apri login DigiKey**
+3. Se richiesto, accetta il certificato TLS locale
+4. Fai login e consenti l'accesso — il token si salva automaticamente
+
+### Opzione B — da terminale
 
 ```bash
 pip3 install requests pyyaml
@@ -73,16 +86,37 @@ Content-Type: application/json
 
 ## Config (`digikey_config.yml`)
 
-Già presente in `/Users/michelebigi/LCSC/digikey_config.yml` — **non committare** (contiene secret).
+```env
+client_id: '...'
+client_secret: '...'
+environment: 'sandbox'   # oppure production
+callback_url: 'http://localhost:8000'
+market: 'IT'
+currency: 'EUR'
+language: 'it'
+```
 
-## Prossimo passo in ComponentVault
+## Arricchimento in ComponentVault (v0.5)
 
-Quando l'autenticazione Python funziona, l'app macOS leggerà `digikey_token_cache.json` e potrà arricchire componenti per **MPN** con il pulsante "Aggiorna da DigiKey".
+- **Dettaglio componente** → pulsante **DigiKey** (richiede MPN + token)
+- **Inventario** → pulsante **DigiKey** per arricchire in bulk la lista filtrata
+- Se DigiKey restituisce più risultati, appare una sheet di scelta
+- Link **Apri su DigiKey** nel dettaglio dopo l'arricchimento
+
+### Batch offline
+
+```bash
+python3 ~/Documents/Develop/ComponentVault/Tools/digikey_enrich.py \
+  --csv "/Users/michelebigi/LCSC/Componenti Elettronici.csv"
+```
+
+Output in `/Users/michelebigi/LCSC/digikey_json_data/{LCSC}.json`
 
 ## Errori comuni
 
 | Errore | Causa | Soluzione |
 |--------|-------|-----------|
+| `Invalid clientId` | Credenziali sandbox usate su API production (o viceversa) | Imposta `environment: sandbox` o crea app Production |
 | `invalid_redirect_uri` | URI non coincide col portale | Allinea `callback_url` nel YAML |
 | `Bearer token error` | Header Authorization mancante | Aggiungi `Bearer ` prima del token |
 | `401 Unauthorized` | Token scaduto | `python3 digikey_auth.py --refresh` |

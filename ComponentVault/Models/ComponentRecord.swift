@@ -24,12 +24,15 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
     var minQuantity: Int
     var tags: [String]
     var updatedAt: String?
+    var digikeyPartNumber: String?
+    var supplierProductURL: String?
 
     enum CodingKeys: String, CodingKey {
         case lcscCode, mpn, name, description, footprint, quantity
         case category, value, brand, datasheetURL, imageURLs
         case price, currency, supplierStock, dataSource, parameters
         case notes, minQuantity, tags, updatedAt
+        case digikeyPartNumber, supplierProductURL
     }
 
     init(from decoder: Decoder) throws {
@@ -54,6 +57,8 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         minQuantity = try Self.decodeInt(from: container, forKey: .minQuantity) ?? 0
         tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
         updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt)
+        digikeyPartNumber = try container.decodeIfPresent(String.self, forKey: .digikeyPartNumber)
+        supplierProductURL = try container.decodeIfPresent(String.self, forKey: .supplierProductURL)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -78,6 +83,8 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         try container.encode(minQuantity, forKey: .minQuantity)
         try container.encode(tags, forKey: .tags)
         try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
+        try container.encodeIfPresent(digikeyPartNumber, forKey: .digikeyPartNumber)
+        try container.encodeIfPresent(supplierProductURL, forKey: .supplierProductURL)
     }
 
     private static func decodeDouble<K: CodingKey>(
@@ -132,7 +139,9 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         notes: String = "",
         minQuantity: Int = 0,
         tags: [String] = [],
-        updatedAt: String? = nil
+        updatedAt: String? = nil,
+        digikeyPartNumber: String? = nil,
+        supplierProductURL: String? = nil
     ) {
         self.lcscCode = lcscCode
         self.mpn = mpn
@@ -154,5 +163,7 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         self.minQuantity = minQuantity
         self.tags = tags
         self.updatedAt = updatedAt
+        self.digikeyPartNumber = digikeyPartNumber
+        self.supplierProductURL = supplierProductURL
     }
 }

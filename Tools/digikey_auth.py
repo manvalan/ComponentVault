@@ -37,6 +37,17 @@ AUTH_URL = "https://api.digikey.com/v1/oauth2/authorize"
 TOKEN_URL = "https://api.digikey.com/v1/oauth2/token"
 SEARCH_URL = "https://api.digikey.com/products/v4/search/keyword"
 
+SANDBOX_AUTH_URL = "https://sandbox-api.digikey.com/v1/oauth2/authorize"
+SANDBOX_TOKEN_URL = "https://sandbox-api.digikey.com/v1/oauth2/token"
+SANDBOX_SEARCH_URL = "https://sandbox-api.digikey.com/products/v4/search/keyword"
+
+
+def api_urls(config: dict) -> tuple[str, str, str]:
+    env = str(config.get("environment", "production")).lower()
+    if env == "sandbox":
+        return SANDBOX_AUTH_URL, SANDBOX_TOKEN_URL, SANDBOX_SEARCH_URL
+    return AUTH_URL, TOKEN_URL, SEARCH_URL
+
 
 def load_config() -> dict:
     with CONFIG_PATH.open(encoding="utf-8") as f:
@@ -58,16 +69,16 @@ def load_tokens() -> dict | None:
         return None
 
 
-def build_auth_url(client_id: str, redirect_uri: str) -> str:
+def build_auth_url(client_id: str, redirect_uri: str, auth_url: str) -> str:
     params = {
         "response_type": "code",
         "client_id": client_id,
         "redirect_uri": redirect_uri,
     }
-    return AUTH_URL + "?" + urllib.parse.urlencode(params)
+    return auth_url + "?" + urllib.parse.urlencode(params)
 
 
-def exchange_code(code: str, config: dict) -> dict:
+def exchange_code(code: str, config: dict, token_url: str) -> dict:
     data = {
         "code": code,
         "client_id": config["client_id"],
@@ -75,26 +86,27 @@ def exchange_code(code: str, config: dict) -> dict:
         "redirect_uri": config["callback_url"],
         "grant_type": "authorization_code",
     }
-    response = requests.post(TOKEN_URL, data=data, timeout=30)
+    response = requests.post(token_url, data=data, timeout=30)
     if response.status_code != 200:
         raise RuntimeError(f"Scambio code fallito ({response.status_code}): {response.text}")
     return response.json()
 
 
-def refresh_tokens(refresh_token: str, config: dict) -> dict:
+def refresh_tokens(refresh_token: str, config: dict, token_url: str) -> dict:
     data = {
         "refresh_token": refresh_token,
         "client_id": config["client_id"],
         "client_secret": config["client_secret"],
         "grant_type": "refresh_token",
     }
-    response = requests.post(TOKEN_URL, data=data, timeout=30)
+    response = requests.post(token_url, data=data, timeout=30)
     if response.status_code != 200:
         raise RuntimeError(f"Refresh fallito ({response.status_code}): {response.text}")
     return response.json()
 
 
 def get_access_token(config: dict, force_auth: bool = False) -> str:
+    auth_url, token_url, _ = api_urls(config)
     tokens = None if force_auth else load_tokens()
 
     if tokens and time.time() < tokens.get("expires_at", 0) - 60:
@@ -102,7 +114,7 @@ def get_access_token(config: dict, force_auth: bool = False) -> str:
 
     if tokens and tokens.get("refresh_token"):
         print("Rinnovo token con refresh_token…")
-        new_tokens = refresh_tokens(tokens["refresh_token"], config)
+        new_tokens = refresh_tokens(tokens["refresh_token"], config, token_url)
         if "refresh_token" not in new_tokens and tokens.get("refresh_token"):
             new_tokens["refresh_token"] = tokens["refresh_token"]
         save_tokens(new_tokens)
@@ -110,11 +122,13 @@ def get_access_token(config: dict, force_auth: bool = False) -> str:
 
     # Autenticazione 3-legged
     redirect_uri = config["callback_url"]
-    auth_url = build_auth_url(config["client_id"], redirect_uri)
+    login_url = build_auth_url(config["client_id"], redirect_uri, auth_url)
+    env = config.get("environment", "production")
 
     print("\n=== AUTENTICAZIONE DIGIKEY (una tantum) ===\n")
+    print(f"Ambiente: {env}")
     print("1. Apri questo URL nel browser e fai login su DigiKey:")
-    print(auth_url)
+    print(login_url)
     print("\n2. Dopo il consenso verrai reindirizzato (la pagina può dare errore — è normale).")
     print(f"3. Copia l'INTERO URL dalla barra indirizzi (deve contenere ?code=…)")
     print(f"   Il redirect_uri registrato deve essere ESATTAMENTE: {redirect_uri}\n")
@@ -124,12 +138,13 @@ def get_access_token(config: dict, force_auth: bool = False) -> str:
         raise ValueError("URL non valido: manca ?code=")
 
     code = urllib.parse.parse_qs(urllib.parse.urlparse(returned_url).query)["code"][0]
-    tokens = exchange_code(code, config)
+    tokens = exchange_code(code, config, token_url)
     save_tokens(tokens)
     return tokens["access_token"]
 
 
 def search_mpn(mpn: str, config: dict, access_token: str) -> dict:
+    _, _, search_url = api_urls(config)
     headers = {
         "Authorization": f"Bearer {access_token}",
         "X-DIGIKEY-Client-Id": config["client_id"],
@@ -139,7 +154,7 @@ def search_mpn(mpn: str, config: dict, access_token: str) -> dict:
         "Content-Type": "application/json",
     }
     body = {"Keywords": mpn, "RecordCount": 3}
-    response = requests.post(SEARCH_URL, headers=headers, json=body, timeout=30)
+    response = requests.post(search_url, headers=headers, json=body, timeout=30)
     if response.status_code != 200:
         raise RuntimeError(f"Ricerca fallita ({response.status_code}): {response.text}")
     return response.json()

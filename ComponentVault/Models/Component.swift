@@ -38,6 +38,8 @@ final class Component {
     var notes: String
     var minQuantity: Int
     var tags: [String]
+    var digikeyPartNumber: String?
+    var supplierProductURL: String?
 
     @Relationship(deleteRule: .cascade, inverse: \ComponentParameter.component)
     var parameters: [ComponentParameter]
@@ -67,6 +69,8 @@ final class Component {
         notes: String = "",
         minQuantity: Int = 0,
         tags: [String] = [],
+        digikeyPartNumber: String? = nil,
+        supplierProductURL: String? = nil,
         parameters: [ComponentParameter] = [],
         stockMovements: [StockMovement] = []
     ) {
@@ -89,6 +93,8 @@ final class Component {
         self.notes = notes
         self.minQuantity = minQuantity
         self.tags = tags
+        self.digikeyPartNumber = digikeyPartNumber
+        self.supplierProductURL = supplierProductURL
         self.parameters = parameters
         self.stockMovements = stockMovements
         self.projectItems = []
@@ -158,6 +164,8 @@ final class Component {
         notes = record.notes
         minQuantity = record.minQuantity
         tags = record.tags
+        digikeyPartNumber = record.digikeyPartNumber
+        supplierProductURL = record.supplierProductURL
         lastUpdated = Date()
 
         if !preserveQuantity {
@@ -191,7 +199,9 @@ final class Component {
             notes: notes,
             minQuantity: minQuantity,
             tags: tags,
-            updatedAt: ISO8601DateFormatter().string(from: lastUpdated)
+            updatedAt: ISO8601DateFormatter().string(from: lastUpdated),
+            digikeyPartNumber: digikeyPartNumber,
+            supplierProductURL: supplierProductURL
         )
     }
 }

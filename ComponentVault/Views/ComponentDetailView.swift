@@ -7,6 +7,7 @@ struct ComponentDetailView: View {
     @State private var selectedImageIndex = 0
     @State private var isEnriching = false
     @State private var errorMessage: String?
+    @State private var digiKeyPicker: DigiKeyCandidatePicker?
 
     var body: some View {
         ScrollView {
@@ -45,12 +46,28 @@ struct ComponentDetailView: View {
                     Label("DigiKey", systemImage: "dollarsign.circle")
                 }
                 .disabled(isEnriching || store == nil || component.mpn.isEmpty)
-                .help(component.mpn.isEmpty ? "Serve un MPN" : "Richiede token: python3 Tools/digikey_auth.py")
+                .help(component.mpn.isEmpty ? "Serve un MPN" : "Arricchisci da DigiKey (richiede token in Impostazioni)")
 
                 Link(destination: lcscURL) {
                     Label("Apri su LCSC", systemImage: "safari")
                 }
+
+                if let digiKeyURL = component.digikeyProductURL {
+                    Link(destination: digiKeyURL) {
+                        Label("Apri su DigiKey", systemImage: "cart")
+                    }
+                }
             }
+        }
+        .sheet(item: $digiKeyPicker) { picker in
+            DigiKeyCandidateSheet(
+                candidates: picker.candidates,
+                onSelect: { candidate in
+                    digiKeyPicker = nil
+                    Task { await applyDigiKeyCandidate(candidate) }
+                },
+                onCancel: { digiKeyPicker = nil }
+            )
         }
         .alert("Errore", isPresented: .constant(errorMessage != nil)) {
             Button("OK") { errorMessage = nil }
@@ -182,13 +199,19 @@ struct ComponentDetailView: View {
                 if !component.mpn.isEmpty {
                     LabeledContent("MPN", value: component.mpn)
                 }
+                if let dkpn = component.digikeyPartNumber, !dkpn.isEmpty {
+                    LabeledContent("DigiKey P/N", value: dkpn)
+                }
                 if let price = component.price, let currency = component.currency {
-                    LabeledContent("Prezzo LCSC") {
+                    LabeledContent(component.source == .digikey ? "Prezzo DigiKey" : "Prezzo LCSC") {
                         Text(String(format: "%.3f %@", price, currency))
                     }
                 }
                 if let stock = component.supplierStock {
-                    LabeledContent("Stock fornitore", value: "\(stock)")
+                    LabeledContent(
+                        component.source == .digikey ? "Stock DigiKey" : "Stock LCSC",
+                        value: "\(stock)"
+                    )
                 }
                 LabeledContent("Ultimo aggiornamento") {
                     Text(component.lastUpdated.formatted(date: .abbreviated, time: .shortened))
@@ -295,6 +318,12 @@ struct ComponentDetailView: View {
                 Label("Pagina LCSC", systemImage: "link")
             }
             .buttonStyle(.bordered)
+            if let digiKeyURL = component.digikeyProductURL {
+                Link(destination: digiKeyURL) {
+                    Label("Pagina DigiKey", systemImage: "cart")
+                }
+                .buttonStyle(.bordered)
+            }
         }
     }
 
@@ -311,13 +340,45 @@ struct ComponentDetailView: View {
             case .lcsc:
                 try await store.enrichFromLCSC(component)
             case .digikey:
-                try await store.enrichFromDigiKey(component)
+                switch try await store.enrichFromDigiKey(component) {
+                case .applied:
+                    break
+                case .chooseCandidate(let candidates):
+                    digiKeyPicker = DigiKeyCandidatePicker(candidates: candidates)
+                }
             case .manual:
                 break
             }
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func applyDigiKeyCandidate(_ candidate: DigiKeyCandidate) async {
+        guard let store else { return }
+        isEnriching = true
+        defer { isEnriching = false }
+        do {
+            try store.applyDigiKeyRecord(candidate.record, to: component)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+struct DigiKeyCandidatePicker: Identifiable {
+    let id = UUID()
+    let candidates: [DigiKeyCandidate]
+}
+
+extension Component {
+    var digikeyProductURL: URL? {
+        guard let urlString = supplierProductURL,
+              !urlString.isEmpty,
+              let url = URL(string: urlString) else {
+            return nil
+        }
+        return url
     }
 }
 

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AppKit
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
@@ -7,6 +8,7 @@ struct SettingsView: View {
 
     @AppStorage("defaultCSVPath") private var defaultCSVPath = "/Users/michelebigi/LCSC/Componenti Elettronici.csv"
     @AppStorage("lcscRequestDelayMs") private var lcscRequestDelayMs = 800.0
+    @AppStorage("digikeyRequestDelayMs") private var digikeyRequestDelayMs = 800.0
     @AppStorage("apiBaseURL") private var apiBaseURL = "https://cvault.michelebigi.it"
     @AppStorage("apiKey") private var apiKey = ""
     @AppStorage("lastSyncAt") private var lastSyncAt = ""
@@ -19,11 +21,15 @@ struct SettingsView: View {
     @State private var statusMessage: String?
     @State private var errorMessage: String?
     @State private var showPullConfirm = false
+    @State private var digiKeyRedirectURL = ""
+    @State private var digiKeyStatusMessage: String?
+    @State private var isDigiKeyBusy = false
+    @State private var digiKeyLoginTask: Task<Void, Never>?
+    @State private var digiKeyTokenExists = FileManager.default.fileExists(
+        atPath: "/Users/michelebigi/LCSC/digikey_token_cache.json"
+    )
 
     private var digiKeyConfigured: Bool { DigiKeyConfig.load() != nil }
-    private var digiKeyTokenExists: Bool {
-        FileManager.default.fileExists(atPath: "/Users/michelebigi/LCSC/digikey_token_cache.json")
-    }
 
     private var serverConfigured: Bool {
         !apiBaseURL.trimmingCharacters(in: .whitespaces).isEmpty
@@ -46,6 +52,7 @@ struct SettingsView: View {
         .navigationTitle("Impostazioni")
         .onAppear {
             if store == nil { store = ComponentStore(modelContext: modelContext) }
+            refreshDigiKeyTokenStatus()
         }
         .alert("Scaricare dal server?", isPresented: $showPullConfirm) {
             Button("Annulla", role: .cancel) {}
@@ -196,21 +203,174 @@ struct SettingsView: View {
 
     private var digiKeySection: some View {
         GroupBox("DigiKey") {
-            VStack(alignment: .leading, spacing: 8) {
-                LabeledContent("Config") {
-                    Text(digiKeyConfigured ? "digikey_config.yml ✓" : "Non trovato")
-                        .foregroundStyle(digiKeyConfigured ? Color.primary : Color.orange)
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    statusPill(label: digiKeyConfigured ? "Config ✓" : "Config mancante", ok: digiKeyConfigured)
+                    statusPill(label: digiKeyTokenExists ? "Token ✓" : "Non autenticato", ok: digiKeyTokenExists)
                 }
-                LabeledContent("Token") {
-                    Text(digiKeyTokenExists ? "Autenticato ✓" : "Non autenticato")
-                        .foregroundStyle(digiKeyTokenExists ? Color.primary : Color.orange)
+
+                if let config = DigiKeyConfig.load() {
+                    Text("Ambiente: \(config.environment.label) · \(config.apiBaseURL)")
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                    Text("Redirect URI: \(config.callbackURL)")
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
                 }
-                Text("python3 ~/Documents/Develop/ComponentVault/Tools/digikey_auth.py")
-                    .font(.caption.monospaced())
-                    .textSelection(.enabled)
-                    .foregroundStyle(.secondary)
+
+                if digiKeyConfigured {
+                    HStack(spacing: 10) {
+                        Button("Apri login DigiKey") {
+                            digiKeyLoginTask?.cancel()
+                            digiKeyLoginTask = Task { await startDigiKeyLogin() }
+                        }
+                        .disabled(isDigiKeyBusy)
+
+                        if isDigiKeyBusy {
+                            Button("Annulla") {
+                                digiKeyLoginTask?.cancel()
+                                isDigiKeyBusy = false
+                                digiKeyStatusMessage = "Annullato."
+                            }
+                        }
+
+                        Button("Rinnova token") {
+                            Task { await refreshDigiKeyToken() }
+                        }
+                        .disabled(isDigiKeyBusy || !digiKeyTokenExists)
+                    }
+
+                    DisclosureGroup("Connessione manuale (fallback)") {
+                        TextField("Incolla URL o solo il code dalla barra indirizzi", text: $digiKeyRedirectURL)
+                            .textFieldStyle(.roundedBorder)
+
+                        Button("Connetti manualmente") {
+                            Task { await connectDigiKey() }
+                        }
+                        .disabled(digiKeyRedirectURL.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                }
+
+                if isDigiKeyBusy {
+                    ProgressView("Autenticazione DigiKey…")
+                }
+
+                if let digiKeyStatusMessage {
+                    Text(digiKeyStatusMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Text("Un clic: server HTTPS locale → login DigiKey → token salvato. Il rinnovo è automatico finché il refresh token è valido.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+
+                LabeledContent("Ritardo tra richieste bulk (ms)") {
+                    HStack {
+                        Slider(value: $digikeyRequestDelayMs, in: 200...3000, step: 100)
+                        Text("\(Int(digikeyRequestDelayMs))")
+                            .monospacedDigit()
+                            .frame(width: 50)
+                    }
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func refreshDigiKeyTokenStatus() {
+        digiKeyTokenExists = FileManager.default.fileExists(
+            atPath: "/Users/michelebigi/LCSC/digikey_token_cache.json"
+        )
+    }
+
+    private func startDigiKeyLogin() async {
+        guard !Task.isCancelled else { return }
+        guard let config = DigiKeyConfig.load() else { return }
+
+        let auth = DigiKeyAuthService(config: config)
+        let loginURL = await auth.authorizationURL
+
+        guard config.supportsLocalCallbackServer else {
+            errorMessage = "callback_url senza porta. Usa es. https://localhost:8443/digikey/callback"
+            return
+        }
+
+        isDigiKeyBusy = true
+        digiKeyStatusMessage = "Avvio server OAuth su \(config.callbackURL)…"
+
+        do {
+            let code = try await DigiKeyOAuthCallbackServer.captureAuthorizationCode(
+                callbackURL: config.callbackURL
+            ) {
+                if let warmupURL = URL(string: config.callbackURL) {
+                    NSWorkspace.shared.open(warmupURL)
+                    digiKeyStatusMessage = "Se il browser avvisa sul certificato, clicca Continua/Avanzate."
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    guard !Task.isCancelled else { return }
+                    NSWorkspace.shared.open(loginURL)
+                    digiKeyStatusMessage = "Login DigiKey aperto — clicca Allow."
+                }
+            }
+
+            guard !Task.isCancelled else { return }
+
+            digiKeyStatusMessage = "Codice ricevuto, scambio token…"
+            try await auth.exchangeAuthorizationCode(code)
+            refreshDigiKeyTokenStatus()
+            if let expiry = await auth.tokenExpiryDescription {
+                digiKeyStatusMessage = "Autenticato. Scadenza token: \(expiry)"
+            } else {
+                digiKeyStatusMessage = "Autenticato con successo."
+            }
+        } catch {
+            if !Task.isCancelled {
+                errorMessage = error.localizedDescription
+                digiKeyStatusMessage = "Auto-login fallito. Apri «Connessione manuale» e incolla l'URL dal browser."
+            }
+        }
+
+        isDigiKeyBusy = false
+        digiKeyLoginTask = nil
+    }
+
+    private func connectDigiKey() async {
+        guard let config = DigiKeyConfig.load() else { return }
+        isDigiKeyBusy = true
+        defer { isDigiKeyBusy = false }
+        let auth = DigiKeyAuthService(config: config)
+        do {
+            try await auth.authenticate(withRedirectURL: digiKeyRedirectURL)
+            refreshDigiKeyTokenStatus()
+            digiKeyRedirectURL = ""
+            if let expiry = await auth.tokenExpiryDescription {
+                digiKeyStatusMessage = "Autenticato. Scadenza token: \(expiry)"
+            } else {
+                digiKeyStatusMessage = "Autenticato con successo."
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func refreshDigiKeyToken() async {
+        guard let config = DigiKeyConfig.load() else { return }
+        isDigiKeyBusy = true
+        defer { isDigiKeyBusy = false }
+        let auth = DigiKeyAuthService(config: config)
+        do {
+            try await auth.forceRefresh()
+            refreshDigiKeyTokenStatus()
+            if let expiry = await auth.tokenExpiryDescription {
+                digiKeyStatusMessage = "Token rinnovato. Scadenza: \(expiry)"
+            } else {
+                digiKeyStatusMessage = "Token rinnovato."
+            }
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 

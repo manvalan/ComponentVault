@@ -1,14 +1,43 @@
 import Foundation
 
+enum DigiKeyEnvironment: String, Codable, Sendable {
+    case production
+    case sandbox
+
+    var apiBaseURL: String {
+        switch self {
+        case .production: "https://api.digikey.com"
+        case .sandbox: "https://sandbox-api.digikey.com"
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .production: "Production"
+        case .sandbox: "Sandbox"
+        }
+    }
+}
+
 struct DigiKeyConfig: Codable, Sendable {
     var clientID: String
     var clientSecret: String
     var callbackURL: String
+    var environment: DigiKeyEnvironment
     var market: String
     var currency: String
     var language: String
 
     static let defaultPath = "/Users/michelebigi/LCSC/digikey_config.yml"
+
+    var apiBaseURL: String { environment.apiBaseURL }
+
+    /// Server locale se callback ha porta esplicita (http o https).
+    var supportsLocalCallbackServer: Bool {
+        guard let url = URL(string: callbackURL), url.port != nil else { return false }
+        let scheme = url.scheme?.lowercased()
+        return scheme == "http" || scheme == "https"
+    }
 
     static func load(from path: String = defaultPath) -> DigiKeyConfig? {
         guard let content = try? String(contentsOfFile: path, encoding: .utf8) else { return nil }
@@ -22,7 +51,10 @@ struct DigiKeyConfig: Codable, Sendable {
             guard !trimmed.isEmpty, !trimmed.hasPrefix("#"), let colon = trimmed.firstIndex(of: ":") else { continue }
             let key = String(trimmed[..<colon]).trimmingCharacters(in: .whitespaces)
             var value = String(trimmed[trimmed.index(after: colon)...]).trimmingCharacters(in: .whitespaces)
-            if value.hasPrefix("'"), value.hasSuffix("'") {
+            if let hash = value.firstIndex(of: "#") {
+                value = String(value[..<hash]).trimmingCharacters(in: .whitespaces)
+            }
+            if (value.hasPrefix("'") && value.hasSuffix("'")) || (value.hasPrefix("\"") && value.hasSuffix("\"")) {
                 value = String(value.dropFirst().dropLast())
             }
             values[key] = value
@@ -33,10 +65,14 @@ struct DigiKeyConfig: Codable, Sendable {
             return nil
         }
 
+        let environment = DigiKeyEnvironment(rawValue: values["environment"]?.lowercased() ?? "production")
+            ?? .production
+
         return DigiKeyConfig(
             clientID: clientID,
             clientSecret: clientSecret,
             callbackURL: values["callback_url"] ?? "http://localhost:8139/digikey_callback",
+            environment: environment,
             market: values["market"] ?? "IT",
             currency: values["currency"] ?? "EUR",
             language: values["language"] ?? "it"

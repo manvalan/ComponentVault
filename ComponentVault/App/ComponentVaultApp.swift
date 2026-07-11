@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AppKit
 
 @main
 struct ComponentVaultApp: App {
@@ -10,6 +11,22 @@ struct ComponentVaultApp: App {
             container = try Persistence.makeContainer()
         } catch {
             fatalError("Impossibile avviare il database: \(error.localizedDescription)")
+        }
+
+        DispatchQueue.main.async {
+            Self.applyApplicationIcon()
+        }
+    }
+
+    private static func applyApplicationIcon() {
+        if let icon = NSImage(named: "AppIcon") {
+            NSApplication.shared.applicationIconImage = icon
+            return
+        }
+
+        if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
+           let icon = NSImage(contentsOf: url) {
+            NSApplication.shared.applicationIconImage = icon
         }
     }
 

@@ -42,6 +42,8 @@ final class ComponentStore {
                     currency: record.currency,
                     supplierStock: record.supplierStock,
                     dataSource: record.dataSource,
+                    digikeyPartNumber: record.digikeyPartNumber,
+                    supplierProductURL: record.supplierProductURL,
                     parameters: record.parameters.map { ComponentParameter(name: $0.key, value: $0.value) }
                 ))
             }
@@ -91,10 +93,31 @@ final class ComponentStore {
         statusMessage = "Aggiornato \(component.lcscCode) da LCSC"
     }
 
-    func enrichFromDigiKey(_ component: Component) async throws {
+    func enrichAllFromLCSC(
+        components: [Component],
+        delayMs: Int = 800,
+        progress: ((Int, Int) -> Void)? = nil
+    ) async {
+        isLoading = true
+        defer { isLoading = false }
+
+        let total = components.count
+        for (index, component) in components.enumerated() {
+            progress?(index + 1, total)
+            do {
+                try await enrichFromLCSC(component)
+                try await Task.sleep(for: .milliseconds(delayMs))
+            } catch {
+                statusMessage = "Errore su \(component.lcscCode): \(error.localizedDescription)"
+            }
+        }
+        statusMessage = "Arricchimento LCSC completato (\(total) componenti)"
+    }
+
+    func enrichFromDigiKey(_ component: Component) async throws -> DigiKeyEnrichResult {
         guard let provider = DigiKeyProvider.configured() else {
             throw ProviderError.networkFailure(
-                "DigiKey non configurato. Esegui: python3 Tools/digikey_auth.py"
+                "DigiKey non configurato. Autenticati da Impostazioni → DigiKey."
             )
         }
         guard !component.mpn.isEmpty else {
@@ -104,7 +127,35 @@ final class ComponentStore {
         isLoading = true
         defer { isLoading = false }
 
-        let record = try await provider.fetchByMPN(component.mpn, lcscCode: component.lcscCode)
+        return try await resolveDigiKeyEnrichment(provider: provider, component: component)
+    }
+
+    private func resolveDigiKeyEnrichment(
+        provider: DigiKeyProvider,
+        component: Component
+    ) async throws -> DigiKeyEnrichResult {
+        let candidates = try await provider.searchCandidates(
+            mpn: component.mpn,
+            lcscCode: component.lcscCode
+        )
+
+        if candidates.count == 1 {
+            try applyDigiKeyRecord(candidates[0].record, to: component)
+            return .applied
+        }
+
+        let exact = candidates.filter {
+            $0.mpn.caseInsensitiveCompare(component.mpn) == .orderedSame
+        }
+        if exact.count == 1 {
+            try applyDigiKeyRecord(exact[0].record, to: component)
+            return .applied
+        }
+
+        return .chooseCandidate(candidates)
+    }
+
+    func applyDigiKeyRecord(_ record: ComponentRecord, to component: Component) throws {
         var merged = record
         merged.quantity = component.quantity
         component.apply(merged)
@@ -112,21 +163,43 @@ final class ComponentStore {
         statusMessage = "Aggiornato \(component.mpn) da DigiKey"
     }
 
-    func enrichAllFromLCSC(components: [Component], progress: ((Int, Int) -> Void)? = nil) async {
+    func enrichAllFromDigiKey(
+        components: [Component],
+        delayMs: Int = 800,
+        progress: ((Int, Int) -> Void)? = nil
+    ) async -> (enriched: Int, skipped: Int, ambiguous: Int) {
+        guard let provider = DigiKeyProvider.configured() else {
+            statusMessage = "DigiKey non configurato. Autenticati da Impostazioni."
+            return (0, components.count, 0)
+        }
+
         isLoading = true
         defer { isLoading = false }
 
-        let total = components.count
-        for (index, component) in components.enumerated() {
+        let eligible = components.filter { !$0.mpn.isEmpty }
+        let total = eligible.count
+        var enriched = 0
+        var skipped = 0
+        var ambiguous = 0
+
+        for (index, component) in eligible.enumerated() {
             progress?(index + 1, total)
             do {
-                try await enrichFromLCSC(component)
-                try await Task.sleep(for: .milliseconds(800))
+                switch try await resolveDigiKeyEnrichment(provider: provider, component: component) {
+                case .applied:
+                    enriched += 1
+                case .chooseCandidate:
+                    ambiguous += 1
+                }
+                try await Task.sleep(for: .milliseconds(delayMs))
             } catch {
+                skipped += 1
                 statusMessage = "Errore su \(component.lcscCode): \(error.localizedDescription)"
             }
         }
-        statusMessage = "Arricchimento completato (\(total) componenti)"
+
+        statusMessage = "DigiKey: \(enriched) aggiornati, \(ambiguous) ambigui, \(skipped) errori"
+        return (enriched, skipped, ambiguous)
     }
 
     func updateQuantity(_ component: Component, to quantity: Int) throws {
