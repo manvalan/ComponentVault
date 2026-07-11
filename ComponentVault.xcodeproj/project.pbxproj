@@ -1,0 +1,332 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000010000000000000001 /* ComponentVaultApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000001 /* ComponentVaultApp.swift */; };
+		A10000010000000000000002 /* Component.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000002 /* Component.swift */; };
+		A10000010000000000000003 /* ComponentParameter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000003 /* ComponentParameter.swift */; };
+		A10000010000000000000004 /* ComponentRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000004 /* ComponentRecord.swift */; };
+		A10000010000000000000005 /* ComponentDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000005 /* ComponentDataProvider.swift */; };
+		A10000010000000000000006 /* LCSCParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000006 /* LCSCParser.swift */; };
+		A10000010000000000000007 /* LCSCProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000007 /* LCSCProvider.swift */; };
+		A10000010000000000000008 /* CSVImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000008 /* CSVImporter.swift */; };
+		A10000010000000000000009 /* ComponentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000009 /* ComponentStore.swift */; };
+		A1000001000000000000000A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000A /* ContentView.swift */; };
+		A1000001000000000000000B /* ComponentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000B /* ComponentDetailView.swift */; };
+		A1000001000000000000000C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000C /* SettingsView.swift */; };
+		A1000001000000000000000D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000D /* Assets.xcassets */; };
+		A1000001000000000000000E /* DatabaseBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000F /* DatabaseBootstrap.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A20000010000000000000001 /* ComponentVaultApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentVaultApp.swift; sourceTree = "<group>"; };
+		A20000010000000000000002 /* Component.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Component.swift; sourceTree = "<group>"; };
+		A20000010000000000000003 /* ComponentParameter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentParameter.swift; sourceTree = "<group>"; };
+		A20000010000000000000004 /* ComponentRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentRecord.swift; sourceTree = "<group>"; };
+		A20000010000000000000005 /* ComponentDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentDataProvider.swift; sourceTree = "<group>"; };
+		A20000010000000000000006 /* LCSCParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCSCParser.swift; sourceTree = "<group>"; };
+		A20000010000000000000007 /* LCSCProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCSCProvider.swift; sourceTree = "<group>"; };
+		A20000010000000000000008 /* CSVImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVImporter.swift; sourceTree = "<group>"; };
+		A20000010000000000000009 /* ComponentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentStore.swift; sourceTree = "<group>"; };
+		A2000001000000000000000A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A2000001000000000000000B /* ComponentDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentDetailView.swift; sourceTree = "<group>"; };
+		A2000001000000000000000C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A2000001000000000000000D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A2000001000000000000000E /* ComponentVault.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ComponentVault.entitlements; sourceTree = "<group>"; };
+		A2000001000000000000000F /* DatabaseBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseBootstrap.swift; sourceTree = "<group>"; };
+		A30000010000000000000001 /* ComponentVault.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ComponentVault.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A40000010000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A50000010000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A50000010000000000000002 /* ComponentVault */,
+				A50000010000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A50000010000000000000002 /* ComponentVault */ = {
+			isa = PBXGroup;
+			children = (
+				A50000010000000000000004 /* App */,
+				A50000010000000000000005 /* Models */,
+				A50000010000000000000006 /* Services */,
+				A50000010000000000000007 /* Views */,
+				A2000001000000000000000D /* Assets.xcassets */,
+				A2000001000000000000000E /* ComponentVault.entitlements */,
+			);
+			path = ComponentVault;
+			sourceTree = "<group>";
+		};
+		A50000010000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A30000010000000000000001 /* ComponentVault.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A50000010000000000000004 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A20000010000000000000001 /* ComponentVaultApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A50000010000000000000005 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A20000010000000000000002 /* Component.swift */,
+				A20000010000000000000003 /* ComponentParameter.swift */,
+				A20000010000000000000004 /* ComponentRecord.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A50000010000000000000006 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A20000010000000000000005 /* ComponentDataProvider.swift */,
+				A20000010000000000000006 /* LCSCParser.swift */,
+				A20000010000000000000007 /* LCSCProvider.swift */,
+				A20000010000000000000008 /* CSVImporter.swift */,
+				A20000010000000000000009 /* ComponentStore.swift */,
+				A2000001000000000000000F /* DatabaseBootstrap.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A50000010000000000000007 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A2000001000000000000000A /* ContentView.swift */,
+				A2000001000000000000000B /* ComponentDetailView.swift */,
+				A2000001000000000000000C /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A60000010000000000000001 /* ComponentVault */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A80000010000000000000003 /* Build configuration list for PBXNativeTarget "ComponentVault" */;
+			buildPhases = (
+				A60000010000000000000002 /* Sources */,
+				A40000010000000000000001 /* Frameworks */,
+				A60000010000000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ComponentVault;
+			productName = ComponentVault;
+			productReference = A30000010000000000000001 /* ComponentVault.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A70000010000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					A60000010000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = A80000010000000000000001 /* Build configuration list for PBXProject "ComponentVault" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = it;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				it,
+				Base,
+			);
+			mainGroup = A50000010000000000000001;
+			productRefGroup = A50000010000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A60000010000000000000001 /* ComponentVault */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A60000010000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000001000000000000000D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A60000010000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000010000000000000001 /* ComponentVaultApp.swift in Sources */,
+				A10000010000000000000002 /* Component.swift in Sources */,
+				A10000010000000000000003 /* ComponentParameter.swift in Sources */,
+				A10000010000000000000004 /* ComponentRecord.swift in Sources */,
+				A10000010000000000000005 /* ComponentDataProvider.swift in Sources */,
+				A10000010000000000000006 /* LCSCParser.swift in Sources */,
+				A10000010000000000000007 /* LCSCProvider.swift in Sources */,
+				A10000010000000000000008 /* CSVImporter.swift in Sources */,
+				A10000010000000000000009 /* ComponentStore.swift in Sources */,
+				A1000001000000000000000A /* ContentView.swift in Sources */,
+				A1000001000000000000000B /* ComponentDetailView.swift in Sources */,
+				A1000001000000000000000C /* SettingsView.swift in Sources */,
+				A1000001000000000000000E /* DatabaseBootstrap.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A90000010000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A90000010000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		A90000010000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ComponentVault/ComponentVault.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = ComponentVault;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = it.michelebigi.ComponentVault;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A90000010000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ComponentVault/ComponentVault.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = ComponentVault;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = it.michelebigi.ComponentVault;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A80000010000000000000001 /* Build configuration list for PBXProject "ComponentVault" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A90000010000000000000001 /* Debug */,
+				A90000010000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A80000010000000000000003 /* Build configuration list for PBXNativeTarget "ComponentVault" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A90000010000000000000003 /* Debug */,
+				A90000010000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A70000010000000000000001 /* Project object */;
+}
