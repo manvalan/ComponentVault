@@ -20,11 +20,16 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
     var supplierStock: Int?
     var dataSource: DataSource
     var parameters: [String: String]
+    var notes: String
+    var minQuantity: Int
+    var tags: [String]
+    var updatedAt: String?
 
     enum CodingKeys: String, CodingKey {
         case lcscCode, mpn, name, description, footprint, quantity
         case category, value, brand, datasheetURL, imageURLs
         case price, currency, supplierStock, dataSource, parameters
+        case notes, minQuantity, tags, updatedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -45,6 +50,10 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         supplierStock = try Self.decodeInt(from: container, forKey: .supplierStock)
         dataSource = try container.decodeIfPresent(DataSource.self, forKey: .dataSource) ?? .manual
         parameters = try container.decodeIfPresent([String: String].self, forKey: .parameters) ?? [:]
+        notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
+        minQuantity = try Self.decodeInt(from: container, forKey: .minQuantity) ?? 0
+        tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
+        updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -65,6 +74,10 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         try container.encodeIfPresent(supplierStock, forKey: .supplierStock)
         try container.encode(dataSource, forKey: .dataSource)
         try container.encode(parameters, forKey: .parameters)
+        try container.encode(notes, forKey: .notes)
+        try container.encode(minQuantity, forKey: .minQuantity)
+        try container.encode(tags, forKey: .tags)
+        try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
     }
 
     private static func decodeDouble<K: CodingKey>(
@@ -115,7 +128,11 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         currency: String? = nil,
         supplierStock: Int? = nil,
         dataSource: DataSource = .manual,
-        parameters: [String: String] = [:]
+        parameters: [String: String] = [:],
+        notes: String = "",
+        minQuantity: Int = 0,
+        tags: [String] = [],
+        updatedAt: String? = nil
     ) {
         self.lcscCode = lcscCode
         self.mpn = mpn
@@ -133,5 +150,9 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         self.supplierStock = supplierStock
         self.dataSource = dataSource
         self.parameters = parameters
+        self.notes = notes
+        self.minQuantity = minQuantity
+        self.tags = tags
+        self.updatedAt = updatedAt
     }
 }

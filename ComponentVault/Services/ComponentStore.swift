@@ -14,15 +14,15 @@ final class ComponentStore {
         self.modelContext = modelContext
     }
 
-    func upsert(records: [ComponentRecord]) throws {
+    func upsert(records: [ComponentRecord], preserveLocalQuantity: Bool = true) throws {
         for record in records {
             let descriptor = FetchDescriptor<Component>(
                 predicate: #Predicate { $0.lcscCode == record.lcscCode }
             )
             if let existing = try modelContext.fetch(descriptor).first {
                 let savedQty = existing.quantity
-                existing.apply(record)
-                if record.quantity == 0 && savedQty > 0 {
+                existing.apply(record, preserveQuantity: preserveLocalQuantity)
+                if preserveLocalQuantity && record.quantity == 0 && savedQty > 0 {
                     existing.quantity = savedQty
                 }
             } else {
@@ -89,6 +89,27 @@ final class ComponentStore {
         component.apply(merged)
         try modelContext.save()
         statusMessage = "Aggiornato \(component.lcscCode) da LCSC"
+    }
+
+    func enrichFromDigiKey(_ component: Component) async throws {
+        guard let provider = DigiKeyProvider.configured() else {
+            throw ProviderError.networkFailure(
+                "DigiKey non configurato. Esegui: python3 Tools/digikey_auth.py"
+            )
+        }
+        guard !component.mpn.isEmpty else {
+            throw ProviderError.invalidCode
+        }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        let record = try await provider.fetchByMPN(component.mpn, lcscCode: component.lcscCode)
+        var merged = record
+        merged.quantity = component.quantity
+        component.apply(merged)
+        try modelContext.save()
+        statusMessage = "Aggiornato \(component.mpn) da DigiKey"
     }
 
     func enrichAllFromLCSC(components: [Component], progress: ((Int, Int) -> Void)? = nil) async {
@@ -159,5 +180,73 @@ final class ComponentStore {
             if lhs.quantity == rhs.quantity { return lhs.lcscCode < rhs.lcscCode }
             return lhs.quantity < rhs.quantity
         }
+    }
+
+    func pushToRemote(config: RemoteAPIConfig) async throws -> Int {
+        isLoading = true
+        defer { isLoading = false }
+
+        let descriptor = FetchDescriptor<Component>(sortBy: [SortDescriptor(\.lcscCode)])
+        let components = try modelContext.fetch(descriptor)
+        let records = components.map { $0.toRecord() }
+        let upserted = try await RemoteAPIClient.pushComponents(records, config: config)
+        statusMessage = "Caricati \(upserted) componenti sul server"
+        return upserted
+    }
+
+    func pullFromRemote(config: RemoteAPIConfig) async throws -> Int {
+        isLoading = true
+        defer { isLoading = false }
+
+        let records = try await RemoteAPIClient.fetchComponents(config: config)
+        try upsert(records: records, preserveLocalQuantity: false)
+        statusMessage = "Scaricati \(records.count) componenti dal server"
+        return records.count
+    }
+
+    func syncBidirectional(config: RemoteAPIConfig) async throws -> SyncBidirectionalResult {
+        isLoading = true
+        defer { isLoading = false }
+
+        let remoteRecords = try await RemoteAPIClient.fetchComponents(config: config)
+        let remoteByCode = Dictionary(uniqueKeysWithValues: remoteRecords.map { ($0.lcscCode, $0) })
+
+        let descriptor = FetchDescriptor<Component>(sortBy: [SortDescriptor(\.lcscCode)])
+        let localComponents = try modelContext.fetch(descriptor)
+        let localByCode = Dictionary(uniqueKeysWithValues: localComponents.map { ($0.lcscCode, $0) })
+
+        var toPush: [ComponentRecord] = []
+        var pulled = 0
+        var unchanged = 0
+
+        for (code, local) in localByCode {
+            let localRecord = local.toRecord()
+            if let remote = remoteByCode[code] {
+                let localDate = local.lastUpdated
+                let remoteDate = SyncDateParser.parse(remote.updatedAt)
+                if localDate > remoteDate.addingTimeInterval(1) {
+                    toPush.append(localRecord)
+                } else if remoteDate > localDate.addingTimeInterval(1) {
+                    local.apply(remote, preserveQuantity: false)
+                    pulled += 1
+                } else {
+                    unchanged += 1
+                }
+            } else {
+                toPush.append(localRecord)
+            }
+        }
+
+        for (code, remote) in remoteByCode where localByCode[code] == nil {
+            try upsert(records: [remote], preserveLocalQuantity: false)
+            pulled += 1
+        }
+
+        let pushed = toPush.isEmpty ? 0 : try await RemoteAPIClient.pushComponents(toPush, config: config)
+        try modelContext.save()
+
+        let result = SyncBidirectionalResult(pushed: pushed, pulled: pulled, unchanged: unchanged)
+        statusMessage = result.summary
+        return result
     }
 }

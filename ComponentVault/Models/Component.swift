@@ -104,6 +104,27 @@ final class Component {
         return lcscCode
     }
 
+    /// Nome leggibile del componente (descrizione CSV/LCSC o categoria).
+    var displayCommonName: String {
+        let description = componentDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !description.isEmpty { return description }
+
+        if let categoryLeaf = category.split(separator: "/").last.map(String.init),
+           !categoryLeaf.isEmpty {
+            return categoryLeaf
+        }
+
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedName.isEmpty {
+            if !brand.isEmpty, trimmedName.hasPrefix(brand) {
+                return trimmedName.dropFirst(brand.count).trimmingCharacters(in: .whitespaces)
+            }
+            return trimmedName
+        }
+
+        return ""
+    }
+
     var primaryImageURL: URL? {
         guard let first = imageURLs.first else { return nil }
         return URL(string: first)
@@ -120,7 +141,7 @@ final class Component {
         category.components(separatedBy: "/").first ?? category
     }
 
-    func apply(_ record: ComponentRecord) {
+    func apply(_ record: ComponentRecord, preserveQuantity: Bool = true) {
         mpn = record.mpn
         name = record.name
         componentDescription = record.description
@@ -134,11 +155,43 @@ final class Component {
         currency = record.currency
         supplierStock = record.supplierStock
         dataSource = record.dataSource.rawValue
+        notes = record.notes
+        minQuantity = record.minQuantity
+        tags = record.tags
         lastUpdated = Date()
+
+        if !preserveQuantity {
+            quantity = record.quantity
+        }
 
         for parameter in parameters { parameter.component = nil }
         parameters = record.parameters.map { key, value in
             ComponentParameter(name: key, value: value)
         }
+    }
+
+    func toRecord() -> ComponentRecord {
+        ComponentRecord(
+            lcscCode: lcscCode,
+            mpn: mpn,
+            name: name,
+            description: componentDescription,
+            footprint: footprint,
+            quantity: quantity,
+            category: category,
+            value: value,
+            brand: brand,
+            datasheetURL: datasheetURL,
+            imageURLs: imageURLs,
+            price: price,
+            currency: currency,
+            supplierStock: supplierStock,
+            dataSource: source,
+            parameters: Dictionary(uniqueKeysWithValues: parameters.map { ($0.name, $0.value) }),
+            notes: notes,
+            minQuantity: minQuantity,
+            tags: tags,
+            updatedAt: ISO8601DateFormatter().string(from: lastUpdated)
+        )
     }
 }

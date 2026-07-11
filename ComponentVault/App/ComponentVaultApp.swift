@@ -16,7 +16,16 @@ struct ComponentVaultApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .frame(
+                    minWidth: AppLayout.minWidth,
+                    minHeight: AppLayout.minHeight
+                )
         }
+        .defaultSize(
+            width: AppLayout.defaultWidth,
+            height: AppLayout.defaultHeight
+        )
+        .windowResizability(.contentMinSize)
         .modelContainer(container)
         .commands {
             CommandGroup(replacing: .newItem) {
@@ -36,6 +45,7 @@ struct ComponentVaultApp: App {
         Settings {
             SettingsView()
         }
+        .modelContainer(container)
     }
 }
 

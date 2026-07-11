@@ -24,19 +24,28 @@ struct ComponentDetailView: View {
             }
             .padding(24)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle(component.displayTitle)
         .toolbar {
             ToolbarItemGroup {
                 Button {
-                    Task { await enrich() }
+                    Task { await enrich(source: .lcsc) }
                 } label: {
                     if isEnriching {
                         ProgressView().controlSize(.small)
                     } else {
-                        Label("Aggiorna da LCSC", systemImage: "arrow.clockwise")
+                        Label("LCSC", systemImage: "arrow.clockwise")
                     }
                 }
                 .disabled(isEnriching || store == nil)
+
+                Button {
+                    Task { await enrich(source: .digikey) }
+                } label: {
+                    Label("DigiKey", systemImage: "dollarsign.circle")
+                }
+                .disabled(isEnriching || store == nil || component.mpn.isEmpty)
+                .help(component.mpn.isEmpty ? "Serve un MPN" : "Richiede token: python3 Tools/digikey_auth.py")
 
                 Link(destination: lcscURL) {
                     Label("Apri su LCSC", systemImage: "safari")
@@ -57,9 +66,20 @@ struct ComponentDetailView: View {
                     .font(.title2.monospaced())
                 SourceBadge(source: component.source)
             }
+            if !component.displayCommonName.isEmpty {
+                Text(component.displayCommonName)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if !component.mpn.isEmpty {
+                Text(component.mpn)
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.tertiary)
+            }
             if !component.brand.isEmpty {
                 Text(component.brand)
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
             if !component.category.isEmpty {
@@ -282,12 +302,19 @@ struct ComponentDetailView: View {
         URL(string: "https://www.lcsc.com/product-detail/\(component.lcscCode).html")!
     }
 
-    private func enrich() async {
+    private func enrich(source: DataSource) async {
         guard let store else { return }
         isEnriching = true
         defer { isEnriching = false }
         do {
-            try await store.enrichFromLCSC(component)
+            switch source {
+            case .lcsc:
+                try await store.enrichFromLCSC(component)
+            case .digikey:
+                try await store.enrichFromDigiKey(component)
+            case .manual:
+                break
+            }
         } catch {
             errorMessage = error.localizedDescription
         }

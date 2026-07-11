@@ -5,6 +5,9 @@ struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Component.lcscCode) private var components: [Component]
 
+    @AppStorage("autoSyncOnLaunch") private var autoSyncOnLaunch = false
+    @AppStorage("autoSyncIntervalMinutes") private var autoSyncIntervalMinutes = 0
+
     @State private var isReady = false
     @State private var bootstrapError: String?
 
@@ -31,8 +34,18 @@ struct RootView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task {
             await loadInventory(force: false)
+            await runAutoSyncIfNeeded()
+        }
+        .task(id: autoSyncIntervalMinutes) {
+            guard autoSyncIntervalMinutes > 0, SyncSettings.isConfigured else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(autoSyncIntervalMinutes * 60))
+                guard !Task.isCancelled else { return }
+                try? await SyncRunner.runFullSync(modelContext: modelContext)
+            }
         }
     }
 
@@ -56,5 +69,10 @@ struct RootView: View {
             bootstrapError = error.localizedDescription
         }
         isReady = true
+    }
+
+    private func runAutoSyncIfNeeded() async {
+        guard autoSyncOnLaunch, SyncSettings.isConfigured else { return }
+        try? await SyncRunner.runFullSync(modelContext: modelContext)
     }
 }

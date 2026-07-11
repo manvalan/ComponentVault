@@ -47,7 +47,10 @@ struct LowStockView: View {
                 .padding(8)
                 .background(.bar)
             }
-            .navigationSplitViewColumnWidth(min: 280, ideal: 340)
+            .navigationSplitViewColumnWidth(
+                min: AppLayout.alertsListMin,
+                ideal: AppLayout.alertsListIdeal
+            )
         } detail: {
             if let selection {
                 ComponentDetailView(component: selection, store: store)
@@ -59,6 +62,8 @@ struct LowStockView: View {
                 )
             }
         }
+        .navigationSplitViewStyle(.balanced)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             if store == nil { store = ComponentStore(modelContext: modelContext) }
         }
@@ -82,6 +87,12 @@ struct LowStockRow: View {
                 Text(component.lcscCode)
                     .font(.caption.monospaced())
                     .foregroundStyle(.secondary)
+                if !component.displayCommonName.isEmpty {
+                    Text(component.displayCommonName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {

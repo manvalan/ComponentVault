@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		A10000010000000000000001 /* ComponentVaultApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000001 /* ComponentVaultApp.swift */; };
+		A10000010000000000000024 /* AppLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000024 /* AppLayout.swift */; };
+		A10000010000000000000025 /* RemoteAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000025 /* RemoteAPIClient.swift */; };
 		A10000010000000000000002 /* Component.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000002 /* Component.swift */; };
 		A10000010000000000000003 /* ComponentParameter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000003 /* ComponentParameter.swift */; };
 		A10000010000000000000004 /* ComponentRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000004 /* ComponentRecord.swift */; };
@@ -35,10 +37,21 @@
 		A1000001000000000000001B /* BOMImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000001B /* BOMImporter.swift */; };
 		A1000001000000000000001C /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000001C /* Persistence.swift */; };
 		A1000001000000000000001D /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000001D /* RootView.swift */; };
+		A1000001000000000000001E /* ComponentType.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000001E /* ComponentType.swift */; };
+		A1000001000000000000001F /* CatalogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000001F /* CatalogView.swift */; };
+		A10000010000000000000020 /* DigiKeyConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000020 /* DigiKeyConfig.swift */; };
+		A10000010000000000000021 /* DigiKeyAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000021 /* DigiKeyAuthService.swift */; };
+		A10000010000000000000022 /* DigiKeyParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000022 /* DigiKeyParser.swift */; };
+		A10000010000000000000023 /* DigiKeyProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000023 /* DigiKeyProvider.swift */; };
+		A10000010000000000000026 /* SyncSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000026 /* SyncSettings.swift */; };
+		A10000010000000000000027 /* ProjectRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000027 /* ProjectRecord.swift */; };
+		A10000010000000000000028 /* SyncRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000028 /* SyncRunner.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		A20000010000000000000001 /* ComponentVaultApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentVaultApp.swift; sourceTree = "<group>"; };
+		A20000010000000000000024 /* AppLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLayout.swift; sourceTree = "<group>"; };
+		A20000010000000000000025 /* RemoteAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteAPIClient.swift; sourceTree = "<group>"; };
 		A20000010000000000000002 /* Component.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Component.swift; sourceTree = "<group>"; };
 		A20000010000000000000003 /* ComponentParameter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentParameter.swift; sourceTree = "<group>"; };
 		A20000010000000000000004 /* ComponentRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentRecord.swift; sourceTree = "<group>"; };
@@ -67,6 +80,15 @@
 		A2000001000000000000001B /* BOMImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BOMImporter.swift; sourceTree = "<group>"; };
 		A2000001000000000000001C /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
 		A2000001000000000000001D /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		A2000001000000000000001E /* ComponentType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentType.swift; sourceTree = "<group>"; };
+		A2000001000000000000001F /* CatalogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogView.swift; sourceTree = "<group>"; };
+		A20000010000000000000020 /* DigiKeyConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigiKeyConfig.swift; sourceTree = "<group>"; };
+		A20000010000000000000021 /* DigiKeyAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigiKeyAuthService.swift; sourceTree = "<group>"; };
+		A20000010000000000000022 /* DigiKeyParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigiKeyParser.swift; sourceTree = "<group>"; };
+		A20000010000000000000023 /* DigiKeyProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigiKeyProvider.swift; sourceTree = "<group>"; };
+		A20000010000000000000026 /* SyncSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSettings.swift; sourceTree = "<group>"; };
+		A20000010000000000000027 /* ProjectRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRecord.swift; sourceTree = "<group>"; };
+		A20000010000000000000028 /* SyncRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncRunner.swift; sourceTree = "<group>"; };
 		A30000010000000000000001 /* ComponentVault.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ComponentVault.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -114,6 +136,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000010000000000000001 /* ComponentVaultApp.swift */,
+				A20000010000000000000024 /* AppLayout.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -126,6 +149,8 @@
 				A20000010000000000000004 /* ComponentRecord.swift */,
 				A20000010000000000000010 /* StockMovement.swift */,
 				A20000010000000000000011 /* Project.swift */,
+				A2000001000000000000001E /* ComponentType.swift */,
+				A20000010000000000000027 /* ProjectRecord.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -145,6 +170,13 @@
 				A20000010000000000000015 /* CSVDocument.swift */,
 				A2000001000000000000001B /* BOMImporter.swift */,
 				A2000001000000000000001C /* Persistence.swift */,
+				A20000010000000000000020 /* DigiKeyConfig.swift */,
+				A20000010000000000000021 /* DigiKeyAuthService.swift */,
+				A20000010000000000000022 /* DigiKeyParser.swift */,
+				A20000010000000000000023 /* DigiKeyProvider.swift */,
+				A20000010000000000000025 /* RemoteAPIClient.swift */,
+				A20000010000000000000026 /* SyncSettings.swift */,
+				A20000010000000000000028 /* SyncRunner.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -161,6 +193,7 @@
 				A20000010000000000000019 /* LowStockView.swift */,
 				A2000001000000000000001A /* TagEditor.swift */,
 				A2000001000000000000001D /* RootView.swift */,
+				A2000001000000000000001F /* CatalogView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -236,6 +269,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000010000000000000001 /* ComponentVaultApp.swift in Sources */,
+				A10000010000000000000024 /* AppLayout.swift in Sources */,
+				A10000010000000000000025 /* RemoteAPIClient.swift in Sources */,
 				A10000010000000000000002 /* Component.swift in Sources */,
 				A10000010000000000000003 /* ComponentParameter.swift in Sources */,
 				A10000010000000000000004 /* ComponentRecord.swift in Sources */,
@@ -262,6 +297,15 @@
 				A1000001000000000000001B /* BOMImporter.swift in Sources */,
 				A1000001000000000000001C /* Persistence.swift in Sources */,
 				A1000001000000000000001D /* RootView.swift in Sources */,
+				A1000001000000000000001E /* ComponentType.swift in Sources */,
+				A1000001000000000000001F /* CatalogView.swift in Sources */,
+				A10000010000000000000020 /* DigiKeyConfig.swift in Sources */,
+				A10000010000000000000021 /* DigiKeyAuthService.swift in Sources */,
+				A10000010000000000000022 /* DigiKeyParser.swift in Sources */,
+				A10000010000000000000023 /* DigiKeyProvider.swift in Sources */,
+				A10000010000000000000026 /* SyncSettings.swift in Sources */,
+				A10000010000000000000027 /* ProjectRecord.swift in Sources */,
+				A10000010000000000000028 /* SyncRunner.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

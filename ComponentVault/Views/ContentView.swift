@@ -4,24 +4,30 @@ import UniformTypeIdentifiers
 
 enum AppSection: String, CaseIterable, Identifiable {
     case inventory
+    case catalog
     case projects
     case alerts
+    case settings
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .inventory: "Inventario"
+        case .catalog: "Catalogo"
         case .projects: "Progetti"
         case .alerts: "Alert"
+        case .settings: "Impostazioni"
         }
     }
 
     var icon: String {
         switch self {
         case .inventory: "tray.full"
+        case .catalog: "square.grid.2x2"
         case .projects: "folder"
         case .alerts: "exclamationmark.triangle"
+        case .settings: "gearshape"
         }
     }
 }
@@ -30,22 +36,64 @@ struct ContentView: View {
     @State private var section: AppSection = .inventory
 
     var body: some View {
-        NavigationSplitView {
-            List(AppSection.allCases, selection: $section) { item in
-                Label(item.title, systemImage: item.icon)
-                    .tag(item)
+        HStack(spacing: 0) {
+            AppSectionSidebar(selection: $section)
+                .frame(width: AppLayout.sectionSidebarWidth)
+
+            Divider()
+
+            Group {
+                switch section {
+                case .inventory:
+                    InventoryView()
+                case .catalog:
+                    CatalogView()
+                case .projects:
+                    ProjectsView()
+                case .alerts:
+                    LowStockView()
+                case .settings:
+                    SettingsView()
+                }
             }
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-        } detail: {
-            switch section {
-            case .inventory:
-                InventoryView()
-            case .projects:
-                ProjectsView()
-            case .alerts:
-                LowStockView()
-            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+struct AppSectionSidebar: View {
+    @Binding var selection: AppSection
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("ComponentVault")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 10)
+                .padding(.top, 4)
+
+            ForEach(AppSection.allCases) { item in
+                Button {
+                    selection = item
+                } label: {
+                    Label(item.title, systemImage: item.icon)
+                        .font(.subheadline)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(
+                            selection == item ? Color.accentColor.opacity(0.14) : Color.clear,
+                            in: RoundedRectangle(cornerRadius: 8)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(8)
+        .background(.bar)
     }
 }
 
@@ -85,6 +133,8 @@ struct InventoryView: View {
             }
         }
         .navigationTitle("Inventario")
+        .navigationSplitViewStyle(.balanced)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             if store == nil { store = ComponentStore(modelContext: modelContext) }
         }
@@ -131,7 +181,10 @@ struct InventoryView: View {
 
             inventoryToolbar
         }
-        .navigationSplitViewColumnWidth(min: 300, ideal: 360)
+        .navigationSplitViewColumnWidth(
+            min: AppLayout.inventoryListMin,
+            ideal: AppLayout.inventoryListIdeal
+        )
     }
 
     private var inventoryToolbar: some View {
@@ -279,6 +332,12 @@ struct ComponentRowView: View {
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }
+                }
+                if !component.displayCommonName.isEmpty {
+                    Text(component.displayCommonName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
                 }
                 if !component.footprint.isEmpty {
                     Text(component.footprint)

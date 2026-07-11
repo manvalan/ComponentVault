@@ -32,7 +32,10 @@ struct ProjectsView: View {
                 .padding(8)
                 .background(.bar)
             }
-            .navigationSplitViewColumnWidth(min: 260, ideal: 300)
+            .navigationSplitViewColumnWidth(
+                min: AppLayout.projectsListMin,
+                ideal: AppLayout.projectsListIdeal
+            )
         } detail: {
             if let selection {
                 ProjectDetailView(project: selection, projectStore: projectStore)
@@ -44,6 +47,8 @@ struct ProjectsView: View {
                 )
             }
         }
+        .navigationSplitViewStyle(.balanced)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             if projectStore == nil {
                 projectStore = ProjectStore(modelContext: modelContext)

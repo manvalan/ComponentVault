@@ -37,12 +37,3 @@ struct LCSCProvider: ComponentDataProvider {
         return try LCSCParser.parse(html: html, lcscCode: code)
     }
 }
-
-/// Placeholder per integrazione futura DigiKey OAuth2.
-struct DigiKeyProvider: ComponentDataProvider {
-    let source: DataSource = .digikey
-
-    func fetch(lcscCode: String) async throws -> ComponentRecord {
-        throw ProviderError.networkFailure("DigiKey non ancora implementato")
-    }
-}
