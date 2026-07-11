@@ -18,6 +18,7 @@ struct ComponentDetailView: View {
                     inventoryCard
                 }
                 descriptionSection
+                digikeyCommercialSection
                 tagsSection
                 parametersSection
                 stockHistorySection
@@ -204,7 +205,17 @@ struct ComponentDetailView: View {
                 }
                 if let price = component.price, let currency = component.currency {
                     LabeledContent(component.source == .digikey ? "Prezzo DigiKey" : "Prezzo LCSC") {
-                        Text(String(format: "%.3f %@", price, currency))
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text(String(format: "%.4f %@", price, currency))
+                            if component.source == .digikey,
+                               let qtyPrice = component.digikeyUnitPriceForInventory,
+                               component.quantity > 0,
+                               abs(qtyPrice - price) > 0.0001 {
+                                Text("a qty \(component.quantity): \(String(format: "%.4f", qtyPrice)) \(currency)")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                 }
                 if let stock = component.supplierStock {
@@ -269,6 +280,64 @@ struct ComponentDetailView: View {
 
     private func adjust(by delta: Int) {
         try? store?.adjustStock(component, delta: delta, reason: .manual)
+    }
+
+    private var digikeyCommercialSection: some View {
+        Group {
+            if component.source == .digikey || !component.priceBreaks.isEmpty {
+                GroupBox("DigiKey — dati commerciali") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        if let moq = component.minimumOrderQuantity, moq > 1 {
+                            LabeledContent("MOQ", value: "\(moq)")
+                        }
+                        if let weeks = component.leadTimeWeeks {
+                            LabeledContent("Lead time", value: "\(weeks) settimane")
+                        }
+                        if let status = component.digikeyProductStatus, !status.isEmpty {
+                            LabeledContent("Stato prodotto", value: status)
+                        }
+                        if let fetched = component.digikeyLastFetched {
+                            LabeledContent("Prezzi aggiornati") {
+                                Text(fetched.formatted(date: .abbreviated, time: .shortened))
+                            }
+                        }
+
+                        if !component.priceBreaks.isEmpty {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Scaglioni prezzo")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+
+                                Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 4) {
+                                    GridRow {
+                                        Text("Qty").font(.caption.weight(.semibold))
+                                        Text("Unitario").font(.caption.weight(.semibold))
+                                        Text("Totale").font(.caption.weight(.semibold))
+                                    }
+                                    ForEach(component.priceBreaks) { tier in
+                                        let highlight = component.quantity >= tier.quantity
+                                        GridRow {
+                                            Text("\(tier.quantity)+")
+                                                .font(.caption.monospacedDigit())
+                                                .foregroundStyle(highlight ? .primary : .secondary)
+                                            Text(String(format: "%.4f", tier.unitPrice))
+                                                .font(.caption.monospacedDigit())
+                                                .foregroundStyle(highlight ? .green : .secondary)
+                                            Text(tier.totalPrice.map { String(format: "%.2f", $0) } ?? "—")
+                                                .font(.caption.monospacedDigit())
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        .padding(.vertical, 2)
+                                        .background(highlight ? Color.green.opacity(0.08) : Color.clear)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        }
     }
 
     private var descriptionSection: some View {
@@ -359,7 +428,7 @@ struct ComponentDetailView: View {
         isEnriching = true
         defer { isEnriching = false }
         do {
-            try store.applyDigiKeyRecord(candidate.record, to: component)
+            try await store.applyDigiKeyRecord(candidate.record, to: component)
         } catch {
             errorMessage = error.localizedDescription
         }

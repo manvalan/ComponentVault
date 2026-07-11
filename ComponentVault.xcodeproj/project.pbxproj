@@ -51,6 +51,8 @@
 		A1000001000000000000002B /* DigiKeyCandidate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000002B /* DigiKeyCandidate.swift */; };
 		A1000001000000000000002C /* DigiKeyEnrichResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000002C /* DigiKeyEnrichResult.swift */; };
 		A1000001000000000000002D /* DigiKeyCandidateSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000002D /* DigiKeyCandidateSheet.swift */; };
+		A1000001000000000000002F /* PriceBreak.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000002F /* PriceBreak.swift */; };
+		A10000010000000000000030 /* DigiKeyCommercialParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000030 /* DigiKeyCommercialParser.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -98,6 +100,8 @@
 		A2000001000000000000002B /* DigiKeyCandidate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigiKeyCandidate.swift; sourceTree = "<group>"; };
 		A2000001000000000000002C /* DigiKeyEnrichResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigiKeyEnrichResult.swift; sourceTree = "<group>"; };
 		A2000001000000000000002D /* DigiKeyCandidateSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigiKeyCandidateSheet.swift; sourceTree = "<group>"; };
+		A2000001000000000000002F /* PriceBreak.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceBreak.swift; sourceTree = "<group>"; };
+		A20000010000000000000030 /* DigiKeyCommercialParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigiKeyCommercialParser.swift; sourceTree = "<group>"; };
 		A2000001000000000000002A /* localhost.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; path = localhost.p12; sourceTree = "<group>"; };
 		A30000010000000000000001 /* ComponentVault.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ComponentVault.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -159,6 +163,7 @@
 				A20000010000000000000003 /* ComponentParameter.swift */,
 				A20000010000000000000004 /* ComponentRecord.swift */,
 				A2000001000000000000002B /* DigiKeyCandidate.swift */,
+				A2000001000000000000002F /* PriceBreak.swift */,
 				A20000010000000000000010 /* StockMovement.swift */,
 				A20000010000000000000011 /* Project.swift */,
 				A2000001000000000000001E /* ComponentType.swift */,
@@ -191,6 +196,7 @@
 				A20000010000000000000028 /* SyncRunner.swift */,
 				A20000010000000000000029 /* DigiKeyOAuthCallbackServer.swift */,
 				A2000001000000000000002C /* DigiKeyEnrichResult.swift */,
+				A20000010000000000000030 /* DigiKeyCommercialParser.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -334,6 +340,8 @@
 				A1000001000000000000002B /* DigiKeyCandidate.swift in Sources */,
 				A1000001000000000000002C /* DigiKeyEnrichResult.swift in Sources */,
 				A1000001000000000000002D /* DigiKeyCandidateSheet.swift in Sources */,
+				A1000001000000000000002F /* PriceBreak.swift in Sources */,
+				A10000010000000000000030 /* DigiKeyCommercialParser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

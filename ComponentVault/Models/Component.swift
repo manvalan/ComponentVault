@@ -40,6 +40,11 @@ final class Component {
     var tags: [String]
     var digikeyPartNumber: String?
     var supplierProductURL: String?
+    var priceBreaksJSON: String
+    var minimumOrderQuantity: Int?
+    var leadTimeWeeks: Int?
+    var digikeyProductStatus: String?
+    var digikeyLastFetched: Date?
 
     @Relationship(deleteRule: .cascade, inverse: \ComponentParameter.component)
     var parameters: [ComponentParameter]
@@ -71,6 +76,11 @@ final class Component {
         tags: [String] = [],
         digikeyPartNumber: String? = nil,
         supplierProductURL: String? = nil,
+        priceBreaksJSON: String = "[]",
+        minimumOrderQuantity: Int? = nil,
+        leadTimeWeeks: Int? = nil,
+        digikeyProductStatus: String? = nil,
+        digikeyLastFetched: Date? = nil,
         parameters: [ComponentParameter] = [],
         stockMovements: [StockMovement] = []
     ) {
@@ -95,6 +105,11 @@ final class Component {
         self.tags = tags
         self.digikeyPartNumber = digikeyPartNumber
         self.supplierProductURL = supplierProductURL
+        self.priceBreaksJSON = priceBreaksJSON
+        self.minimumOrderQuantity = minimumOrderQuantity
+        self.leadTimeWeeks = leadTimeWeeks
+        self.digikeyProductStatus = digikeyProductStatus
+        self.digikeyLastFetched = digikeyLastFetched
         self.parameters = parameters
         self.stockMovements = stockMovements
         self.projectItems = []
@@ -143,6 +158,15 @@ final class Component {
         return quantity == 0
     }
 
+    var priceBreaks: [PriceBreak] {
+        get { PriceBreakCodec.decode(priceBreaksJSON) }
+        set { priceBreaksJSON = PriceBreakCodec.encode(newValue) }
+    }
+
+    var digikeyUnitPriceForInventory: Double? {
+        PriceBreakCodec.unitPrice(for: max(quantity, 1), in: priceBreaks)
+    }
+
     var categoryRoot: String {
         category.components(separatedBy: "/").first ?? category
     }
@@ -166,6 +190,15 @@ final class Component {
         tags = record.tags
         digikeyPartNumber = record.digikeyPartNumber
         supplierProductURL = record.supplierProductURL
+        priceBreaks = record.priceBreaks
+        minimumOrderQuantity = record.minimumOrderQuantity
+        leadTimeWeeks = record.leadTimeWeeks
+        digikeyProductStatus = record.digikeyProductStatus
+        if let fetched = record.digikeyLastFetched {
+            digikeyLastFetched = ISO8601DateFormatter().date(from: fetched) ?? Date()
+        } else if record.dataSource == .digikey {
+            digikeyLastFetched = Date()
+        }
         lastUpdated = Date()
 
         if !preserveQuantity {
@@ -201,7 +234,12 @@ final class Component {
             tags: tags,
             updatedAt: ISO8601DateFormatter().string(from: lastUpdated),
             digikeyPartNumber: digikeyPartNumber,
-            supplierProductURL: supplierProductURL
+            supplierProductURL: supplierProductURL,
+            priceBreaks: priceBreaks,
+            minimumOrderQuantity: minimumOrderQuantity,
+            leadTimeWeeks: leadTimeWeeks,
+            digikeyProductStatus: digikeyProductStatus,
+            digikeyLastFetched: digikeyLastFetched.map { ISO8601DateFormatter().string(from: $0) }
         )
     }
 }

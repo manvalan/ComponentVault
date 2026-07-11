@@ -96,12 +96,23 @@ currency: 'EUR'
 language: 'it'
 ```
 
-## Arricchimento in ComponentVault (v0.5)
+## Arricchimento in ComponentVault (v0.5–v0.6)
 
 - **Dettaglio componente** → pulsante **DigiKey** (richiede MPN + token)
 - **Inventario** → pulsante **DigiKey** per arricchire in bulk la lista filtrata
 - Se DigiKey restituisce più risultati, appare una sheet di scelta
 - Link **Apri su DigiKey** nel dettaglio dopo l'arricchimento
+
+### Dati commerciali (v0.6)
+
+Dopo l'arricchimento, l'app chiama automaticamente:
+
+| Endpoint | Dati |
+|----------|------|
+| `GET /products/v4/search/{digikeyPN}/pricing` | Scaglioni prezzo (`StandardPricing`) |
+| `GET /products/v4/search/{digikeyPN}/productdetails` | MOQ, lead time, stato prodotto |
+
+Nel dettaglio componente compare la card **DigiKey — dati commerciali** con tabella scaglioni (riga evidenziata per la qty in inventario).
 
 ### Batch offline
 

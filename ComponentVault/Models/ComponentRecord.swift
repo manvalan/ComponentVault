@@ -26,6 +26,11 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
     var updatedAt: String?
     var digikeyPartNumber: String?
     var supplierProductURL: String?
+    var priceBreaks: [PriceBreak]
+    var minimumOrderQuantity: Int?
+    var leadTimeWeeks: Int?
+    var digikeyProductStatus: String?
+    var digikeyLastFetched: String?
 
     enum CodingKeys: String, CodingKey {
         case lcscCode, mpn, name, description, footprint, quantity
@@ -33,6 +38,8 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         case price, currency, supplierStock, dataSource, parameters
         case notes, minQuantity, tags, updatedAt
         case digikeyPartNumber, supplierProductURL
+        case priceBreaks, minimumOrderQuantity, leadTimeWeeks
+        case digikeyProductStatus, digikeyLastFetched
     }
 
     init(from decoder: Decoder) throws {
@@ -59,6 +66,11 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt)
         digikeyPartNumber = try container.decodeIfPresent(String.self, forKey: .digikeyPartNumber)
         supplierProductURL = try container.decodeIfPresent(String.self, forKey: .supplierProductURL)
+        priceBreaks = try container.decodeIfPresent([PriceBreak].self, forKey: .priceBreaks) ?? []
+        minimumOrderQuantity = try Self.decodeInt(from: container, forKey: .minimumOrderQuantity)
+        leadTimeWeeks = try Self.decodeInt(from: container, forKey: .leadTimeWeeks)
+        digikeyProductStatus = try container.decodeIfPresent(String.self, forKey: .digikeyProductStatus)
+        digikeyLastFetched = try container.decodeIfPresent(String.self, forKey: .digikeyLastFetched)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -85,6 +97,11 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
         try container.encodeIfPresent(digikeyPartNumber, forKey: .digikeyPartNumber)
         try container.encodeIfPresent(supplierProductURL, forKey: .supplierProductURL)
+        try container.encode(priceBreaks, forKey: .priceBreaks)
+        try container.encodeIfPresent(minimumOrderQuantity, forKey: .minimumOrderQuantity)
+        try container.encodeIfPresent(leadTimeWeeks, forKey: .leadTimeWeeks)
+        try container.encodeIfPresent(digikeyProductStatus, forKey: .digikeyProductStatus)
+        try container.encodeIfPresent(digikeyLastFetched, forKey: .digikeyLastFetched)
     }
 
     private static func decodeDouble<K: CodingKey>(
@@ -141,7 +158,12 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         tags: [String] = [],
         updatedAt: String? = nil,
         digikeyPartNumber: String? = nil,
-        supplierProductURL: String? = nil
+        supplierProductURL: String? = nil,
+        priceBreaks: [PriceBreak] = [],
+        minimumOrderQuantity: Int? = nil,
+        leadTimeWeeks: Int? = nil,
+        digikeyProductStatus: String? = nil,
+        digikeyLastFetched: String? = nil
     ) {
         self.lcscCode = lcscCode
         self.mpn = mpn
@@ -165,5 +187,10 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         self.updatedAt = updatedAt
         self.digikeyPartNumber = digikeyPartNumber
         self.supplierProductURL = supplierProductURL
+        self.priceBreaks = priceBreaks
+        self.minimumOrderQuantity = minimumOrderQuantity
+        self.leadTimeWeeks = leadTimeWeeks
+        self.digikeyProductStatus = digikeyProductStatus
+        self.digikeyLastFetched = digikeyLastFetched
     }
 }

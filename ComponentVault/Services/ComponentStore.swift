@@ -44,6 +44,13 @@ final class ComponentStore {
                     dataSource: record.dataSource,
                     digikeyPartNumber: record.digikeyPartNumber,
                     supplierProductURL: record.supplierProductURL,
+                    priceBreaksJSON: PriceBreakCodec.encode(record.priceBreaks),
+                    minimumOrderQuantity: record.minimumOrderQuantity,
+                    leadTimeWeeks: record.leadTimeWeeks,
+                    digikeyProductStatus: record.digikeyProductStatus,
+                    digikeyLastFetched: record.digikeyLastFetched.flatMap {
+                        ISO8601DateFormatter().date(from: $0)
+                    },
                     parameters: record.parameters.map { ComponentParameter(name: $0.key, value: $0.value) }
                 ))
             }
@@ -140,7 +147,7 @@ final class ComponentStore {
         )
 
         if candidates.count == 1 {
-            try applyDigiKeyRecord(candidates[0].record, to: component)
+            try await applyDigiKeyRecord(candidates[0].record, to: component, provider: provider)
             return .applied
         }
 
@@ -148,16 +155,26 @@ final class ComponentStore {
             $0.mpn.caseInsensitiveCompare(component.mpn) == .orderedSame
         }
         if exact.count == 1 {
-            try applyDigiKeyRecord(exact[0].record, to: component)
+            try await applyDigiKeyRecord(exact[0].record, to: component, provider: provider)
             return .applied
         }
 
         return .chooseCandidate(candidates)
     }
 
-    func applyDigiKeyRecord(_ record: ComponentRecord, to component: Component) throws {
+    func applyDigiKeyRecord(
+        _ record: ComponentRecord,
+        to component: Component,
+        provider: DigiKeyProvider? = nil
+    ) async throws {
+        let activeProvider = provider ?? DigiKeyProvider.configured()
         var merged = record
         merged.quantity = component.quantity
+
+        if let activeProvider {
+            merged = try await activeProvider.enrichRecord(merged)
+        }
+
         component.apply(merged)
         try modelContext.save()
         statusMessage = "Aggiornato \(component.mpn) da DigiKey"
