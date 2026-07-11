@@ -18,6 +18,7 @@ struct ComponentDetailView: View {
                     inventoryCard
                 }
                 descriptionSection
+                supplierComparisonSection
                 digikeyCommercialSection
                 tagsSection
                 parametersSection
@@ -28,8 +29,16 @@ struct ComponentDetailView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle(component.displayTitle)
+        .onAppear { component.migrateLegacySnapshotsIfNeeded() }
         .toolbar {
             ToolbarItemGroup {
+                Button {
+                    Task { await enrichBoth() }
+                } label: {
+                    Label("Entrambi", systemImage: "arrow.triangle.2.circlepath")
+                }
+                .disabled(isEnriching || store == nil)
+
                 Button {
                     Task { await enrich(source: .lcsc) }
                 } label: {
@@ -282,9 +291,17 @@ struct ComponentDetailView: View {
         try? store?.adjustStock(component, delta: delta, reason: .manual)
     }
 
+    private var supplierComparisonSection: some View {
+        Group {
+            if component.hasLCSCSnapshot || component.hasDigiKeySnapshot {
+                SupplierComparisonView(component: component)
+            }
+        }
+    }
+
     private var digikeyCommercialSection: some View {
         Group {
-            if component.source == .digikey || !component.priceBreaks.isEmpty {
+            if component.hasDigiKeySnapshot, let snapshot = component.digikeySnapshot, !snapshot.priceBreaks.isEmpty {
                 GroupBox("DigiKey — dati commerciali") {
                     VStack(alignment: .leading, spacing: 12) {
                         if let moq = component.minimumOrderQuantity, moq > 1 {
@@ -397,7 +414,23 @@ struct ComponentDetailView: View {
     }
 
     private var lcscURL: URL {
-        URL(string: "https://www.lcsc.com/product-detail/\(component.lcscCode).html")!
+        component.lcscProductURL ?? URL(string: "https://www.lcsc.com/product-detail/\(component.lcscCode).html")!
+    }
+
+    private func enrichBoth() async {
+        guard let store else { return }
+        isEnriching = true
+        defer { isEnriching = false }
+        do {
+            switch try await store.enrichFromBoth(component) {
+            case .applied:
+                break
+            case .chooseCandidate(let candidates):
+                digiKeyPicker = DigiKeyCandidatePicker(candidates: candidates)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     private func enrich(source: DataSource) async {
@@ -410,6 +443,13 @@ struct ComponentDetailView: View {
                 try await store.enrichFromLCSC(component)
             case .digikey:
                 switch try await store.enrichFromDigiKey(component) {
+                case .applied:
+                    break
+                case .chooseCandidate(let candidates):
+                    digiKeyPicker = DigiKeyCandidatePicker(candidates: candidates)
+                }
+            case .dual:
+                switch try await store.enrichFromBoth(component) {
                 case .applied:
                     break
                 case .chooseCandidate(let candidates):
@@ -442,10 +482,18 @@ struct DigiKeyCandidatePicker: Identifiable {
 
 extension Component {
     var digikeyProductURL: URL? {
-        guard let urlString = supplierProductURL,
+        guard let urlString = digikeySnapshot?.productURL ?? supplierProductURL,
               !urlString.isEmpty,
               let url = URL(string: urlString) else {
             return nil
+        }
+        return url
+    }
+
+    var lcscProductURL: URL? {
+        guard let urlString = lcscSnapshot?.productURL,
+              let url = URL(string: urlString) else {
+            return URL(string: "https://www.lcsc.com/product-detail/\(lcscCode).html")
         }
         return url
     }
@@ -469,6 +517,7 @@ struct SourceBadge: View {
         case .manual: .gray
         case .lcsc: .orange
         case .digikey: .red
+        case .dual: .purple
         }
     }
 }

@@ -51,6 +51,8 @@ final class ComponentStore {
                     digikeyLastFetched: record.digikeyLastFetched.flatMap {
                         ISO8601DateFormatter().date(from: $0)
                     },
+                    lcscSnapshotJSON: SupplierSnapshotCodec.encode(record.lcscSnapshot),
+                    digikeySnapshotJSON: SupplierSnapshotCodec.encode(record.digikeySnapshot),
                     parameters: record.parameters.map { ComponentParameter(name: $0.key, value: $0.value) }
                 ))
             }
@@ -93,9 +95,7 @@ final class ComponentStore {
         defer { isLoading = false }
 
         let record = try await lcscProvider.fetch(lcscCode: component.lcscCode)
-        var merged = record
-        merged.quantity = component.quantity
-        component.apply(merged)
+        component.applyLCSC(record, preserveQuantity: true)
         try modelContext.save()
         statusMessage = "Aggiornato \(component.lcscCode) da LCSC"
     }
@@ -175,9 +175,33 @@ final class ComponentStore {
             merged = try await activeProvider.enrichRecord(merged)
         }
 
-        component.apply(merged)
+        component.applyDigiKey(merged)
         try modelContext.save()
         statusMessage = "Aggiornato \(component.mpn) da DigiKey"
+    }
+
+    func enrichFromBoth(_ component: Component) async throws -> DigiKeyEnrichResult {
+        isLoading = true
+        defer { isLoading = false }
+
+        let record = try await lcscProvider.fetch(lcscCode: component.lcscCode)
+        component.applyLCSC(record, preserveQuantity: true)
+
+        guard !component.mpn.isEmpty else {
+            try modelContext.save()
+            statusMessage = "LCSC aggiornato — serve MPN per DigiKey"
+            return .applied
+        }
+
+        guard let provider = DigiKeyProvider.configured() else {
+            try modelContext.save()
+            statusMessage = "LCSC aggiornato — DigiKey non configurato"
+            return .applied
+        }
+
+        let result = try await resolveDigiKeyEnrichment(provider: provider, component: component)
+        statusMessage = "Aggiornati LCSC + DigiKey per \(component.lcscCode)"
+        return result
     }
 
     func enrichAllFromDigiKey(

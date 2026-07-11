@@ -32,6 +32,10 @@ struct FilterBar: View {
                         Toggle("Solo scorte basse", isOn: $filter.showLowStockOnly)
                         Toggle("Solo esauriti", isOn: $filter.showOutOfStockOnly)
                     }
+                    GridRow {
+                        Toggle("Con dati DigiKey", isOn: $filter.requireDigiKeyData)
+                        Toggle("DigiKey stock 0", isOn: $filter.digikeyOutOfStockOnly)
+                    }
                 }
                 .font(.caption)
             }

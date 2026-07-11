@@ -365,6 +365,12 @@ struct ComponentRowView: View {
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
+                if let comparison = component.supplierComparison {
+                    Text(comparison.summary)
+                        .font(.caption2)
+                        .foregroundStyle(comparison.cheaper == .lcsc ? .orange : .red)
+                        .lineLimit(1)
+                }
             }
 
             Spacer()

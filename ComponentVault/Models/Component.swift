@@ -5,6 +5,7 @@ enum DataSource: String, Codable, CaseIterable, Identifiable {
     case manual
     case lcsc
     case digikey
+    case dual
 
     var id: String { rawValue }
 
@@ -13,6 +14,7 @@ enum DataSource: String, Codable, CaseIterable, Identifiable {
         case .manual: "Manuale"
         case .lcsc: "LCSC"
         case .digikey: "DigiKey"
+        case .dual: "LCSC + DigiKey"
         }
     }
 }
@@ -45,6 +47,8 @@ final class Component {
     var leadTimeWeeks: Int?
     var digikeyProductStatus: String?
     var digikeyLastFetched: Date?
+    var lcscSnapshotJSON: String
+    var digikeySnapshotJSON: String
 
     @Relationship(deleteRule: .cascade, inverse: \ComponentParameter.component)
     var parameters: [ComponentParameter]
@@ -81,6 +85,8 @@ final class Component {
         leadTimeWeeks: Int? = nil,
         digikeyProductStatus: String? = nil,
         digikeyLastFetched: Date? = nil,
+        lcscSnapshotJSON: String = "",
+        digikeySnapshotJSON: String = "",
         parameters: [ComponentParameter] = [],
         stockMovements: [StockMovement] = []
     ) {
@@ -110,6 +116,8 @@ final class Component {
         self.leadTimeWeeks = leadTimeWeeks
         self.digikeyProductStatus = digikeyProductStatus
         self.digikeyLastFetched = digikeyLastFetched
+        self.lcscSnapshotJSON = lcscSnapshotJSON
+        self.digikeySnapshotJSON = digikeySnapshotJSON
         self.parameters = parameters
         self.stockMovements = stockMovements
         self.projectItems = []
@@ -164,7 +172,29 @@ final class Component {
     }
 
     var digikeyUnitPriceForInventory: Double? {
-        PriceBreakCodec.unitPrice(for: max(quantity, 1), in: priceBreaks)
+        digikeySnapshot?.unitPrice(for: max(quantity, 1))
+            ?? PriceBreakCodec.unitPrice(for: max(quantity, 1), in: priceBreaks)
+    }
+
+    var lcscSnapshot: SupplierSnapshot? {
+        get { SupplierSnapshotCodec.decode(lcscSnapshotJSON) }
+        set { lcscSnapshotJSON = SupplierSnapshotCodec.encode(newValue) }
+    }
+
+    var digikeySnapshot: SupplierSnapshot? {
+        get { SupplierSnapshotCodec.decode(digikeySnapshotJSON) }
+        set { digikeySnapshotJSON = SupplierSnapshotCodec.encode(newValue) }
+    }
+
+    var hasLCSCSnapshot: Bool { lcscSnapshot != nil }
+    var hasDigiKeySnapshot: Bool { digikeySnapshot != nil }
+
+    var supplierComparison: SupplierComparison? {
+        SupplierComparisonBuilder.compare(
+            quantity: quantity,
+            lcsc: lcscSnapshot,
+            digikey: digikeySnapshot
+        )
     }
 
     var categoryRoot: String {
@@ -172,6 +202,20 @@ final class Component {
     }
 
     func apply(_ record: ComponentRecord, preserveQuantity: Bool = true) {
+        switch record.dataSource {
+        case .lcsc:
+            applyLCSC(record, preserveQuantity: preserveQuantity)
+        case .digikey:
+            applyDigiKey(record, preserveQuantity: preserveQuantity)
+        case .dual, .manual:
+            applyLCSC(record, preserveQuantity: preserveQuantity)
+            if record.digikeyPartNumber != nil || !record.priceBreaks.isEmpty {
+                applyDigiKey(record, preserveQuantity: preserveQuantity)
+            }
+        }
+    }
+
+    func applyLCSC(_ record: ComponentRecord, preserveQuantity: Bool = true) {
         mpn = record.mpn
         name = record.name
         componentDescription = record.description
@@ -181,26 +225,15 @@ final class Component {
         brand = record.brand
         datasheetURL = record.datasheetURL
         imageURLs = record.imageURLs
-        price = record.price
-        currency = record.currency
-        supplierStock = record.supplierStock
-        dataSource = record.dataSource.rawValue
         notes = record.notes
         minQuantity = record.minQuantity
         tags = record.tags
-        digikeyPartNumber = record.digikeyPartNumber
-        supplierProductURL = record.supplierProductURL
-        priceBreaks = record.priceBreaks
-        minimumOrderQuantity = record.minimumOrderQuantity
-        leadTimeWeeks = record.leadTimeWeeks
-        digikeyProductStatus = record.digikeyProductStatus
-        if let fetched = record.digikeyLastFetched {
-            digikeyLastFetched = ISO8601DateFormatter().date(from: fetched) ?? Date()
-        } else if record.dataSource == .digikey {
-            digikeyLastFetched = Date()
-        }
-        lastUpdated = Date()
 
+        lcscSnapshot = SupplierSnapshot.fromLCSC(record: record)
+        syncDigiKeyFieldsFromSnapshot()
+        refreshDisplayFields()
+
+        lastUpdated = Date()
         if !preserveQuantity {
             quantity = record.quantity
         }
@@ -209,6 +242,124 @@ final class Component {
         parameters = record.parameters.map { key, value in
             ComponentParameter(name: key, value: value)
         }
+    }
+
+    func applyDigiKey(_ record: ComponentRecord, preserveQuantity: Bool = true) {
+        if mpn.isEmpty, !record.mpn.isEmpty { mpn = record.mpn }
+        if name.isEmpty, !record.name.isEmpty { name = record.name }
+        if componentDescription.isEmpty, !record.description.isEmpty {
+            componentDescription = record.description
+        }
+        if footprint.isEmpty, !record.footprint.isEmpty { footprint = record.footprint }
+        if category.isEmpty, !record.category.isEmpty { category = record.category }
+        if value.isEmpty || value == "N/A", !record.value.isEmpty, record.value != "N/A" {
+            value = record.value
+        }
+        if brand.isEmpty, !record.brand.isEmpty { brand = record.brand }
+        if datasheetURL == nil { datasheetURL = record.datasheetURL }
+        if imageURLs.isEmpty { imageURLs = record.imageURLs }
+
+        digikeySnapshot = SupplierSnapshot.fromDigiKey(record: record)
+        syncDigiKeyFieldsFromSnapshot()
+        refreshDisplayFields()
+
+        notes = record.notes.isEmpty ? notes : record.notes
+        minQuantity = record.minQuantity
+        tags = record.tags.isEmpty ? tags : record.tags
+        lastUpdated = Date()
+
+        if !preserveQuantity {
+            quantity = record.quantity
+        }
+
+        if parameters.isEmpty, !record.parameters.isEmpty {
+            parameters = record.parameters.map { key, value in
+                ComponentParameter(name: key, value: value)
+            }
+        }
+    }
+
+    private func syncDigiKeyFieldsFromSnapshot() {
+        guard let snapshot = digikeySnapshot else { return }
+        digikeyPartNumber = snapshot.digikeyPartNumber
+        supplierProductURL = snapshot.productURL
+        priceBreaks = snapshot.priceBreaks
+        minimumOrderQuantity = snapshot.minimumOrderQuantity
+        leadTimeWeeks = snapshot.leadTimeWeeks
+        digikeyProductStatus = snapshot.productStatus
+        digikeyLastFetched = snapshot.fetchedDate
+    }
+
+    private func refreshDisplayFields() {
+        if hasLCSCSnapshot && hasDigiKeySnapshot {
+            dataSource = DataSource.dual.rawValue
+        } else if hasDigiKeySnapshot {
+            dataSource = DataSource.digikey.rawValue
+        } else if hasLCSCSnapshot {
+            dataSource = DataSource.lcsc.rawValue
+        }
+
+        if let comparison = supplierComparison {
+            switch comparison.cheaper {
+            case .lcsc:
+                price = comparison.lcscUnitPrice
+                currency = comparison.lcscCurrency
+                supplierStock = lcscSnapshot?.supplierStock
+            case .digikey:
+                price = comparison.digikeyUnitPrice
+                currency = comparison.digikeyCurrency
+                supplierStock = digikeySnapshot?.supplierStock
+            case nil:
+                price = comparison.lcscUnitPrice ?? comparison.digikeyUnitPrice
+                currency = comparison.lcscCurrency ?? comparison.digikeyCurrency
+                supplierStock = lcscSnapshot?.supplierStock ?? digikeySnapshot?.supplierStock
+            }
+        } else if let lcsc = lcscSnapshot {
+            price = lcsc.unitPrice(for: max(quantity, 1)) ?? lcsc.price
+            currency = lcsc.currency
+            supplierStock = lcsc.supplierStock
+        } else if let digikey = digikeySnapshot {
+            price = digikey.unitPrice(for: max(quantity, 1)) ?? digikey.price
+            currency = digikey.currency
+            supplierStock = digikey.supplierStock
+        }
+    }
+
+    func migrateLegacySnapshotsIfNeeded() {
+        if lcscSnapshot == nil,
+           (source == .lcsc || source == .manual),
+           price != nil || supplierStock != nil {
+            lcscSnapshot = SupplierSnapshot(
+                price: price,
+                currency: currency,
+                supplierStock: supplierStock,
+                productURL: "https://www.lcsc.com/product-detail/\(lcscCode).html",
+                fetchedAt: ISO8601DateFormatter().string(from: lastUpdated),
+                priceBreaks: [],
+                minimumOrderQuantity: nil,
+                leadTimeWeeks: nil,
+                digikeyPartNumber: nil,
+                productStatus: nil
+            )
+        }
+
+        if digikeySnapshot == nil,
+           digikeyPartNumber != nil || digikeyLastFetched != nil || !priceBreaks.isEmpty {
+            digikeySnapshot = SupplierSnapshot(
+                price: price,
+                currency: currency,
+                supplierStock: supplierStock,
+                productURL: supplierProductURL,
+                fetchedAt: digikeyLastFetched.map { ISO8601DateFormatter().string(from: $0) },
+                priceBreaks: priceBreaks,
+                minimumOrderQuantity: minimumOrderQuantity,
+                leadTimeWeeks: leadTimeWeeks,
+                digikeyPartNumber: digikeyPartNumber,
+                productStatus: digikeyProductStatus
+            )
+        }
+
+        refreshDisplayFields()
     }
 
     func toRecord() -> ComponentRecord {
@@ -239,7 +390,9 @@ final class Component {
             minimumOrderQuantity: minimumOrderQuantity,
             leadTimeWeeks: leadTimeWeeks,
             digikeyProductStatus: digikeyProductStatus,
-            digikeyLastFetched: digikeyLastFetched.map { ISO8601DateFormatter().string(from: $0) }
+            digikeyLastFetched: digikeyLastFetched.map { ISO8601DateFormatter().string(from: $0) },
+            lcscSnapshot: lcscSnapshot,
+            digikeySnapshot: digikeySnapshot
         )
     }
 }

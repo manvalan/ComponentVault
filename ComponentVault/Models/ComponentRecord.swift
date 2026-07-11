@@ -31,6 +31,8 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
     var leadTimeWeeks: Int?
     var digikeyProductStatus: String?
     var digikeyLastFetched: String?
+    var lcscSnapshot: SupplierSnapshot?
+    var digikeySnapshot: SupplierSnapshot?
 
     enum CodingKeys: String, CodingKey {
         case lcscCode, mpn, name, description, footprint, quantity
@@ -40,6 +42,7 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         case digikeyPartNumber, supplierProductURL
         case priceBreaks, minimumOrderQuantity, leadTimeWeeks
         case digikeyProductStatus, digikeyLastFetched
+        case lcscSnapshot, digikeySnapshot
     }
 
     init(from decoder: Decoder) throws {
@@ -71,6 +74,8 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         leadTimeWeeks = try Self.decodeInt(from: container, forKey: .leadTimeWeeks)
         digikeyProductStatus = try container.decodeIfPresent(String.self, forKey: .digikeyProductStatus)
         digikeyLastFetched = try container.decodeIfPresent(String.self, forKey: .digikeyLastFetched)
+        lcscSnapshot = try container.decodeIfPresent(SupplierSnapshot.self, forKey: .lcscSnapshot)
+        digikeySnapshot = try container.decodeIfPresent(SupplierSnapshot.self, forKey: .digikeySnapshot)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -102,6 +107,8 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         try container.encodeIfPresent(leadTimeWeeks, forKey: .leadTimeWeeks)
         try container.encodeIfPresent(digikeyProductStatus, forKey: .digikeyProductStatus)
         try container.encodeIfPresent(digikeyLastFetched, forKey: .digikeyLastFetched)
+        try container.encodeIfPresent(lcscSnapshot, forKey: .lcscSnapshot)
+        try container.encodeIfPresent(digikeySnapshot, forKey: .digikeySnapshot)
     }
 
     private static func decodeDouble<K: CodingKey>(
@@ -163,7 +170,9 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         minimumOrderQuantity: Int? = nil,
         leadTimeWeeks: Int? = nil,
         digikeyProductStatus: String? = nil,
-        digikeyLastFetched: String? = nil
+        digikeyLastFetched: String? = nil,
+        lcscSnapshot: SupplierSnapshot? = nil,
+        digikeySnapshot: SupplierSnapshot? = nil
     ) {
         self.lcscCode = lcscCode
         self.mpn = mpn
@@ -192,5 +201,7 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         self.leadTimeWeeks = leadTimeWeeks
         self.digikeyProductStatus = digikeyProductStatus
         self.digikeyLastFetched = digikeyLastFetched
+        self.lcscSnapshot = lcscSnapshot
+        self.digikeySnapshot = digikeySnapshot
     }
 }

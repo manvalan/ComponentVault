@@ -5,7 +5,7 @@ Guida per il tuo server:
 - **OS:** AlmaLinux 9 + Plesk
 - **RAM:** 4 GB (sufficiente per PostgreSQL + API + rete neurale esistente)
 
-> **Sicurezza:** non condividere la password `root` in chat. Dopo il primo accesso, crea un utente dedicato e disabilita login root via password se possibile.
+> **Sicurezza:** non incollare credenziali SSH in chat o nel repository. Dopo il primo accesso, crea un utente dedicato e disabilita il login root via password se possibile.
 
 ---
 

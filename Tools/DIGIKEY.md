@@ -96,12 +96,25 @@ currency: 'EUR'
 language: 'it'
 ```
 
-## Arricchimento in ComponentVault (v0.5–v0.6)
+## Arricchimento in ComponentVault (v0.5–v0.7)
 
 - **Dettaglio componente** → pulsante **DigiKey** (richiede MPN + token)
+- **Dettaglio componente** → pulsante **Entrambi** (LCSC poi DigiKey, senza sovrascrivere l'altro fornitore)
 - **Inventario** → pulsante **DigiKey** per arricchire in bulk la lista filtrata
 - Se DigiKey restituisce più risultati, appare una sheet di scelta
 - Link **Apri su DigiKey** nel dettaglio dopo l'arricchimento
+
+### Confronto LCSC ↔ DigiKey (v0.7)
+
+Ogni arricchimento salva uno **snapshot** separato (`lcscSnapshot`, `digikeySnapshot`). I campi in lista (prezzo, stock, ecc.) vengono aggiornati con la politica di merge (`refreshDisplayFields` — prezzo più conveniente per la qty in inventario).
+
+| Azione | Effetto |
+|--------|---------|
+| **LCSC** | Aggiorna solo snapshot LCSC + dati tecnici |
+| **DigiKey** | Aggiorna solo snapshot DigiKey + dati commerciali |
+| **Entrambi** | Esegue LCSC, poi DigiKey; badge **LCSC + DigiKey** |
+
+Nel dettaglio, la sezione **Confronto fornitori** mostra le due card affiancate con riepilogo risparmio. Filtri inventario: **Con dati DigiKey**, **DigiKey stock 0**.
 
 ### Dati commerciali (v0.6)
 

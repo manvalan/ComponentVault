@@ -8,6 +8,8 @@ struct ComponentFilter {
     var tag = "Tutti"
     var showLowStockOnly = false
     var showOutOfStockOnly = false
+    var requireDigiKeyData = false
+    var digikeyOutOfStockOnly = false
 
     func apply(to components: [Component]) -> [Component] {
         components.filter { component in
@@ -16,7 +18,8 @@ struct ComponentFilter {
             matchesFootprint(component) &&
             matchesBrand(component) &&
             matchesTag(component) &&
-            matchesStock(component)
+            matchesStock(component) &&
+            matchesDigiKey(component)
         }
     }
 
@@ -77,6 +80,16 @@ struct ComponentFilter {
     private func matchesStock(_ component: Component) -> Bool {
         if showOutOfStockOnly { return component.quantity == 0 }
         if showLowStockOnly { return component.isLowStock }
+        return true
+    }
+
+    private func matchesDigiKey(_ component: Component) -> Bool {
+        component.migrateLegacySnapshotsIfNeeded()
+        if requireDigiKeyData && !component.hasDigiKeySnapshot { return false }
+        if digikeyOutOfStockOnly {
+            guard let stock = component.digikeySnapshot?.supplierStock else { return false }
+            return stock == 0
+        }
         return true
     }
 }
