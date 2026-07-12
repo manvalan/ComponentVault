@@ -226,10 +226,16 @@ struct SettingsView: View {
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
-                    Text("Redirect URI: \(config.callbackURL)")
+                    Text("Redirect Mac: \(config.callbackURL)")
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
+                    #if os(iOS)
+                    Text("Redirect iPad (portale DigiKey): \(config.iosOAuthRedirectURI)")
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                    #endif
                 }
 
                 if digiKeyConfigured {
@@ -266,7 +272,7 @@ struct SettingsView: View {
                         }
                         .disabled(isDigiKeyBusy || !digiKeyTokenExists)
                     }
-                    Text("Su iPad usa redirect `componentvault://digikey/callback` nel portale DigiKey.")
+                    Text("DigiKey accetta solo redirect HTTPS. Registra nel portale l'URI sopra (es. cvault.michelebigi.it/…), non componentvault://.")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                     #endif
@@ -378,7 +384,7 @@ struct SettingsView: View {
         let auth = DigiKeyAuthService(config: config)
         do {
             let code = try await DigiKeyOAuthFlow.authorize(config: config)
-            try await auth.exchangeAuthorizationCode(code, redirectURI: DigiKeyOAuthFlow.iosRedirectURI)
+            try await auth.exchangeAuthorizationCode(code, redirectURI: config.iosOAuthRedirectURI)
             refreshDigiKeyTokenStatus()
             if let expiry = await auth.tokenExpiryDescription {
                 digiKeyStatusMessage = "Autenticato. Scadenza token: \(expiry)"

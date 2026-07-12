@@ -18,16 +18,16 @@ private final class DigiKeyOAuthPresenter: NSObject, ASWebAuthenticationPresenta
 }
 
 enum DigiKeyOAuthFlow {
-    /// Redirect URI da registrare nel portale DigiKey per iPad/iOS.
-    static let iosRedirectURI = "componentvault://digikey/callback"
-    static let iosCallbackScheme = "componentvault"
+    /// Schema interno catturato dall'app dopo il bridge HTTPS sul server.
+    static let appCallbackScheme = "componentvault"
 
     static func authorize(config: DigiKeyConfig) async throws -> String {
+        let redirectURI = config.iosOAuthRedirectURI
         var components = URLComponents(string: "\(config.apiBaseURL)/v1/oauth2/authorize")!
         components.queryItems = [
             URLQueryItem(name: "response_type", value: "code"),
             URLQueryItem(name: "client_id", value: config.clientID),
-            URLQueryItem(name: "redirect_uri", value: iosRedirectURI),
+            URLQueryItem(name: "redirect_uri", value: redirectURI),
         ]
         guard let authURL = components.url else {
             throw ProviderError.networkFailure("URL autorizzazione DigiKey non valido")
@@ -36,7 +36,7 @@ enum DigiKeyOAuthFlow {
         return try await withCheckedThrowingContinuation { continuation in
             let session = ASWebAuthenticationSession(
                 url: authURL,
-                callbackURLScheme: iosCallbackScheme
+                callbackURLScheme: appCallbackScheme
             ) { callbackURL, error in
                 if let error {
                     continuation.resume(throwing: error)
@@ -44,7 +44,9 @@ enum DigiKeyOAuthFlow {
                 }
                 guard let callbackURL,
                       let code = DigiKeyAuthService.parseAuthorizationCode(from: callbackURL.absoluteString) else {
-                    continuation.resume(throwing: ProviderError.networkFailure("Codice OAuth non ricevuto"))
+                    continuation.resume(throwing: ProviderError.networkFailure(
+                        "Codice OAuth non ricevuto. Usa la connessione manuale e incolla l'URL dal browser."
+                    ))
                     return
                 }
                 continuation.resume(returning: code)

@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 import secrets
 
-from fastapi import Depends, FastAPI, Header
+from fastapi import Depends, FastAPI, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
@@ -36,6 +37,38 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()
+
+
+@app.get("/oauth/digikey/callback", response_class=HTMLResponse)
+def digikey_oauth_callback(
+    code: str | None = Query(default=None),
+    error: str | None = Query(default=None),
+    error_description: str | None = Query(default=None),
+) -> str:
+    """Bridge HTTPS → componentvault:// per OAuth DigiKey su iPad (il portale accetta solo https://)."""
+    if error:
+        detail = error_description or error
+        return f"""<!DOCTYPE html><html><body style="font-family:system-ui;padding:24px">
+        <h2>DigiKey — errore</h2><p>{detail}</p>
+        <p>Puoi chiudere questa pagina e riprovare dall'app.</p></body></html>"""
+
+    if not code:
+        return """<!DOCTYPE html><html><body style="font-family:system-ui;padding:24px">
+        <h2>DigiKey — callback</h2><p>Nessun codice nella risposta. Riprova il login dall'app.</p></body></html>"""
+
+    from urllib.parse import quote
+
+    deep_link = f"componentvault://digikey/callback?code={quote(code, safe='')}"
+    return f"""<!DOCTYPE html><html><head><meta charset="utf-8">
+    <meta http-equiv="refresh" content="0;url={deep_link}">
+    <title>ComponentVault</title></head>
+    <body style="font-family:system-ui;padding:24px">
+    <h2>Accesso DigiKey riuscito</h2>
+    <p>Reindirizzamento a ComponentVault…</p>
+    <p>Se l'app non si apre, <a href="{deep_link}">tocca qui</a> oppure incolla questo codice in Impostazioni → DigiKey:</p>
+    <pre style="background:#f4f4f4;padding:12px;overflow:auto">{code}</pre>
+    <script>window.location.replace("{deep_link}");</script>
+    </body></html>"""
 
 
 def row_to_out(row: ComponentRow) -> ComponentOut:

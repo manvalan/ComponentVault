@@ -46,6 +46,12 @@ sequenceDiagram
    Sandbox può usare `http://localhost:8000`
    - Deve coincidere **esattamente** con `callback_url` nel YAML
 
+   **iPad:** il portale **non accetta** `componentvault://`. Registra un URI **HTTPS**, es.:
+   ```
+   https://cvault.michelebigi.it/oauth/digikey/callback
+   ```
+   Il server ComponentVault reindirizza poi all'app. Opzionale nel YAML: `ios_callback_url: 'https://…'`
+
 ## Autenticazione (prima volta)
 
 ### Opzione A — dall'app (consigliata)

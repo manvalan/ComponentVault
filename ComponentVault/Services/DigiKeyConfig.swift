@@ -23,6 +23,7 @@ struct DigiKeyConfig: Codable, Sendable {
     var clientID: String
     var clientSecret: String
     var callbackURL: String
+    var iosCallbackURL: String?
     var environment: DigiKeyEnvironment
     var market: String
     var currency: String
@@ -30,7 +31,24 @@ struct DigiKeyConfig: Codable, Sendable {
 
     static var defaultPath: String { AppPaths.digiKeyConfigPath }
 
+    /// Default bridge HTTPS per iPad — registrare nel portale DigiKey (non accetta custom scheme).
+    static let defaultIOSCallbackURL = "https://cvault.michelebigi.it/oauth/digikey/callback"
+
     var apiBaseURL: String { environment.apiBaseURL }
+
+    /// Redirect URI HTTPS da registrare nel portale DigiKey per login iPad.
+    var iosOAuthRedirectURI: String {
+        let custom = iosCallbackURL?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !custom.isEmpty, custom.lowercased().hasPrefix("https://") {
+            return custom
+        }
+        if callbackURL.lowercased().hasPrefix("https://"),
+           !callbackURL.lowercased().contains("localhost"),
+           !callbackURL.lowercased().contains("127.0.0.1") {
+            return callbackURL
+        }
+        return Self.defaultIOSCallbackURL
+    }
 
     /// Server locale se callback ha porta esplicita (http o https). Solo macOS.
     var supportsLocalCallbackServer: Bool {
@@ -77,6 +95,7 @@ struct DigiKeyConfig: Codable, Sendable {
             clientID: clientID,
             clientSecret: clientSecret,
             callbackURL: values["callback_url"] ?? "http://localhost:8139/digikey_callback",
+            iosCallbackURL: values["ios_callback_url"],
             environment: environment,
             market: values["market"] ?? "IT",
             currency: values["currency"] ?? "EUR",
