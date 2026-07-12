@@ -48,9 +48,35 @@ struct CatalogMatchCard: Identifiable, Sendable {
     let lcscRecord: ComponentRecord?
     let lcscSource: LCSCMatchSource?
 
-    var hasLCSC: Bool { lcscCode != nil }
+    var hasLCSC: Bool {
+        guard let lcscCode else { return false }
+        return LCSCCode.isValid(lcscCode)
+    }
     var hasDigiKey: Bool { digikeyPartNumber != nil }
     var hasBothCodes: Bool { hasLCSC && hasDigiKey }
+
+    /// Codice `CV-*` proposto quando LCSC non è disponibile.
+    var proposedInternalCode: String? {
+        guard !hasLCSC else { return nil }
+        let seed: String
+        if let digikeyPartNumber, !digikeyPartNumber.isEmpty {
+            seed = digikeyPartNumber
+        } else if !mpn.isEmpty {
+            seed = mpn
+        } else {
+            return nil
+        }
+        return InternalComponentCode.make(from: seed)
+    }
+
+    var lcscDisplayCode: String {
+        if hasLCSC, let lcscCode { return lcscCode }
+        return proposedInternalCode ?? "—"
+    }
+
+    var usesInternalLCSCPlaceholder: Bool {
+        !hasLCSC && proposedInternalCode != nil
+    }
 
     var lcscLink: URL? {
         guard let lcscCode else { return nil }

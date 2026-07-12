@@ -390,7 +390,7 @@ final class ComponentStore {
         defer { isLoading = false }
 
         let inventory = fetchAllComponents()
-        if let realCode = card.lcscCode, realCode.hasPrefix("C"), !card.mpn.isEmpty {
+        if let realCode = card.lcscCode, LCSCCode.isValid(realCode), !card.mpn.isEmpty {
             let targetMPN = CatalogMatchNormalizer.mpn(card.mpn)
             if let dkTwin = inventory.first(where: {
                 CatalogMatchNormalizer.mpn($0.mpn) == targetMPN
@@ -401,10 +401,12 @@ final class ComponentStore {
         }
 
         let lcscCode: String
-        if let existing = card.lcscCode {
+        if let existing = card.lcscCode, LCSCCode.isValid(existing) {
             lcscCode = existing
-        } else if let digikeyPN = card.digikeyPartNumber {
+        } else if let digikeyPN = card.digikeyPartNumber, !digikeyPN.isEmpty {
             lcscCode = DigiKeySyntheticCode.make(from: digikeyPN)
+        } else if !card.mpn.isEmpty {
+            lcscCode = InternalComponentCode.make(from: card.mpn)
         } else {
             throw ProviderError.invalidCode
         }
@@ -781,7 +783,7 @@ final class ComponentStore {
             price: card.lcscPrice ?? card.digikeyPrice,
             currency: card.lcscCurrency ?? card.digikeyCurrency,
             supplierStock: card.lcscStock ?? card.digikeyStock,
-            dataSource: card.hasLCSC ? .lcsc : .digikey,
+            dataSource: card.hasLCSC ? .lcsc : (card.hasDigiKey ? .digikey : .manual),
             digikeyPartNumber: card.digikeyPartNumber,
             supplierProductURL: card.digikeyURL ?? card.lcscURL
         )

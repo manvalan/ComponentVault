@@ -379,9 +379,9 @@ struct CatalogMatchCardView: View {
     private var codesRow: some View {
         HStack(spacing: 12) {
             SupplierCodeTile(
-                title: "LCSC",
-                code: card.lcscCode ?? "—",
-                tint: .orange,
+                title: card.usesInternalLCSCPlaceholder ? "CV interno" : "LCSC",
+                code: card.lcscDisplayCode,
+                tint: card.usesInternalLCSCPlaceholder ? .teal : .orange,
                 price: card.lcscPrice,
                 currency: card.lcscCurrency,
                 stock: card.lcscStock,

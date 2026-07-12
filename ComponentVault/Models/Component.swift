@@ -217,10 +217,14 @@ final class Component {
     }
 
     var needsLCSCCodeResolution: Bool {
-        DigiKeySyntheticCode.isDigiKeyOnly(lcscCode) || !lcscCode.uppercased().hasPrefix("C")
+        !LCSCCode.isValid(lcscCode)
     }
 
-    /// Codice C da mostrare: usa lo snapshot LCSC se il record ha ancora un placeholder DK-.
+    var isInternalComponentCode: Bool {
+        InternalComponentCode.isInternal(lcscCode) && !LCSCCode.isValid(lcscCode)
+    }
+
+    /// Codice da mostrare: C LCSC reale, oppure codice interno CV-*.
     var resolvedLCSCCode: String {
         if LCSCCode.isValid(lcscCode) { return lcscCode }
         if let fromSnapshot = LCSCCode.extract(from: lcscSnapshot?.productURL) {

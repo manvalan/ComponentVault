@@ -25,18 +25,45 @@ struct DigiKeyAlternatePackage: Identifiable, Sendable {
     let stock: Int?
 }
 
-enum DigiKeySyntheticCode {
-    static func make(from digikeyPartNumber: String) -> String {
-        let upper = digikeyPartNumber.uppercased()
-        let sanitized = upper
+/// Codice inventario interno ComponentVault quando non esiste un codice LCSC (Cxxxxx).
+/// Prefisso `CV-` — chiaramente distinto dai codici LCSC.
+enum InternalComponentCode {
+    static let prefix = "CV-"
+
+    static func make(from seed: String) -> String {
+        let trimmed = seed.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sanitized = trimmed.uppercased()
             .replacingOccurrences(of: "[^A-Z0-9]+", with: "-", options: .regularExpression)
             .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
-        let body = sanitized.isEmpty ? "UNKNOWN" : String(sanitized.prefix(48))
-        return "DK-\(body)"
+
+        if !sanitized.isEmpty {
+            return prefix + String(sanitized.prefix(40))
+        }
+
+        var hasher = Hasher()
+        hasher.combine(trimmed.isEmpty ? UUID().uuidString : trimmed)
+        let hash = abs(hasher.finalize())
+        return String(format: "\(prefix)INT-%06X", hash % 0xFFFFFF)
+    }
+
+    static func isInternal(_ code: String) -> Bool {
+        let upper = code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        return upper.hasPrefix("CV-") || upper.hasPrefix("DK-")
+    }
+
+    /// Vecchi placeholder `DK-*` (pre CV-) o `DK-UNKNOWN`.
+    static func isLegacyPlaceholder(_ code: String) -> Bool {
+        code.uppercased().hasPrefix("DK-")
+    }
+}
+
+enum DigiKeySyntheticCode {
+    static func make(from digikeyPartNumber: String) -> String {
+        InternalComponentCode.make(from: digikeyPartNumber)
     }
 
     static func isDigiKeyOnly(_ code: String) -> Bool {
-        code.uppercased().hasPrefix("DK-")
+        InternalComponentCode.isInternal(code) && !LCSCCode.isValid(code)
     }
 }
 
@@ -44,6 +71,7 @@ enum LCSCCode {
     static func isValid(_ code: String) -> Bool {
         let normalized = code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         return normalized.hasPrefix("C") && normalized.count >= 4
+            && normalized.dropFirst().allSatisfy(\.isNumber)
     }
 
     static func extract(from urlString: String?) -> String? {

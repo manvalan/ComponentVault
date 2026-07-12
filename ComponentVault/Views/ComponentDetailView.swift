@@ -177,7 +177,11 @@ struct ComponentDetailView: View {
                 if component.isToOrder {
                     ToOrderBadge()
                 }
-                if component.needsLCSCCodeResolution {
+                if component.isInternalComponentCode {
+                    Text("CV interno")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.teal)
+                } else if component.needsLCSCCodeResolution {
                     Text("codice provvisorio")
                         .font(.caption2)
                         .foregroundStyle(.orange)

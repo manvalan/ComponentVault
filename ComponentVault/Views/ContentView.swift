@@ -386,7 +386,16 @@ struct ComponentRowView: View {
                 HStack(spacing: 6) {
                     Text(component.resolvedLCSCCode)
                         .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(component.isInternalComponentCode ? .teal : .secondary)
+                    if component.isInternalComponentCode {
+                        Text("CV")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.teal)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(Color.teal.opacity(0.12))
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
                     if !component.value.isEmpty && component.value != "N/A" {
                         Text(component.value)
                             .font(.caption2)
