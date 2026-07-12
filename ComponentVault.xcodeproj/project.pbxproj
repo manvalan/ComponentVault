@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -26,6 +26,7 @@
 		A10000010000000000000011 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000011 /* Project.swift */; };
 		A10000010000000000000012 /* ComponentFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000012 /* ComponentFilter.swift */; };
 		A10000010000000000000013 /* ExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000013 /* ExportService.swift */; };
+		A1000001000000000000004A /* EasyEDAService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000004A /* EasyEDAService.swift */; };
 		A10000010000000000000014 /* ProjectStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000014 /* ProjectStore.swift */; };
 		A10000010000000000000015 /* CSVDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000015 /* CSVDocument.swift */; };
 		A10000010000000000000016 /* FilterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000016 /* FilterBar.swift */; };
@@ -99,6 +100,7 @@
 		A20000010000000000000011 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
 		A20000010000000000000012 /* ComponentFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentFilter.swift; sourceTree = "<group>"; };
 		A20000010000000000000013 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportService.swift; sourceTree = "<group>"; };
+		A2000001000000000000004A /* EasyEDAService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EasyEDAService.swift; sourceTree = "<group>"; };
 		A20000010000000000000014 /* ProjectStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectStore.swift; sourceTree = "<group>"; };
 		A20000010000000000000015 /* CSVDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVDocument.swift; sourceTree = "<group>"; };
 		A20000010000000000000016 /* FilterBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterBar.swift; sourceTree = "<group>"; };
@@ -241,6 +243,7 @@
 				A2000001000000000000000F /* DatabaseBootstrap.swift */,
 				A20000010000000000000012 /* ComponentFilter.swift */,
 				A20000010000000000000013 /* ExportService.swift */,
+				A2000001000000000000004A /* EasyEDAService.swift */,
 				A20000010000000000000014 /* ProjectStore.swift */,
 				A20000010000000000000015 /* CSVDocument.swift */,
 				A2000001000000000000001B /* BOMImporter.swift */,
@@ -344,7 +347,6 @@
 				};
 			};
 			buildConfigurationList = A80000010000000000000001 /* Build configuration list for PBXProject "ComponentVault" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = it;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -353,6 +355,7 @@
 				Base,
 			);
 			mainGroup = A50000010000000000000001;
+			preferredProjectObjectVersion = 77;
 			productRefGroup = A50000010000000000000003 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -398,6 +401,7 @@
 				A10000010000000000000011 /* Project.swift in Sources */,
 				A10000010000000000000012 /* ComponentFilter.swift in Sources */,
 				A10000010000000000000013 /* ExportService.swift in Sources */,
+				A1000001000000000000004A /* EasyEDAService.swift in Sources */,
 				A10000010000000000000014 /* ProjectStore.swift in Sources */,
 				A10000010000000000000015 /* CSVDocument.swift in Sources */,
 				A10000010000000000000016 /* FilterBar.swift in Sources */,
@@ -566,7 +570,7 @@
 				"COMBINE_HIDPI_IMAGES[sdk=macosx*]" = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 653SB9GBDR;
 				"ENABLE_APP_SANDBOX[sdk=macosx*]" = YES;
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				"ENABLE_OUTGOING_NETWORK_CONNECTIONS[sdk=macosx*]" = YES;
@@ -610,7 +614,7 @@
 				"COMBINE_HIDPI_IMAGES[sdk=macosx*]" = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 653SB9GBDR;
 				"ENABLE_APP_SANDBOX[sdk=macosx*]" = YES;
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				"ENABLE_OUTGOING_NETWORK_CONNECTIONS[sdk=macosx*]" = YES;

@@ -44,7 +44,7 @@ struct DigiKeyProvider: ComponentDataProvider {
         return try DigiKeyParser.parseCandidates(
             data: data,
             mpn: trimmed,
-            lcscCode: "DK-SEARCH",
+            lcscCode: InternalComponentCode.catalogSearchPlaceholder,
             currency: config.currency
         )
     }

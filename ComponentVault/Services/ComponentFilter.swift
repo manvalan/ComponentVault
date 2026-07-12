@@ -46,7 +46,7 @@ struct ComponentFilter {
     private func matchesSearch(_ component: Component) -> Bool {
         guard !searchText.isEmpty else { return true }
         let query = searchText.lowercased()
-        let fields = [
+        let fields: [String] = [
             component.lcscCode,
             component.mpn,
             component.name,
@@ -56,7 +56,10 @@ struct ComponentFilter {
             component.brand,
             component.category,
             component.notes
-        ] + component.tags + component.parameters.map { "\($0.name) \($0.value)" }
+        ]
+        + [component.lcscSupplierCode, component.supplierLCSCCode, component.digikeyPartNumber].compactMap { $0 }
+        + component.tags
+        + component.parameters.map { "\($0.name) \($0.value)" }
 
         return fields.contains { $0.localizedCaseInsensitiveContains(query) }
     }

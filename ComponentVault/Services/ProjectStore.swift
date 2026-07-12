@@ -90,13 +90,17 @@ final class ProjectStore {
         var missingLCSC: [String] = []
 
         let byLCSC = Dictionary(uniqueKeysWithValues: components.map { ($0.lcscCode.uppercased(), $0) })
+        let bySupplierLCSC = Dictionary(uniqueKeysWithValues: components.compactMap { component -> (String, Component)? in
+            guard let code = component.supplierLCSCCode else { return nil }
+            return (code.uppercased(), component)
+        })
         let byMPN = Dictionary(grouping: components.filter { !$0.mpn.isEmpty }, by: { $0.mpn.uppercased() })
 
         for line in lines {
             let code = line.lcscCode.uppercased()
-            let component = byLCSC[code] ?? (
-                line.mpn.isEmpty ? nil : byMPN[line.mpn.uppercased()]?.first
-            )
+            let component = byLCSC[code]
+                ?? bySupplierLCSC[code]
+                ?? (line.mpn.isEmpty ? nil : byMPN[line.mpn.uppercased()]?.first)
 
             guard let component else {
                 missingLCSC.append(line.lcscCode)

@@ -2,10 +2,11 @@ import Foundation
 
 enum ExportService {
     static func inventoryCSV(components: [Component]) -> String {
-        var lines = ["LCSC;MPN;Descrizione;Categoria;Valore;Footprint;Quantità;Soglia;Tag;Note"]
+        var lines = ["CV;LCSC;MPN;Descrizione;Categoria;Valore;Footprint;Quantità;Soglia;Tag;Note"]
         for c in components.sorted(by: { $0.lcscCode < $1.lcscCode }) {
             lines.append([
-                c.lcscCode,
+                c.inventoryCode,
+                c.supplierLCSCCode ?? "",
                 c.mpn,
                 c.componentDescription,
                 c.category,
@@ -21,7 +22,7 @@ enum ExportService {
     }
 
     static func projectBOMCSV(project: Project) -> String {
-        var lines = ["Designator;LCSC;MPN;Descrizione;Richiesti;Disponibili;Mancanti;Stato"]
+        var lines = ["Designator;CV;LCSC;MPN;Descrizione;Richiesti;Disponibili;Mancanti;Stato;EasyEDA"]
         for item in project.items.sorted(by: { $0.designator < $1.designator }) {
             let c = item.component
             let status: String
@@ -32,18 +33,33 @@ enum ExportService {
             } else {
                 status = "Mancante"
             }
+            let easyEDA = c?.hasValidLCSCCode == true ? "Pronto" : "Manca C"
             lines.append([
                 item.designator,
-                c?.lcscCode ?? "",
+                c?.inventoryCode ?? "",
+                c?.supplierLCSCCode ?? "",
                 c?.mpn ?? "",
                 c?.componentDescription ?? "",
                 "\(item.requiredQuantity)",
                 "\(item.availableQuantity)",
                 "\(item.shortage)",
-                status
+                status,
+                easyEDA
             ].map(csvEscape).joined(separator: ";"))
         }
         return lines.joined(separator: "\n")
+    }
+
+    static func projectBOMEasyEDACSV(project: Project) -> String {
+        EasyEDAService.projectBOM(project: project)
+    }
+
+    static func projectBOMMissingEasyEDACSV(project: Project) -> String {
+        EasyEDAService.projectBOM(project: project, missingOnly: true)
+    }
+
+    static func projectBOMMissingLCSCEasyEDACSV(project: Project) -> String {
+        EasyEDAService.projectBOMWithoutLCSC(project)
     }
 
     static func projectBOMDigiKeyCSV(project: Project) -> String {
@@ -72,7 +88,7 @@ enum ExportService {
 
             lines.append(csvRow(
                 item.designator,
-                component?.lcscCode ?? "",
+                component?.supplierLCSCCode ?? component?.inventoryCode ?? "",
                 component?.mpn ?? "",
                 digikeyPN,
                 "\(item.requiredQuantity)",
@@ -110,7 +126,8 @@ enum ExportService {
             let suggestion = BOMPricingService.reorderSuggestion(for: component) ?? ""
 
             lines.append(csvRow(
-                component.lcscCode,
+                component.inventoryCode,
+                component.supplierLCSCCode ?? "",
                 component.mpn,
                 "\(component.quantity)",
                 "\(component.minQuantity)",

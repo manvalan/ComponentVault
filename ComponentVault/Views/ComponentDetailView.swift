@@ -26,7 +26,7 @@ struct ComponentDetailView: View {
                     toOrderBanner
                 }
                 header
-                if component.needsLCSCCodeResolution {
+                if component.needsLCSCForEasyEDA {
                     lcscResolutionBanner
                 }
                 HStack(alignment: .top, spacing: 24) {
@@ -47,8 +47,7 @@ struct ComponentDetailView: View {
         .navigationTitle(component.displayTitle)
         .onAppear {
             component.migrateLegacySnapshotsIfNeeded()
-            guard component.needsLCSCCodeResolution,
-                  !component.mpn.isEmpty,
+            guard component.needsLCSCForEasyEDA,
                   let store else { return }
             let originalID = component.persistentModelID
             Task {
@@ -100,11 +99,22 @@ struct ComponentDetailView: View {
                         }
                     }
                     .disabled(isLookingUpMPN)
-                    .platformHelp("Cerca codice LCSC Cxxxxx dal MPN \(component.mpn)")
+                    .platformHelp("Cerca codice LCSC Cxxxxx per EasyEDA dal MPN \(component.mpn)")
                 }
 
-                Link(destination: lcscURL) {
-                    Label("Apri su LCSC", systemImage: "safari")
+                if let lcsc = component.supplierLCSCCode {
+                    Button {
+                        PlatformPasteboard.copy(lcsc)
+                    } label: {
+                        Label("Copia LCSC", systemImage: "doc.on.doc")
+                    }
+                    .platformHelp("Copia \(lcsc) per EasyEDA")
+                }
+
+                if let lcscURL = component.lcscProductURL {
+                    Link(destination: lcscURL) {
+                        Label("Apri su LCSC", systemImage: "safari")
+                    }
                 }
 
                 if let digiKeyURL = component.digikeyProductURL {
@@ -142,10 +152,10 @@ struct ComponentDetailView: View {
     private func handleReplacement(_ updated: Component, originalID: PersistentIdentifier) {
         if updated.persistentModelID != originalID {
             onReplaced?(updated)
-            infoMessage = "Codice LCSC assegnato: \(updated.lcscCode)"
-        } else if updated.lcscCode != component.lcscCode {
+            infoMessage = "Codice LCSC assegnato: \(updated.supplierLCSCCode ?? updated.lcscCode)"
+        } else if updated.supplierLCSCCode != component.supplierLCSCCode {
             onReplaced?(updated)
-            infoMessage = "Codice LCSC assegnato: \(updated.lcscCode)"
+            infoMessage = "Codice LCSC assegnato: \(updated.supplierLCSCCode ?? updated.lcscCode)"
         }
     }
 
@@ -171,8 +181,7 @@ struct ComponentDetailView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                Text(component.resolvedLCSCCode)
-                    .font(.title2.monospaced())
+                ComponentCodesRow(component: component)
                 SourceBadge(source: component.source)
                 if component.isToOrder {
                     ToOrderBadge()
@@ -181,8 +190,8 @@ struct ComponentDetailView: View {
                     Text("CV interno")
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.teal)
-                } else if component.needsLCSCCodeResolution {
-                    Text("codice provvisorio")
+                } else if component.needsLCSCForEasyEDA {
+                    Text("LCSC per EasyEDA")
                         .font(.caption2)
                         .foregroundStyle(.orange)
                 }
@@ -216,16 +225,23 @@ struct ComponentDetailView: View {
 
     private var lcscResolutionBanner: some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "magnifyingglass.circle")
+            Image(systemName: "square.grid.2x2")
                 .font(.title2)
                 .foregroundStyle(.blue)
             VStack(alignment: .leading, spacing: 8) {
-                Text("MPN non presente su LCSC")
+                Text("Codice LCSC per EasyEDA")
                     .font(.headline)
-                Text("Il codice \(component.mpn) non è catalogato su LCSC. Puoi cercare un equivalente cinese con le stesse specifiche (footprint, valore, dielettrico…).")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                if component.isInternalComponentCode {
+                    Text("Inventario: \(component.inventoryCode). Per EasyEDA cerca il codice LCSC Cxxxxx — dal MPN o equivalente cinese.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("Il componente non ha ancora un codice LCSC Cxxxxx. Cercalo dal MPN per usarlo in EasyEDA.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 HStack(spacing: 10) {
                     Button {
                         Task { await lookupChineseEquivalent() }
@@ -359,8 +375,21 @@ struct ComponentDetailView: View {
                 if !component.mpn.isEmpty {
                     LabeledContent("MPN", value: component.mpn)
                 }
+                LabeledContent("Codice CV") {
+                    Text(component.inventoryCode)
+                        .font(.body.monospaced())
+                }
+                LabeledContent("LCSC") {
+                    Text(component.supplierLCSCCode ?? "—")
+                        .font(.body.monospaced())
+                        .foregroundStyle(component.supplierLCSCCode == nil ? .tertiary : .primary)
+                }
                 if let dkpn = component.digikeyPartNumber, !dkpn.isEmpty {
                     LabeledContent("DigiKey P/N", value: dkpn)
+                } else {
+                    LabeledContent("DigiKey P/N") {
+                        Text("—").foregroundStyle(.tertiary)
+                    }
                 }
                 if let price = component.price, let currency = component.currency {
                     LabeledContent(component.source == .digikey ? "Prezzo DigiKey" : "Prezzo LCSC") {
@@ -550,10 +579,12 @@ struct ComponentDetailView: View {
                 }
                 .buttonStyle(.bordered)
             }
-            Link(destination: lcscURL) {
-                Label("Pagina LCSC", systemImage: "link")
+            if let lcscURL = component.lcscProductURL {
+                Link(destination: lcscURL) {
+                    Label("Pagina LCSC", systemImage: "link")
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(.bordered)
             if let digiKeyURL = component.digikeyProductURL {
                 Link(destination: digiKeyURL) {
                     Label("Pagina DigiKey", systemImage: "cart")
@@ -561,10 +592,6 @@ struct ComponentDetailView: View {
                 .buttonStyle(.bordered)
             }
         }
-    }
-
-    private var lcscURL: URL {
-        component.lcscProductURL ?? URL(string: "https://www.lcsc.com/product-detail/\(component.lcscCode).html")!
     }
 
     private var mpnLookupSheet: some View {
@@ -734,11 +761,8 @@ extension Component {
     }
 
     var lcscProductURL: URL? {
-        guard let urlString = lcscSnapshot?.productURL,
-              let url = URL(string: urlString) else {
-            return URL(string: "https://www.lcsc.com/product-detail/\(lcscCode).html")
-        }
-        return url
+        guard let code = supplierLCSCCode else { return nil }
+        return URL(string: "https://www.lcsc.com/product-detail/\(code).html")
     }
 }
 

@@ -41,24 +41,34 @@ enum BOMImporter {
         }
 
         let designatorIdx = index(of: ["designator", "ref", "reference"])
-        let lcscIdx = index(of: ["lcsc", "codice"])
+        let lcscIdx = index(of: [
+            "lcsc", "lcsc#", "lcsc part", "lcsc part #", "jlc", "jlcpcb part",
+            "supplier part", "codice", "supplierpart"
+        ])
         let qtyIdx = index(of: ["quantity", "quantità", "quantita", "qty", "q.ty"])
-        let mpnIdx = index(of: ["mpn", "part name", "partname"])
-        let notesIdx = index(of: ["comment", "notes", "descrizione", "description", "value"])
+        let mpnIdx = index(of: ["mpn", "part name", "partname", "manufacturer part"])
+        let notesIdx = index(of: ["comment", "notes", "descrizione", "description", "value", "name"])
+        let footprintIdx = index(of: ["footprint", "package", "pacco"])
 
         return lines.dropFirst().compactMap { line in
             let fields = parseRow(line, delimiter: delimiter)
             guard !fields.isEmpty else { return nil }
 
-            let lcsc = lcscIdx.flatMap { fields[safe: $0] }?
+            let lcscRaw = lcscIdx.flatMap { fields[safe: $0] }?
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .uppercased() ?? ""
+            let lcsc = normalizeLCSCCode(lcscRaw)
             let mpn = mpnIdx.flatMap { fields[safe: $0] }?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let designator = designatorIdx.flatMap { fields[safe: $0] }?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            let notes = notesIdx.flatMap { fields[safe: $0] }?
+            var notes = notesIdx.flatMap { fields[safe: $0] }?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if let footprintIdx,
+               let fp = fields[safe: footprintIdx]?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !fp.isEmpty, !notes.contains(fp) {
+                notes = notes.isEmpty ? fp : "\(notes) · \(fp)"
+            }
 
             let quantity: Int
             if let qtyIdx, let raw = fields[safe: qtyIdx], let parsed = Int(raw.trimmingCharacters(in: .whitespaces)) {
@@ -67,7 +77,7 @@ enum BOMImporter {
                 quantity = 1
             }
 
-            guard !lcsc.isEmpty && lcsc.hasPrefix("C") else { return nil }
+            guard let lcsc, !lcsc.isEmpty else { return nil }
 
             return BOMImportLine(
                 designator: designator,
@@ -82,7 +92,17 @@ enum BOMImporter {
     private static func parseRow(_ line: String, delimiter: String) -> [String] {
         line.components(separatedBy: delimiter).map {
             $0.trimmingCharacters(in: .whitespacesAndNewlines)
+                .trimmingCharacters(in: CharacterSet(charactersIn: "\""))
         }
+    }
+
+    /// EasyEDA può esportare «C12345» o URL LCSC nella colonna Supplier Part.
+    private static func normalizeLCSCCode(_ raw: String) -> String? {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        if LCSCCode.isValid(trimmed) { return trimmed.uppercased() }
+        if let fromURL = LCSCCode.extract(from: trimmed) { return fromURL }
+        return nil
     }
 }
 

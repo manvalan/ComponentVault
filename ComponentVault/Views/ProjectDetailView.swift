@@ -14,10 +14,16 @@ struct ProjectDetailView: View {
     @State private var showImportBOM = false
     @State private var showExport = false
     @State private var showDigiKeyExport = false
+    @State private var showEasyEDAExport = false
+    @State private var showEasyEDAMissingExport = false
     @State private var exportDocument = CSVDocument()
     @State private var digikeyExportDocument = CSVDocument()
+    @State private var easyEDAExportDocument = CSVDocument()
+    @State private var easyEDAMissingExportDocument = CSVDocument()
     @State private var importResult: BOMImportResult?
     @State private var importError: String?
+    @State private var isResolvingLCSC = false
+    @State private var lcscResolveMessage: String?
     @State private var selectedLCSC = ""
     @State private var addQuantity = 1
     @State private var addDesignator = ""
@@ -32,6 +38,14 @@ struct ProjectDetailView: View {
 
     private var obsoleteCount: Int {
         bomSummary.lines.filter(\.isObsolete).count
+    }
+
+    private var easyEDAReadyCount: Int {
+        EasyEDAService.easyEDAReadyCount(for: project)
+    }
+
+    private var easyEDAMissingCount: Int {
+        EasyEDAService.projectItemsMissingLCSC(project).count
     }
 
     private var sortedItems: [ProjectItem] {
@@ -72,6 +86,21 @@ struct ProjectDetailView: View {
                     }
 
                     Button {
+                        easyEDAExportDocument = CSVDocument(text: ExportService.projectBOMEasyEDACSV(project: project))
+                        showEasyEDAExport = true
+                    } label: {
+                        Label("BOM EasyEDA / JLC", systemImage: "square.grid.2x2")
+                    }
+                    .disabled(easyEDAReadyCount == 0)
+
+                    Button {
+                        easyEDAMissingExportDocument = CSVDocument(text: ExportService.projectBOMMissingEasyEDACSV(project: project))
+                        showEasyEDAMissingExport = true
+                    } label: {
+                        Label("Da ordinare (mancanti stock)", systemImage: "cart")
+                    }
+
+                    Button {
                         digikeyExportDocument = CSVDocument(text: ExportService.projectBOMDigiKeyCSV(project: project))
                         showDigiKeyExport = true
                     } label: {
@@ -80,6 +109,18 @@ struct ProjectDetailView: View {
                 } label: {
                     Label("Esporta BOM", systemImage: "square.and.arrow.up")
                 }
+
+                Button {
+                    Task { await resolveLCSCForEasyEDA() }
+                } label: {
+                    if isResolvingLCSC {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Label("Risolvi LCSC", systemImage: "number")
+                    }
+                }
+                .disabled(isResolvingLCSC || store == nil || easyEDAMissingCount == 0)
+                .platformHelp("Cerca codici Cxxxxx LCSC dal MPN per EasyEDA")
 
                 Button {
                     guard let store else { return }
@@ -118,6 +159,23 @@ struct ProjectDetailView: View {
             contentType: .commaSeparatedText,
             defaultFilename: "\(project.name)-BOM-DigiKey.csv"
         ) { _ in }
+        .fileExporter(
+            isPresented: $showEasyEDAExport,
+            document: easyEDAExportDocument,
+            contentType: .commaSeparatedText,
+            defaultFilename: "\(project.name)-EasyEDA-BOM.csv"
+        ) { _ in }
+        .fileExporter(
+            isPresented: $showEasyEDAMissingExport,
+            document: easyEDAMissingExportDocument,
+            contentType: .commaSeparatedText,
+            defaultFilename: "\(project.name)-JLC-da-ordinare.csv"
+        ) { _ in }
+        .alert("Risoluzione LCSC", isPresented: .constant(lcscResolveMessage != nil)) {
+            Button("OK") { lcscResolveMessage = nil }
+        } message: {
+            Text(lcscResolveMessage ?? "")
+        }
         .alert("Import BOM completato", isPresented: .constant(importResult != nil)) {
             Button("OK") { importResult = nil }
         } message: {
@@ -217,6 +275,18 @@ struct ProjectDetailView: View {
         .frame(width: 480, height: 420)
     }
 
+    private func resolveLCSCForEasyEDA() async {
+        guard let store else { return }
+        isResolvingLCSC = true
+        defer { isResolvingLCSC = false }
+        do {
+            let result = try await store.resolveLCSCForProject(project)
+            lcscResolveMessage = "Trovati \(result.resolved) codici LCSC.\nAncora senza C: \(result.stillMissing)."
+        } catch {
+            lcscResolveMessage = error.localizedDescription
+        }
+    }
+
     private func importBOMFile(_ result: Result<[URL], Error>) {
         guard let projectStore else { return }
         switch result {
@@ -243,9 +313,14 @@ struct ProjectDetailView: View {
             }
             .width(60)
 
-            TableColumn("LCSC") { item in
-                Text(item.component?.lcscCode ?? "—")
+            TableColumn("CV") { item in
+                Text(item.component?.inventoryCode ?? "—")
                     .font(.caption.monospaced())
+            }
+            .width(100)
+
+            TableColumn("LCSC") { item in
+                lcscCell(for: item)
             }
             .width(90)
 
@@ -283,10 +358,13 @@ struct ProjectDetailView: View {
             TableColumn("Stato") { item in
                 HStack(spacing: 4) {
                     StatusBadge(item: item)
+                    if item.component?.hasValidLCSCCode == true {
+                        EasyEDABadge()
+                    }
                     if isObsolete(item) { ObsoleteBadge() }
                 }
             }
-            .width(130)
+            .width(150)
 
             TableColumn("") { item in
                 bomRowActions(for: item)
@@ -321,8 +399,20 @@ struct ProjectDetailView: View {
                 bomRowActions(for: item)
             }
             HStack(spacing: 8) {
-                Text(item.component?.lcscCode ?? "—")
+                Text(item.component?.inventoryCode ?? "—")
                     .font(.caption2.monospaced())
+                if let lcsc = item.component?.supplierLCSCCode {
+                    Button(lcsc) {
+                        PlatformPasteboard.copy(lcsc)
+                    }
+                    .font(.caption2.monospaced())
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.orange)
+                } else {
+                    Text("—")
+                        .font(.caption2.monospaced())
+                        .foregroundStyle(.tertiary)
+                }
                 Text(digiKeyPart(for: item))
                     .font(.caption2.monospaced())
                     .foregroundStyle(.secondary)
@@ -366,6 +456,23 @@ struct ProjectDetailView: View {
     }
 
     @ViewBuilder
+    private func lcscCell(for item: ProjectItem) -> some View {
+        if let lcsc = item.component?.supplierLCSCCode {
+            Button(lcsc) {
+                PlatformPasteboard.copy(lcsc)
+            }
+            .buttonStyle(.plain)
+            .font(.caption.monospaced())
+            .foregroundStyle(.orange)
+            .platformHelp("Copia Cxxxxx per EasyEDA")
+        } else {
+            Text("—")
+                .font(.caption.monospaced())
+                .foregroundStyle(.tertiary)
+        }
+    }
+
+    @ViewBuilder
     private func bomRowActions(for item: ProjectItem) -> some View {
         HStack(spacing: 4) {
             if isObsolete(item) {
@@ -392,6 +499,12 @@ struct ProjectDetailView: View {
             SummaryPill(title: "Righe", value: "\(project.totalItems)", color: .blue)
             SummaryPill(title: "Mancanti", value: "\(project.missingCount)", color: project.missingCount > 0 ? .orange : .green)
             SummaryPill(title: "Scorta bassa", value: "\(project.lowStockCount)", color: project.lowStockCount > 0 ? .yellow : .green)
+
+            SummaryPill(
+                title: "EasyEDA",
+                value: "\(easyEDAReadyCount)/\(project.totalItems)",
+                color: easyEDAMissingCount > 0 ? .orange : .green
+            )
 
             if obsoleteCount > 0 {
                 SummaryPill(title: "Obsoleti", value: "\(obsoleteCount)", color: .red)
@@ -430,7 +543,8 @@ struct ProjectDetailView: View {
             Picker("Componente", selection: $selectedLCSC) {
                 Text("Seleziona…").tag("")
                 ForEach(allComponents, id: \.lcscCode) { c in
-                    Text("\(c.lcscCode) — \(c.displayTitle)").tag(c.lcscCode)
+                    let lcsc = c.supplierLCSCCode ?? "—"
+                    Text("\(c.inventoryCode) · \(lcsc) — \(c.displayTitle)").tag(c.lcscCode)
                 }
             }
 
@@ -467,6 +581,19 @@ struct ProjectDetailView: View {
 }
 
 extension ProjectItem: Identifiable {}
+
+struct EasyEDABadge: View {
+    var body: some View {
+        Text("C")
+            .font(.caption2.weight(.bold))
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(Color.orange.opacity(0.15))
+            .foregroundStyle(.orange)
+            .clipShape(Capsule())
+            .platformHelp("Codice LCSC pronto per EasyEDA")
+    }
+}
 
 struct ObsoleteBadge: View {
     var body: some View {

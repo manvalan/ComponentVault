@@ -384,18 +384,7 @@ struct ComponentRowView: View {
                     }
                 }
                 HStack(spacing: 6) {
-                    Text(component.resolvedLCSCCode)
-                        .font(.caption.monospaced())
-                        .foregroundStyle(component.isInternalComponentCode ? .teal : .secondary)
-                    if component.isInternalComponentCode {
-                        Text("CV")
-                            .font(.caption2.weight(.bold))
-                            .foregroundStyle(.teal)
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 1)
-                            .background(Color.teal.opacity(0.12))
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                    }
+                    ComponentCodesRow(component: component, compact: true)
                     if !component.value.isEmpty && component.value != "N/A" {
                         Text(component.value)
                             .font(.caption2)
@@ -432,4 +421,77 @@ struct ComponentRowView: View {
 #Preview {
     ContentView()
         .modelContainer(for: [Component.self, Project.self], inMemory: true)
+}
+
+/// Riga codici inventario CV, LCSC Cxxxxx e DigiKey P/N.
+struct ComponentCodesRow: View {
+    let component: Component
+    var compact: Bool = false
+
+    var body: some View {
+        HStack(spacing: compact ? 5 : 8) {
+            CodeChip(
+                title: "CV",
+                code: component.inventoryCode,
+                tint: .teal,
+                compact: compact
+            )
+            CodeChip(
+                title: "LCSC",
+                code: component.supplierLCSCCode ?? "—",
+                tint: .orange,
+                dimmed: component.supplierLCSCCode == nil,
+                compact: compact,
+                copyOnTap: component.supplierLCSCCode
+            )
+            CodeChip(
+                title: "DK",
+                code: component.digikeyPartNumber?.isEmpty == false ? component.digikeyPartNumber! : "—",
+                tint: .red,
+                dimmed: component.digikeyPartNumber?.isEmpty != false,
+                compact: compact
+            )
+        }
+    }
+}
+
+private struct CodeChip: View {
+    let title: String
+    let code: String
+    let tint: Color
+    var dimmed: Bool = false
+    var compact: Bool = false
+    var copyOnTap: String? = nil
+
+    var body: some View {
+        Group {
+            if let copyOnTap, !copyOnTap.isEmpty {
+                Button {
+                    PlatformPasteboard.copy(copyOnTap)
+                } label: {
+                    chipContent
+                }
+                .buttonStyle(.plain)
+                .platformHelp("Copia \(copyOnTap) per EasyEDA")
+            } else {
+                chipContent
+            }
+        }
+    }
+
+    private var chipContent: some View {
+        HStack(spacing: 3) {
+            Text(title)
+                .font(compact ? .caption2.weight(.bold) : .caption.weight(.bold))
+                .foregroundStyle(tint.opacity(dimmed ? 0.5 : 1))
+            Text(code)
+                .font(compact ? .caption2.monospaced() : .caption.monospaced())
+                .foregroundStyle(dimmed ? .tertiary : .secondary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, compact ? 4 : 6)
+        .padding(.vertical, compact ? 1 : 2)
+        .background(tint.opacity(dimmed ? 0.05 : 0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 4))
+    }
 }

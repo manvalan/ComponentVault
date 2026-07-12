@@ -27,6 +27,7 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
     var digikeyPartNumber: String?
     var supplierProductURL: String?
     var priceBreaks: [PriceBreak]
+    var lcscSupplierCode: String?
     var minimumOrderQuantity: Int?
     var leadTimeWeeks: Int?
     var digikeyProductStatus: String?
@@ -39,7 +40,7 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         case category, value, brand, datasheetURL, imageURLs
         case price, currency, supplierStock, dataSource, parameters
         case notes, minQuantity, tags, updatedAt
-        case digikeyPartNumber, supplierProductURL
+        case digikeyPartNumber, supplierProductURL, lcscSupplierCode
         case priceBreaks, minimumOrderQuantity, leadTimeWeeks
         case digikeyProductStatus, digikeyLastFetched
         case lcscSnapshot, digikeySnapshot
@@ -70,6 +71,7 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         digikeyPartNumber = try container.decodeIfPresent(String.self, forKey: .digikeyPartNumber)
         supplierProductURL = try container.decodeIfPresent(String.self, forKey: .supplierProductURL)
         priceBreaks = try container.decodeIfPresent([PriceBreak].self, forKey: .priceBreaks) ?? []
+        lcscSupplierCode = try container.decodeIfPresent(String.self, forKey: .lcscSupplierCode)
         minimumOrderQuantity = try Self.decodeInt(from: container, forKey: .minimumOrderQuantity)
         leadTimeWeeks = try Self.decodeInt(from: container, forKey: .leadTimeWeeks)
         digikeyProductStatus = try container.decodeIfPresent(String.self, forKey: .digikeyProductStatus)
@@ -103,6 +105,7 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         try container.encodeIfPresent(digikeyPartNumber, forKey: .digikeyPartNumber)
         try container.encodeIfPresent(supplierProductURL, forKey: .supplierProductURL)
         try container.encode(priceBreaks, forKey: .priceBreaks)
+        try container.encodeIfPresent(lcscSupplierCode, forKey: .lcscSupplierCode)
         try container.encodeIfPresent(minimumOrderQuantity, forKey: .minimumOrderQuantity)
         try container.encodeIfPresent(leadTimeWeeks, forKey: .leadTimeWeeks)
         try container.encodeIfPresent(digikeyProductStatus, forKey: .digikeyProductStatus)
@@ -167,6 +170,7 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         digikeyPartNumber: String? = nil,
         supplierProductURL: String? = nil,
         priceBreaks: [PriceBreak] = [],
+        lcscSupplierCode: String? = nil,
         minimumOrderQuantity: Int? = nil,
         leadTimeWeeks: Int? = nil,
         digikeyProductStatus: String? = nil,
@@ -197,6 +201,7 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         self.digikeyPartNumber = digikeyPartNumber
         self.supplierProductURL = supplierProductURL
         self.priceBreaks = priceBreaks
+        self.lcscSupplierCode = lcscSupplierCode
         self.minimumOrderQuantity = minimumOrderQuantity
         self.leadTimeWeeks = leadTimeWeeks
         self.digikeyProductStatus = digikeyProductStatus
@@ -206,8 +211,16 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
     }
 
     func withLCSCCode(_ code: String) -> ComponentRecord {
+        with(inventoryCode: code, lcscSupplierCode: lcscSupplierCode)
+    }
+
+    func withSupplierLCSC(_ code: String) -> ComponentRecord {
+        with(inventoryCode: lcscCode, lcscSupplierCode: code)
+    }
+
+    func with(inventoryCode: String? = nil, lcscSupplierCode: String? = nil) -> ComponentRecord {
         ComponentRecord(
-            lcscCode: code,
+            lcscCode: inventoryCode ?? lcscCode,
             mpn: mpn,
             name: name,
             description: description,
@@ -230,12 +243,26 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
             digikeyPartNumber: digikeyPartNumber,
             supplierProductURL: supplierProductURL,
             priceBreaks: priceBreaks,
+            lcscSupplierCode: lcscSupplierCode ?? self.lcscSupplierCode,
             minimumOrderQuantity: minimumOrderQuantity,
             leadTimeWeeks: leadTimeWeeks,
             digikeyProductStatus: digikeyProductStatus,
             digikeyLastFetched: digikeyLastFetched,
             lcscSnapshot: lcscSnapshot,
             digikeySnapshot: digikeySnapshot
+        )
+    }
+
+    /// Separa codice inventario CV-* da codice fornitore LCSC Cxxxxx.
+    func normalizedForInventory() -> ComponentRecord {
+        if InternalComponentCode.isInternal(lcscCode) { return self }
+        if let lcscSupplierCode, LCSCCode.isValid(lcscSupplierCode) { return self }
+        guard LCSCCode.isValid(lcscCode) else { return self }
+        let seed = digikeyPartNumber.flatMap { $0.isEmpty ? nil : $0 }
+            ?? (mpn.isEmpty ? lcscCode : mpn)
+        return with(
+            inventoryCode: InternalComponentCode.make(from: seed),
+            lcscSupplierCode: lcscCode
         )
     }
 }

@@ -23,6 +23,7 @@ struct RootView: View {
                 }
             }
             .task {
+                runInventoryMigrations()
                 await loadInventoryIfNeeded()
                 await runAutoSyncIfNeeded()
             }
@@ -94,6 +95,12 @@ struct RootView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(Color.orange.opacity(0.12))
+    }
+
+    private func runInventoryMigrations() {
+        let store = ComponentStore(modelContext: modelContext)
+        _ = try? store.migrateLegacyInventoryCodesIfNeeded()
+        _ = try? store.migrateLegacyPrimaryKeysToCVIfNeeded()
     }
 
     private func loadInventoryIfNeeded() async {

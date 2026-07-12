@@ -55,6 +55,19 @@ enum InternalComponentCode {
     static func isLegacyPlaceholder(_ code: String) -> Bool {
         code.uppercased().hasPrefix("DK-")
     }
+
+    /// Converte un vecchio `DK-*` nel corrispondente `CV-*` (stesso corpo o rigenerato dal seed).
+    static func migrateLegacyCode(_ code: String, seed: String) -> String {
+        guard isLegacyPlaceholder(code) else { return code }
+        let body = String(code.dropFirst(3))
+        if body.isEmpty || body.uppercased() == "UNKNOWN" || body.uppercased() == "SEARCH" {
+            return make(from: seed)
+        }
+        return prefix + String(body.prefix(40))
+    }
+
+    /// Placeholder per ricerche catalogo DigiKey (non va in inventario).
+    static let catalogSearchPlaceholder = "CV-CATALOG-SEARCH"
 }
 
 enum DigiKeySyntheticCode {

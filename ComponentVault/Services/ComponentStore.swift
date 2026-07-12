@@ -40,7 +40,7 @@ final class ComponentStore {
         let existing = try modelContext.fetch(FetchDescriptor<Component>())
         var byCode = Dictionary(uniqueKeysWithValues: existing.map { ($0.lcscCode, $0) })
 
-        for record in records {
+        for record in records.map({ $0.normalizedForInventory() }) {
             if let existing = byCode[record.lcscCode] {
                 let savedQty = existing.quantity
                 existing.apply(record, preserveQuantity: preserveLocalQuantity)
@@ -65,6 +65,7 @@ final class ComponentStore {
                     supplierStock: record.supplierStock,
                     dataSource: record.dataSource,
                     digikeyPartNumber: record.digikeyPartNumber,
+                    lcscSupplierCode: record.lcscSupplierCode,
                     supplierProductURL: record.supplierProductURL,
                     priceBreaksJSON: PriceBreakCodec.encode(record.priceBreaks),
                     minimumOrderQuantity: record.minimumOrderQuantity,
@@ -98,6 +99,60 @@ final class ComponentStore {
         let source = DatabaseBootstrap.describeSource()
         publishStatus("Database creato: \(records.count) componenti da \(source)")
         return DatabaseBootstrap.Result(imported: records.count, source: source)
+    }
+
+    /// Converte codici `DK-*` legacy in `CV-*` (one-shot all'avvio).
+    @discardableResult
+    func migrateLegacyInventoryCodesIfNeeded() throws -> Int {
+        let components = fetchAllComponents()
+        var count = 0
+        for component in components {
+            guard InternalComponentCode.isLegacyPlaceholder(component.lcscCode) else { continue }
+            let seed = component.digikeyPartNumber.flatMap { $0.isEmpty ? nil : $0 }
+                ?? component.mpn
+            guard !seed.isEmpty else { continue }
+            component.lcscCode = InternalComponentCode.migrateLegacyCode(component.lcscCode, seed: seed)
+            count += 1
+        }
+        if count > 0 {
+            try modelContext.save()
+            publishStatus("Migrati \(count) codici DK- → CV-")
+        }
+        return count
+    }
+
+    /// Sposta `Cxxxxx` legacy da chiave primaria a `lcscSupplierCode` e assegna `CV-*`.
+    @discardableResult
+    func migrateLegacyPrimaryKeysToCVIfNeeded() throws -> Int {
+        let components = fetchAllComponents()
+        var count = 0
+        for component in components {
+            guard LCSCCode.isValid(component.lcscCode),
+                  !InternalComponentCode.isInternal(component.lcscCode) else { continue }
+
+            let supplier = component.lcscCode.uppercased()
+            component.lcscSupplierCode = supplier
+
+            let seed = component.digikeyPartNumber.flatMap { $0.isEmpty ? nil : $0 } ?? component.mpn
+            guard !seed.isEmpty else { continue }
+
+            let cvCode = InternalComponentCode.make(from: seed)
+            guard component.lcscCode.uppercased() != cvCode.uppercased() else { continue }
+
+            if let existing = try fetchComponent(lcscCode: cvCode),
+               existing.persistentModelID != component.persistentModelID {
+                try mergeComponent(existing, from: component)
+                existing.lcscSupplierCode = supplier
+            } else {
+                component.lcscCode = cvCode
+            }
+            count += 1
+        }
+        if count > 0 {
+            try modelContext.save()
+            publishStatus("Migrati \(count) componenti a codice CV con LCSC separato")
+        }
+        return count
     }
 
     func importCSV(from url: URL) async throws {
@@ -145,6 +200,37 @@ final class ComponentStore {
             }
         }
         publishStatus("Arricchimento LCSC completato (\(total) componenti)")
+    }
+
+    /// Cerca codici LCSC Cxxxxx per tutte le righe del progetto che ne sono prive.
+    func resolveLCSCForProject(_ project: Project) async throws -> (resolved: Int, stillMissing: Int) {
+        isLoading = true
+        defer { isLoading = false }
+
+        var resolved = 0
+        var stillMissing = 0
+
+        for item in project.items {
+            guard let component = item.component else {
+                stillMissing += 1
+                continue
+            }
+            if component.hasValidLCSCCode { continue }
+            guard !component.mpn.isEmpty else {
+                stillMissing += 1
+                continue
+            }
+            if let updated = try await assignLCSCFromMPN(component), updated.hasValidLCSCCode {
+                resolved += 1
+            } else {
+                stillMissing += 1
+            }
+        }
+
+        project.updatedAt = Date()
+        try modelContext.save()
+        publishStatus("EasyEDA: \(resolved) LCSC trovati, \(stillMissing) ancora senza C")
+        return (resolved, stillMissing)
     }
 
     func enrichFromDigiKey(_ component: Component) async throws -> DigiKeyEnrichResult {
@@ -342,7 +428,7 @@ final class ComponentStore {
 
         if let recovered = try recoverLCSCCodeFromSnapshot(component) {
             try modelContext.save()
-            publishStatus("Codice LCSC recuperato: \(recovered.lcscCode)")
+            publishStatus("Codice LCSC assegnato: \(recovered.supplierLCSCCode ?? recovered.lcscCode)")
             return recovered
         }
 
@@ -351,7 +437,7 @@ final class ComponentStore {
         let target = try assignLCSCCode(to: component, record: record)
         target.applyLCSC(record, preserveQuantity: true)
         try modelContext.save()
-        publishStatus("Codice LCSC assegnato: \(target.lcscCode)")
+        publishStatus("Codice LCSC assegnato: \(target.supplierLCSCCode ?? target.lcscCode)")
         return target
     }
 
@@ -364,7 +450,9 @@ final class ComponentStore {
         }
 
         let inventory = fetchAllComponents()
-        let record = card.lcscRecord ?? buildRecord(for: card, lcscCode: lcscCode, inventory: inventory)
+        let record = card.lcscRecord
+            ?? buildRecord(for: card, inventoryCode: component.lcscCode, inventory: inventory)
+            .withSupplierLCSC(lcscCode)
 
         let target = try assignLCSCCode(to: component, record: record)
         target.applyLCSC(record, preserveQuantity: true)
@@ -381,7 +469,7 @@ final class ComponentStore {
             markAsToOrder(target)
         }
         try modelContext.save()
-        publishStatus("Codice LCSC assegnato: \(target.lcscCode)")
+        publishStatus("Codice LCSC assegnato: \(target.supplierLCSCCode ?? target.lcscCode)")
         return target
     }
 
@@ -394,27 +482,32 @@ final class ComponentStore {
             let targetMPN = CatalogMatchNormalizer.mpn(card.mpn)
             if let dkTwin = inventory.first(where: {
                 CatalogMatchNormalizer.mpn($0.mpn) == targetMPN
-                    && DigiKeySyntheticCode.isDigiKeyOnly($0.lcscCode)
+                    && InternalComponentCode.isInternal($0.lcscCode)
+                    && $0.supplierLCSCCode == nil
             }) {
                 return try await applyCatalogMatchToExisting(dkTwin, card: card)
             }
         }
 
-        let lcscCode: String
-        if let existing = card.lcscCode, LCSCCode.isValid(existing) {
-            lcscCode = existing
-        } else if let digikeyPN = card.digikeyPartNumber, !digikeyPN.isEmpty {
-            lcscCode = DigiKeySyntheticCode.make(from: digikeyPN)
+        let supplierLCSC = card.lcscCode.flatMap { LCSCCode.isValid($0) ? $0 : nil }
+        let inventoryCode: String
+        if let digikeyPN = card.digikeyPartNumber, !digikeyPN.isEmpty {
+            inventoryCode = InternalComponentCode.make(from: digikeyPN)
         } else if !card.mpn.isEmpty {
-            lcscCode = InternalComponentCode.make(from: card.mpn)
+            inventoryCode = InternalComponentCode.make(from: card.mpn)
+        } else if let supplierLCSC {
+            inventoryCode = InternalComponentCode.make(from: supplierLCSC)
         } else {
             throw ProviderError.invalidCode
         }
 
-        let record = buildRecord(for: card, lcscCode: lcscCode, inventory: inventory)
+        var record = buildRecord(for: card, inventoryCode: inventoryCode, inventory: inventory)
+        if let supplierLCSC {
+            record = record.withSupplierLCSC(supplierLCSC)
+        }
 
         let descriptor = FetchDescriptor<Component>(
-            predicate: #Predicate { $0.lcscCode == lcscCode }
+            predicate: #Predicate { $0.lcscCode == inventoryCode }
         )
         if let existing = try modelContext.fetch(descriptor).first {
             if card.lcscRecord != nil || card.lcscCode != nil {
@@ -435,8 +528,8 @@ final class ComponentStore {
             }
             publishStatus(
                 existing.isToOrder
-                    ? "Scheda salvata — da ordinare (\(lcscCode))"
-                    : "Aggiornato \(lcscCode)"
+                    ? "Scheda salvata — da ordinare (\(inventoryCode))"
+                    : "Aggiornato \(inventoryCode)"
             )
             return existing
         }
@@ -444,10 +537,10 @@ final class ComponentStore {
         try upsert(records: [record], preserveLocalQuantity: true)
 
         let insertedDescriptor = FetchDescriptor<Component>(
-            predicate: #Predicate { $0.lcscCode == lcscCode }
+            predicate: #Predicate { $0.lcscCode == inventoryCode }
         )
         guard let component = try modelContext.fetch(insertedDescriptor).first else {
-            throw ProviderError.networkFailure("Import fallito per \(lcscCode)")
+            throw ProviderError.networkFailure("Import fallito per \(inventoryCode)")
         }
 
         if let dkRecord = card.digikeyRecord {
@@ -460,7 +553,7 @@ final class ComponentStore {
 
         markAsToOrder(component)
         try modelContext.save()
-        publishStatus("Scheda salvata — da ordinare (\(lcscCode))")
+        publishStatus("Scheda salvata — da ordinare (\(inventoryCode))")
         return component
     }
 
@@ -559,39 +652,33 @@ final class ComponentStore {
 
     private func recoverLCSCCodeFromSnapshot(_ component: Component) throws -> Component? {
         guard component.needsLCSCCodeResolution else { return nil }
-        guard let code = LCSCCode.extract(from: component.lcscSnapshot?.productURL),
-              code.uppercased() != component.lcscCode.uppercased() else { return nil }
+        guard let code = LCSCCode.extract(from: component.lcscSnapshot?.productURL) else { return nil }
+        guard component.supplierLCSCCode?.uppercased() != code.uppercased() else { return nil }
 
-        let record = component.toRecord().withLCSCCode(code)
-        let target = try assignLCSCCode(to: component, record: record)
-        target.applyLCSC(record, preserveQuantity: true)
-        return target
+        component.lcscSupplierCode = code.uppercased()
+        return component
     }
 
     @discardableResult
     private func assignLCSCCode(to component: Component, record: ComponentRecord) throws -> Component {
-        let newCode = record.lcscCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        guard LCSCCode.isValid(newCode) else { return component }
+        let newSupplierCode = record.lcscSupplierCode.flatMap { LCSCCode.isValid($0) ? $0.uppercased() : nil }
+            ?? (LCSCCode.isValid(record.lcscCode) ? record.lcscCode.uppercased() : nil)
+        guard let newSupplierCode else { return component }
 
-        let originalID = component.persistentModelID
-        let target: Component
-
-        if component.lcscCode.uppercased() == newCode {
-            target = component
-        } else if let existing = try fetchComponent(lcscCode: newCode),
-                  existing.persistentModelID != component.persistentModelID {
-            try mergeComponent(existing, from: component)
-            existing.applyLCSC(record, preserveQuantity: true)
-            target = existing
-        } else {
-            target = try rekeyComponent(component, to: newCode)
-            target.applyLCSC(record, preserveQuantity: true)
+        if let duplicate = fetchAllComponents().first(where: {
+            $0.persistentModelID != component.persistentModelID
+                && $0.supplierLCSCCode?.uppercased() == newSupplierCode
+        }) {
+            try mergeComponent(duplicate, from: component)
+            duplicate.lcscSupplierCode = newSupplierCode
+            duplicate.applyLCSC(record, preserveQuantity: true)
+            focusComponent = duplicate
+            return duplicate
         }
 
-        if target.persistentModelID != originalID {
-            focusComponent = target
-        }
-        return target
+        component.lcscSupplierCode = newSupplierCode
+        component.applyLCSC(record, preserveQuantity: true)
+        return component
     }
 
     private func rekeyComponent(_ component: Component, to newCode: String) throws -> Component {
@@ -634,6 +721,7 @@ final class ComponentStore {
             supplierStock: record.supplierStock,
             dataSource: record.dataSource,
             digikeyPartNumber: record.digikeyPartNumber,
+            lcscSupplierCode: record.lcscSupplierCode,
             supplierProductURL: record.supplierProductURL,
             priceBreaksJSON: PriceBreakCodec.encode(record.priceBreaks),
             minimumOrderQuantity: record.minimumOrderQuantity,
@@ -669,13 +757,13 @@ final class ComponentStore {
             return target
         }
 
-        let record = try await lcscProvider.fetch(lcscCode: component.lcscCode)
-        if record.lcscCode.hasPrefix("C"), record.lcscCode.uppercased() != component.lcscCode.uppercased() {
-            let target = try assignLCSCCode(to: component, record: record)
-            target.applyLCSC(record, preserveQuantity: true)
-            return target
+        let fetchCode = component.supplierLCSCCode
+            ?? (LCSCCode.isValid(component.lcscCode) ? component.lcscCode : nil)
+        guard let fetchCode else {
+            throw ProviderError.invalidCode
         }
 
+        let record = try await lcscProvider.fetch(lcscCode: fetchCode)
         component.applyLCSC(record, preserveQuantity: true)
         return component
     }
@@ -719,26 +807,61 @@ final class ComponentStore {
 
     private func buildRecord(
         for card: CatalogMatchCard,
-        lcscCode: String,
+        inventoryCode: String,
         inventory: [Component]
     ) -> ComponentRecord {
         if let lcscRecord = card.lcscRecord {
-            return lcscRecord
+            let supplier = LCSCCode.isValid(lcscRecord.lcscCode) ? lcscRecord.lcscCode : card.lcscCode
+            return ComponentRecord(
+                lcscCode: inventoryCode,
+                mpn: lcscRecord.mpn,
+                name: lcscRecord.name,
+                description: lcscRecord.description,
+                footprint: lcscRecord.footprint,
+                quantity: lcscRecord.quantity,
+                category: lcscRecord.category,
+                value: lcscRecord.value,
+                brand: lcscRecord.brand,
+                datasheetURL: lcscRecord.datasheetURL,
+                imageURLs: lcscRecord.imageURLs,
+                price: lcscRecord.price,
+                currency: lcscRecord.currency,
+                supplierStock: lcscRecord.supplierStock,
+                dataSource: lcscRecord.dataSource,
+                parameters: lcscRecord.parameters,
+                notes: lcscRecord.notes,
+                minQuantity: lcscRecord.minQuantity,
+                tags: lcscRecord.tags,
+                updatedAt: lcscRecord.updatedAt,
+                digikeyPartNumber: lcscRecord.digikeyPartNumber ?? card.digikeyPartNumber,
+                supplierProductURL: lcscRecord.supplierProductURL,
+                priceBreaks: lcscRecord.priceBreaks,
+                lcscSupplierCode: {
+                    if let supplier, LCSCCode.isValid(supplier) { return supplier }
+                    return nil
+                }(),
+                minimumOrderQuantity: lcscRecord.minimumOrderQuantity,
+                leadTimeWeeks: lcscRecord.leadTimeWeeks,
+                digikeyProductStatus: lcscRecord.digikeyProductStatus,
+                digikeyLastFetched: lcscRecord.digikeyLastFetched,
+                lcscSnapshot: lcscRecord.lcscSnapshot,
+                digikeySnapshot: lcscRecord.digikeySnapshot
+            )
         }
 
         if let code = card.lcscCode,
-           let component = inventory.first(where: { $0.lcscCode == code }) {
-            return component.toRecord()
+           let component = inventory.first(where: { $0.lcscCode == code || $0.supplierLCSCCode == code }) {
+            return component.toRecord().with(inventoryCode: inventoryCode)
         }
 
         if let code = card.lcscCode,
            let archived = loadArchiveRecord(lcscCode: code) {
-            return archived
+            return archived.normalizedForInventory().with(inventoryCode: inventoryCode)
         }
 
         if var digikeyRecord = card.digikeyRecord {
             digikeyRecord = ComponentRecord(
-                lcscCode: lcscCode,
+                lcscCode: inventoryCode,
                 mpn: digikeyRecord.mpn,
                 name: digikeyRecord.name,
                 description: digikeyRecord.description,
@@ -761,6 +884,7 @@ final class ComponentStore {
                 digikeyPartNumber: digikeyRecord.digikeyPartNumber,
                 supplierProductURL: digikeyRecord.supplierProductURL,
                 priceBreaks: digikeyRecord.priceBreaks,
+                lcscSupplierCode: card.lcscCode.flatMap { LCSCCode.isValid($0) ? $0 : nil },
                 minimumOrderQuantity: digikeyRecord.minimumOrderQuantity,
                 leadTimeWeeks: digikeyRecord.leadTimeWeeks,
                 digikeyProductStatus: digikeyRecord.digikeyProductStatus,
@@ -772,7 +896,7 @@ final class ComponentStore {
         }
 
         return ComponentRecord(
-            lcscCode: lcscCode,
+            lcscCode: inventoryCode,
             mpn: card.mpn,
             name: card.mpn,
             description: card.description,
@@ -785,7 +909,8 @@ final class ComponentStore {
             supplierStock: card.lcscStock ?? card.digikeyStock,
             dataSource: card.hasLCSC ? .lcsc : (card.hasDigiKey ? .digikey : .manual),
             digikeyPartNumber: card.digikeyPartNumber,
-            supplierProductURL: card.digikeyURL ?? card.lcscURL
+            supplierProductURL: card.digikeyURL ?? card.lcscURL,
+            lcscSupplierCode: card.lcscCode.flatMap { LCSCCode.isValid($0) ? $0 : nil }
         )
     }
 

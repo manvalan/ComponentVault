@@ -101,15 +101,25 @@ ComponentVault/
 }
 ```
 
+## Codici inventario vs LCSC
+
+| Codice | Uso |
+|--------|-----|
+| **CV-*** | Codice inventario ComponentVault (chiave univoca) |
+| **Cxxxxx** (LCSC) | Codice fornitore LCSC — visibile accanto al CV, usato in EasyEDA |
+| **DigiKey P/N** | Part number DigiKey — sempre visibile quando disponibile |
+
+Quando importi un componente con LCSC, l'app salva **CV-*** come ID inventario e **Cxxxxx** in un campo separato. I tre codici compaiono in lista e scheda dettaglio.
+
 ## Roadmap
 
 | Fase | Obiettivo |
 |------|-----------|
-| **v0.1** | App macOS, import CSV, LCSC live |
+| **v0.1** | App macOS, import CSV, LCSC live ✓ |
 | **v0.2** | Stock, progetti BOM, filtri, export, alert ✓ |
-| **v0.3** | API REST su michelebigi.it + sync |
-| **v0.4** | DigiKey provider (OAuth2) |
-| **v1.0** | App iPad (SwiftUI condiviso) |
+| **v0.3** | API REST + sync componenti ✓ (deploy server) |
+| **v0.4** | DigiKey OAuth2 + sync progetti ✓ (deploy server v0.4) |
+| **v1.0** | App iPad ✓ (validazione device) |
 
 ## Note LCSC
 

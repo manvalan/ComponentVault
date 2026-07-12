@@ -41,6 +41,7 @@ final class Component {
     var minQuantity: Int
     var tags: [String]
     var digikeyPartNumber: String?
+    var lcscSupplierCode: String?
     var supplierProductURL: String?
     var priceBreaksJSON: String
     var minimumOrderQuantity: Int?
@@ -79,6 +80,7 @@ final class Component {
         minQuantity: Int = 0,
         tags: [String] = [],
         digikeyPartNumber: String? = nil,
+        lcscSupplierCode: String? = nil,
         supplierProductURL: String? = nil,
         priceBreaksJSON: String = "[]",
         minimumOrderQuantity: Int? = nil,
@@ -110,6 +112,7 @@ final class Component {
         self.minQuantity = minQuantity
         self.tags = tags
         self.digikeyPartNumber = digikeyPartNumber
+        self.lcscSupplierCode = lcscSupplierCode
         self.supplierProductURL = supplierProductURL
         self.priceBreaksJSON = priceBreaksJSON
         self.minimumOrderQuantity = minimumOrderQuantity
@@ -216,21 +219,43 @@ final class Component {
         category.components(separatedBy: "/").first ?? category
     }
 
-    var needsLCSCCodeResolution: Bool {
-        !LCSCCode.isValid(lcscCode)
-    }
+    /// Codice inventario ComponentVault (`CV-*` o legacy `Cxxxxx` non ancora migrato).
+    var inventoryCode: String { lcscCode }
 
-    var isInternalComponentCode: Bool {
-        InternalComponentCode.isInternal(lcscCode) && !LCSCCode.isValid(lcscCode)
-    }
-
-    /// Codice da mostrare: C LCSC reale, oppure codice interno CV-*.
-    var resolvedLCSCCode: String {
-        if LCSCCode.isValid(lcscCode) { return lcscCode }
-        if let fromSnapshot = LCSCCode.extract(from: lcscSnapshot?.productURL) {
-            return fromSnapshot
+    /// Codice LCSC `Cxxxxx` del fornitore (EasyEDA, link LCSC).
+    var supplierLCSCCode: String? {
+        if let lcscSupplierCode, LCSCCode.isValid(lcscSupplierCode) {
+            return lcscSupplierCode.uppercased()
         }
-        return lcscCode
+        if LCSCCode.isValid(lcscCode), !InternalComponentCode.isInternal(lcscCode) {
+            return lcscCode.uppercased()
+        }
+        return LCSCCode.extract(from: lcscSnapshot?.productURL)
+    }
+
+    /// Codice LCSC `Cxxxxx` valido — necessario per EasyEDA e link fornitore.
+    var hasValidLCSCCode: Bool {
+        supplierLCSCCode != nil
+    }
+
+    /// Manca ancora un Cxxxxx LCSC.
+    var needsLCSCCodeResolution: Bool {
+        !hasValidLCSCCode
+    }
+
+    /// Codice inventario `CV-*`.
+    var isInternalComponentCode: Bool {
+        InternalComponentCode.isInternal(lcscCode)
+    }
+
+    /// Mostra il banner «cerca LCSC per EasyEDA».
+    var needsLCSCForEasyEDA: Bool {
+        !hasValidLCSCCode && !mpn.isEmpty
+    }
+
+    /// Codice LCSC per EasyEDA / copia; altrimenti codice inventario.
+    var resolvedLCSCCode: String {
+        supplierLCSCCode ?? lcscCode
     }
 
     func apply(_ record: ComponentRecord, preserveQuantity: Bool = true) {
@@ -248,6 +273,8 @@ final class Component {
     }
 
     func applyLCSC(_ record: ComponentRecord, preserveQuantity: Bool = true) {
+        applySupplierLCSC(from: record)
+
         mpn = record.mpn
         name = record.name
         componentDescription = record.description
@@ -401,6 +428,15 @@ final class Component {
         }
     }
 
+    private func applySupplierLCSC(from record: ComponentRecord) {
+        if let supplier = record.lcscSupplierCode, LCSCCode.isValid(supplier) {
+            lcscSupplierCode = supplier.uppercased()
+        } else if LCSCCode.isValid(record.lcscCode),
+                  InternalComponentCode.isInternal(lcscCode) || lcscSupplierCode == nil {
+            lcscSupplierCode = record.lcscCode.uppercased()
+        }
+    }
+
     func toRecord() -> ComponentRecord {
         ComponentRecord(
             lcscCode: lcscCode,
@@ -426,6 +462,7 @@ final class Component {
             digikeyPartNumber: digikeyPartNumber,
             supplierProductURL: supplierProductURL,
             priceBreaks: priceBreaks,
+            lcscSupplierCode: lcscSupplierCode,
             minimumOrderQuantity: minimumOrderQuantity,
             leadTimeWeeks: leadTimeWeeks,
             digikeyProductStatus: digikeyProductStatus,
