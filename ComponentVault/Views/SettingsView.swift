@@ -255,9 +255,20 @@ struct SettingsView: View {
                         .disabled(isDigiKeyBusy || !digiKeyTokenExists)
                     }
                     #else
-                    Text("OAuth automatico disponibile solo su Mac. Usa la connessione manuale o sincronizza da un Mac con token già configurato.")
+                    HStack(spacing: 10) {
+                        Button("Apri login DigiKey") {
+                            Task { await startDigiKeyLoginIOS() }
+                        }
+                        .disabled(isDigiKeyBusy)
+
+                        Button("Rinnova token") {
+                            Task { await refreshDigiKeyToken() }
+                        }
+                        .disabled(isDigiKeyBusy || !digiKeyTokenExists)
+                    }
+                    Text("Su iPad usa redirect `componentvault://digikey/callback` nel portale DigiKey.")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.tertiary)
                     #endif
 
                     DisclosureGroup("Connessione manuale (fallback)") {
@@ -354,6 +365,30 @@ struct SettingsView: View {
 
         isDigiKeyBusy = false
         digiKeyLoginTask = nil
+    }
+    #endif
+
+    #if os(iOS)
+    private func startDigiKeyLoginIOS() async {
+        guard let config = DigiKeyConfig.load() else { return }
+        isDigiKeyBusy = true
+        digiKeyStatusMessage = "Apertura login DigiKey…"
+        defer { isDigiKeyBusy = false }
+
+        let auth = DigiKeyAuthService(config: config)
+        do {
+            let code = try await DigiKeyOAuthFlow.authorize(config: config)
+            try await auth.exchangeAuthorizationCode(code, redirectURI: DigiKeyOAuthFlow.iosRedirectURI)
+            refreshDigiKeyTokenStatus()
+            if let expiry = await auth.tokenExpiryDescription {
+                digiKeyStatusMessage = "Autenticato. Scadenza token: \(expiry)"
+            } else {
+                digiKeyStatusMessage = "Autenticato con successo."
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            digiKeyStatusMessage = "Login fallito. Prova la connessione manuale."
+        }
     }
     #endif
 

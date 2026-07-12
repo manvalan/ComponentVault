@@ -73,6 +73,7 @@
 		A10000010000000000000042 /* ExternalURLService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000042 /* ExternalURLService.swift */; };
 		A10000010000000000000043 /* PlatformHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000043 /* PlatformHelpers.swift */; };
 		A10000010000000000000044 /* PadContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000044 /* PadContentView.swift */; };
+		A10000010000000000000046 /* DigiKeyOAuthFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000046 /* DigiKeyOAuthFlow.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -143,6 +144,8 @@
 		A20000010000000000000043 /* PlatformHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformHelpers.swift; sourceTree = "<group>"; };
 		A20000010000000000000044 /* PadContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PadContentView.swift; sourceTree = "<group>"; };
 		A20000010000000000000045 /* ComponentVault-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "ComponentVault-iOS.entitlements"; sourceTree = "<group>"; };
+		A20000010000000000000046 /* DigiKeyOAuthFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigiKeyOAuthFlow.swift; sourceTree = "<group>"; };
+		A20000010000000000000047 /* iOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "iOS-Info.plist"; sourceTree = "<group>"; };
 		A2000001000000000000002A /* localhost.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; path = localhost.p12; sourceTree = "<group>"; };
 		A30000010000000000000001 /* ComponentVault.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ComponentVault.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -177,6 +180,7 @@
 				A50000010000000000000008 /* DigiKeyOAuth */,
 				A2000001000000000000000E /* ComponentVault.entitlements */,
 				A20000010000000000000045 /* ComponentVault-iOS.entitlements */,
+				A20000010000000000000047 /* iOS-Info.plist */,
 			);
 			path = ComponentVault;
 			sourceTree = "<group>";
@@ -253,6 +257,7 @@
 				A2000001000000000000003A /* BOMPricingService.swift */,
 				A2000001000000000000003C /* MPNLookupService.swift */,
 				A20000010000000000000040 /* LCSCEquivalentSearchService.swift */,
+				A20000010000000000000046 /* DigiKeyOAuthFlow.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -432,6 +437,7 @@
 				A10000010000000000000042 /* ExternalURLService.swift in Sources */,
 				A10000010000000000000043 /* PlatformHelpers.swift in Sources */,
 				A10000010000000000000044 /* PadContentView.swift in Sources */,
+				A10000010000000000000046 /* DigiKeyOAuthFlow.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -558,6 +564,8 @@
 				"ENABLE_OUTGOING_NETWORK_CONNECTIONS[sdk=macosx*]" = YES;
 				"ENABLE_USER_SELECTED_FILES[sdk=macosx*]" = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				"INFOPLIST_FILE[sdk=iphoneos*]" = ComponentVault/iOS-Info.plist;
+				"INFOPLIST_FILE[sdk=iphonesimulator*]" = ComponentVault/iOS-Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ComponentVault;
 				"INFOPLIST_KEY_LSApplicationCategoryType[sdk=macosx*]" = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -600,6 +608,8 @@
 				"ENABLE_OUTGOING_NETWORK_CONNECTIONS[sdk=macosx*]" = YES;
 				"ENABLE_USER_SELECTED_FILES[sdk=macosx*]" = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				"INFOPLIST_FILE[sdk=iphoneos*]" = ComponentVault/iOS-Info.plist;
+				"INFOPLIST_FILE[sdk=iphonesimulator*]" = ComponentVault/iOS-Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ComponentVault;
 				"INFOPLIST_KEY_LSApplicationCategoryType[sdk=macosx*]" = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";

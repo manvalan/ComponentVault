@@ -86,4 +86,5 @@ struct ComponentVaultApp: App {
 extension Notification.Name {
     static let importCSV = Notification.Name("ComponentVault.importCSV")
     static let exportInventory = Notification.Name("ComponentVault.exportInventory")
+    static let openSettings = Notification.Name("ComponentVault.openSettings")
 }

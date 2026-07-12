@@ -26,5 +26,10 @@ struct PadContentView: View {
                 .tabItem { Label(AppSection.settings.title, systemImage: AppSection.settings.icon) }
                 .tag(AppSection.settings)
         }
+        #if os(iOS)
+        .onReceive(NotificationCenter.default.publisher(for: .openSettings)) { _ in
+            section = .settings
+        }
+        #endif
     }
 }

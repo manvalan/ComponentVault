@@ -109,12 +109,13 @@ actor DigiKeyAuthService {
         try await exchangeAuthorizationCode(code)
     }
 
-    func exchangeAuthorizationCode(_ code: String) async throws {
+    func exchangeAuthorizationCode(_ code: String, redirectURI: String? = nil) async throws {
+        let redirect = redirectURI ?? config.callbackURL
         let token = try await tokenRequest(body: [
             "code": code,
             "client_id": config.clientID,
             "client_secret": config.clientSecret,
-            "redirect_uri": config.callbackURL,
+            "redirect_uri": redirect,
             "grant_type": "authorization_code",
         ])
         try saveCache(token)
