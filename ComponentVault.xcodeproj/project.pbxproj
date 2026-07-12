@@ -26,7 +26,6 @@
 		A10000010000000000000011 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000011 /* Project.swift */; };
 		A10000010000000000000012 /* ComponentFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000012 /* ComponentFilter.swift */; };
 		A10000010000000000000013 /* ExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000013 /* ExportService.swift */; };
-		A1000001000000000000004A /* EasyEDAService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000004A /* EasyEDAService.swift */; };
 		A10000010000000000000014 /* ProjectStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000014 /* ProjectStore.swift */; };
 		A10000010000000000000015 /* CSVDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000015 /* CSVDocument.swift */; };
 		A10000010000000000000016 /* FilterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000016 /* FilterBar.swift */; };
@@ -77,6 +76,7 @@
 		A10000010000000000000044 /* PadContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000044 /* PadContentView.swift */; };
 		A10000010000000000000046 /* DigiKeyOAuthFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000046 /* DigiKeyOAuthFlow.swift */; };
 		A10000010000000000000048 /* DigiKeyConfigEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000048 /* DigiKeyConfigEditorView.swift */; };
+		A1000001000000000000004A /* EasyEDAService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000004A /* EasyEDAService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -100,7 +100,6 @@
 		A20000010000000000000011 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
 		A20000010000000000000012 /* ComponentFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentFilter.swift; sourceTree = "<group>"; };
 		A20000010000000000000013 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportService.swift; sourceTree = "<group>"; };
-		A2000001000000000000004A /* EasyEDAService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EasyEDAService.swift; sourceTree = "<group>"; };
 		A20000010000000000000014 /* ProjectStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectStore.swift; sourceTree = "<group>"; };
 		A20000010000000000000015 /* CSVDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVDocument.swift; sourceTree = "<group>"; };
 		A20000010000000000000016 /* FilterBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterBar.swift; sourceTree = "<group>"; };
@@ -153,6 +152,7 @@
 		A20000010000000000000046 /* DigiKeyOAuthFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigiKeyOAuthFlow.swift; sourceTree = "<group>"; };
 		A20000010000000000000047 /* iOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "iOS-Info.plist"; sourceTree = "<group>"; };
 		A20000010000000000000048 /* DigiKeyConfigEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigiKeyConfigEditorView.swift; sourceTree = "<group>"; };
+		A2000001000000000000004A /* EasyEDAService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EasyEDAService.swift; sourceTree = "<group>"; };
 		A30000010000000000000001 /* ComponentVault.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ComponentVault.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -566,6 +566,7 @@
 				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "ComponentVault/ComponentVault-iOS.entitlements";
 				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "ComponentVault/ComponentVault-iOS.entitlements";
 				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = ComponentVault/ComponentVault.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				"COMBINE_HIDPI_IMAGES[sdk=macosx*]" = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -610,6 +611,7 @@
 				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "ComponentVault/ComponentVault-iOS.entitlements";
 				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "ComponentVault/ComponentVault-iOS.entitlements";
 				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = ComponentVault/ComponentVault.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				"COMBINE_HIDPI_IMAGES[sdk=macosx*]" = YES;
 				CURRENT_PROJECT_VERSION = 1;
