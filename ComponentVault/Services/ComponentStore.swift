@@ -788,7 +788,7 @@ final class ComponentStore {
     }
 
     private func loadArchiveRecord(lcscCode: String) -> ComponentRecord? {
-        let path = "/Users/michelebigi/LCSC/json_full_data/\(lcscCode).json"
+        let path = AppPaths.jsonArchiveDirectory.appendingPathComponent("\(lcscCode).json").path
         guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
               let record = try? JSONDecoder().decode(ComponentRecord.self, from: data) else {
             return nil

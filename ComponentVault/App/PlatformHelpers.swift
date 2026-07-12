@@ -1,0 +1,30 @@
+import SwiftUI
+
+extension View {
+    @ViewBuilder
+    func platformHelp(_ text: String) -> some View {
+        #if os(macOS)
+        self.help(text)
+        #else
+        self
+        #endif
+    }
+
+    @ViewBuilder
+    func platformSheetFrame(minWidth: CGFloat, minHeight: CGFloat) -> some View {
+        #if os(macOS)
+        self.frame(minWidth: minWidth, minHeight: minHeight)
+        #else
+        self
+        #endif
+    }
+
+    @ViewBuilder
+    func platformWindowMinSize(width: CGFloat, height: CGFloat) -> some View {
+        #if os(macOS)
+        self.frame(minWidth: width, minHeight: height)
+        #else
+        self.frame(maxWidth: .infinity, maxHeight: .infinity)
+        #endif
+    }
+}

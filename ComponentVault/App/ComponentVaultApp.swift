@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
+
+#if os(macOS)
 import AppKit
+#endif
 
 @main
 struct ComponentVaultApp: App {
@@ -13,11 +16,14 @@ struct ComponentVaultApp: App {
             fatalError("Impossibile avviare il database: \(error.localizedDescription)")
         }
 
+        #if os(macOS)
         DispatchQueue.main.async {
             Self.applyApplicationIcon()
         }
+        #endif
     }
 
+    #if os(macOS)
     private static func applyApplicationIcon() {
         if let icon = NSImage(named: "AppIcon") {
             NSApplication.shared.applicationIconImage = icon
@@ -29,21 +35,26 @@ struct ComponentVaultApp: App {
             NSApplication.shared.applicationIconImage = icon
         }
     }
+    #endif
 
     var body: some Scene {
+        mainWindow
+        #if os(macOS)
+        settingsWindow
+        #endif
+    }
+
+    private var mainWindow: some Scene {
         WindowGroup {
             RootView()
-                .frame(
-                    minWidth: AppLayout.minWidth,
-                    minHeight: AppLayout.minHeight
-                )
+                .platformWindowMinSize(width: AppLayout.minWidth, height: AppLayout.minHeight)
         }
+        #if os(macOS)
         .defaultSize(
             width: AppLayout.defaultWidth,
             height: AppLayout.defaultHeight
         )
         .windowResizability(.contentMinSize)
-        .modelContainer(container)
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button("Importa CSV…") {
@@ -58,12 +69,18 @@ struct ComponentVaultApp: App {
                 .keyboardShortcut("e", modifiers: [.command, .shift])
             }
         }
+        #endif
+        .modelContainer(container)
+    }
 
+    #if os(macOS)
+    private var settingsWindow: some Scene {
         Settings {
             SettingsView()
         }
         .modelContainer(container)
     }
+    #endif
 }
 
 extension Notification.Name {

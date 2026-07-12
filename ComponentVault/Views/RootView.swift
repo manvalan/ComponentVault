@@ -61,8 +61,25 @@ struct RootView: View {
     private func loadInventoryIfNeeded() async {
         guard components.isEmpty else { return }
 
+        #if os(iOS)
+        if !DatabaseBootstrap.isDatabaseAvailable(), SyncSettings.isConfigured {
+            isBootstrapping = true
+            defer { isBootstrapping = false }
+            if let message = try? await SyncRunner.runFullSync(modelContext: modelContext) {
+                bootstrapError = nil
+                if !message.isEmpty { return }
+            }
+        }
+        #endif
+
         guard DatabaseBootstrap.isDatabaseAvailable() else {
-            bootstrapError = "Database non trovato in /Users/michelebigi/LCSC"
+            #if os(iOS)
+            bootstrapError = """
+            Nessun dato locale. Configura server e API key in Impostazioni, poi sincronizza — oppure importa un CSV dall'inventario.
+            """
+            #else
+            bootstrapError = "Database non trovato in \(AppPaths.lcscDataRoot.path)"
+            #endif
             return
         }
 

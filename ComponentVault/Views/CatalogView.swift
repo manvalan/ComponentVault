@@ -85,11 +85,102 @@ struct CatalogView: View {
             NavigationStack {
                 CatalogLookupView()
             }
+            #if os(iOS)
+            .presentationDetents([.large])
+            #endif
         }
         .sheet(isPresented: $showDigiKeyExplorer) {
             NavigationStack {
                 DigiKeyExplorerView()
             }
+            #if os(iOS)
+            .presentationDetents([.large])
+            #endif
+        }
+    }
+
+    #if os(macOS)
+    private var catalogGroupsTable: some View {
+        Table(filteredGroups, selection: $selectedGroupID) {
+            TableColumn("Valore") { group in
+                Text(group.value)
+                    .font(.body.monospacedDigit().weight(.medium))
+            }
+            .width(min: 90, ideal: 110)
+
+            TableColumn("Footprint") { group in
+                Text(group.footprint)
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
+            }
+            .width(min: 90, ideal: 120)
+
+            TableColumn("Qty") { group in
+                Text("\(group.totalQuantity)")
+                    .font(.body.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(group.totalQuantity > 0 ? .primary : .tertiary)
+            }
+            .width(48)
+
+            TableColumn("MPN") { group in
+                Text(group.primaryMPN)
+                    .lineLimit(1)
+                    .platformHelp(group.components.map(\.mpn).joined(separator: ", "))
+            }
+
+            TableColumn("Var.") { group in
+                if group.componentCount > 1 {
+                    Text("\(group.componentCount)×")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .width(44)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onChange(of: selectedGroupID) { _, newID in
+            applyGroupSelection(newID)
+        }
+    }
+    #endif
+
+    #if os(iOS)
+    private var catalogGroupsList: some View {
+        List(filteredGroups, selection: $selectedGroupID) { group in
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(group.value)
+                        .font(.body.monospacedDigit().weight(.medium))
+                    Text(group.footprint)
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("qty \(group.totalQuantity)")
+                        .font(.caption.monospacedDigit().weight(.semibold))
+                    if group.componentCount > 1 {
+                        Text("\(group.componentCount) var.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .tag(group.id)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onChange(of: selectedGroupID) { _, newID in
+            applyGroupSelection(newID)
+        }
+    }
+    #endif
+
+    private func applyGroupSelection(_ newID: String?) {
+        guard let newID,
+              let group = filteredGroups.first(where: { $0.id == newID }) else { return }
+        if selectedComponent == nil
+            || !group.components.contains(where: { $0.lcscCode == selectedComponent?.lcscCode }) {
+            selectedComponent = group.components.first
         }
     }
 
@@ -126,51 +217,11 @@ struct CatalogView: View {
             VStack(spacing: 0) {
                 catalogHeader(for: selectedType)
 
-                Table(filteredGroups, selection: $selectedGroupID) {
-                    TableColumn("Valore") { group in
-                        Text(group.value)
-                            .font(.body.monospacedDigit().weight(.medium))
-                    }
-                    .width(min: 90, ideal: 110)
-
-                    TableColumn("Footprint") { group in
-                        Text(group.footprint)
-                            .font(.caption.monospaced())
-                            .foregroundStyle(.secondary)
-                    }
-                    .width(min: 90, ideal: 120)
-
-                    TableColumn("Qty") { group in
-                        Text("\(group.totalQuantity)")
-                            .font(.body.monospacedDigit().weight(.semibold))
-                            .foregroundStyle(group.totalQuantity > 0 ? .primary : .tertiary)
-                    }
-                    .width(48)
-
-                    TableColumn("MPN") { group in
-                        Text(group.primaryMPN)
-                            .lineLimit(1)
-                            .help(group.components.map(\.mpn).joined(separator: ", "))
-                    }
-
-                    TableColumn("Var.") { group in
-                        if group.componentCount > 1 {
-                            Text("\(group.componentCount)×")
-                                .font(.caption.weight(.medium))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .width(44)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .onChange(of: selectedGroupID) { _, newID in
-                    guard let newID,
-                          let group = filteredGroups.first(where: { $0.id == newID }) else { return }
-                    if selectedComponent == nil
-                        || !group.components.contains(where: { $0.lcscCode == selectedComponent?.lcscCode }) {
-                        selectedComponent = group.components.first
-                    }
-                }
+                #if os(macOS)
+                catalogGroupsTable
+                #else
+                catalogGroupsList
+                #endif
 
                 if let group = activeGroup, group.componentCount > 1 {
                     variantBar(for: group)
@@ -226,14 +277,14 @@ struct CatalogView: View {
                 } label: {
                     Label("Progettazione", systemImage: "magnifyingglass.circle")
                 }
-                .help("Cerca nei cataloghi LCSC e DigiKey per tipo, valore e footprint")
+                .platformHelp("Cerca nei cataloghi LCSC e DigiKey per tipo, valore e footprint")
 
                 Button {
                     showDigiKeyExplorer = true
                 } label: {
                     Label("Esplora DigiKey", systemImage: "shippingbox")
                 }
-                .help("Ricerca keyword, barcode, sostituti e packaging alternativo DigiKey")
+                .platformHelp("Ricerca keyword, barcode, sostituti e packaging alternativo DigiKey")
 
                 TextField("Cerca valore, footprint, MPN…", text: $searchText)
                     .textFieldStyle(.roundedBorder)

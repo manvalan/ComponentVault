@@ -3,7 +3,7 @@ import Foundation
 struct LCSCProvider: ComponentDataProvider {
     let source: DataSource = .lcsc
 
-    private static let localArchivePath = "/Users/michelebigi/LCSC/json_full_data"
+    private static var localArchivePath: String { AppPaths.jsonArchivePath }
 
     private let session: URLSession
 

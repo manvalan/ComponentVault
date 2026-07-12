@@ -62,6 +62,6 @@ struct DigiKeyCandidateSheet: View {
             }
         }
         .padding(20)
-        .frame(minWidth: 520, minHeight: 400)
+        .platformSheetFrame(minWidth: 520, minHeight: 400)
     }
 }

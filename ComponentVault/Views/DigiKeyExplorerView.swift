@@ -41,7 +41,7 @@ struct DigiKeyExplorerView: View {
             Divider()
             content
         }
-        .frame(minWidth: 760, minHeight: 560)
+        .platformSheetFrame(minWidth: 760, minHeight: 560)
         .navigationTitle("Esplora DigiKey")
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {

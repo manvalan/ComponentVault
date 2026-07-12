@@ -34,97 +34,19 @@ struct ProjectDetailView: View {
         bomSummary.lines.filter(\.isObsolete).count
     }
 
+    private var sortedItems: [ProjectItem] {
+        project.items.sorted { $0.designator < $1.designator }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             summaryBar
 
-            Table(project.items.sorted(by: { $0.designator < $1.designator })) {
-                TableColumn("Ref") { item in
-                    Text(item.designator.isEmpty ? "—" : item.designator)
-                        .font(.caption.monospaced())
-                }
-                .width(60)
-
-                TableColumn("LCSC") { item in
-                    Text(item.component?.lcscCode ?? "—")
-                        .font(.caption.monospaced())
-                }
-                .width(90)
-
-                TableColumn("DigiKey") { item in
-                    let pn = item.component?.digikeyPartNumber
-                        ?? item.component?.digikeySnapshot?.digikeyPartNumber
-                    Text(pn?.isEmpty == false ? pn! : "—")
-                        .font(.caption.monospaced())
-                        .lineLimit(1)
-                }
-                .width(100)
-
-                TableColumn("MPN") { item in
-                    Text(item.component?.mpn ?? "—")
-                        .lineLimit(1)
-                }
-
-                TableColumn("Richiesti") { item in
-                    Text("\(item.requiredQuantity)")
-                        .monospacedDigit()
-                }
-                .width(70)
-
-                TableColumn("Prezzo DK") { item in
-                    if let line = bomSummary.lines.first(where: { $0.item.persistentModelID == item.persistentModelID }),
-                       let unit = line.unitPrice,
-                       let currency = line.currency {
-                        Text(String(format: "%.3f %@", unit, currency))
-                            .font(.caption.monospacedDigit())
-                    } else {
-                        Text("—")
-                            .foregroundStyle(.tertiary)
-                    }
-                }
-                .width(100)
-
-                TableColumn("Disponibili") { item in
-                    Text("\(item.availableQuantity)")
-                        .monospacedDigit()
-                        .foregroundStyle(item.isAvailable ? Color.primary : Color.orange)
-                }
-                .width(80)
-
-                TableColumn("Stato") { item in
-                    HStack(spacing: 4) {
-                        StatusBadge(item: item)
-                        if let line = bomSummary.lines.first(where: { $0.item.persistentModelID == item.persistentModelID }),
-                           line.isObsolete {
-                            ObsoleteBadge()
-                        }
-                    }
-                }
-                .width(130)
-
-                TableColumn("") { item in
-                    HStack(spacing: 4) {
-                        if let line = bomSummary.lines.first(where: { $0.item.persistentModelID == item.persistentModelID }),
-                           line.isObsolete {
-                            Button {
-                                Task { await loadSubstitutes(for: item) }
-                            } label: {
-                                Image(systemName: "arrow.triangle.swap")
-                            }
-                            .buttonStyle(.borderless)
-                            .help("Cerca sostituti DigiKey")
-                        }
-
-                        Button(role: .destructive) {
-                            try? projectStore?.removeItem(item, from: project)
-                        } label: {
-                            Image(systemName: "trash")
-                        }
-                        .buttonStyle(.borderless)
-                    }
-                }
-                .width(56)
-            }
+            #if os(macOS)
+            bomTable
+            #else
+            bomList
+            #endif
         }
         .navigationTitle(project.name)
         .toolbar {
@@ -165,7 +87,7 @@ struct ProjectDetailView: View {
                 } label: {
                     Label("Riserva stock", systemImage: "minus.circle")
                 }
-                .help("Scala le quantità dall'inventario per i componenti disponibili")
+                .platformHelp("Scala le quantità dall'inventario per i componenti disponibili")
             }
         }
         .onAppear {
@@ -309,6 +231,159 @@ struct ProjectDetailView: View {
             }
         case .failure(let error):
             importError = error.localizedDescription
+        }
+    }
+
+    #if os(macOS)
+    private var bomTable: some View {
+        Table(sortedItems) {
+            TableColumn("Ref") { item in
+                Text(item.designator.isEmpty ? "—" : item.designator)
+                    .font(.caption.monospaced())
+            }
+            .width(60)
+
+            TableColumn("LCSC") { item in
+                Text(item.component?.lcscCode ?? "—")
+                    .font(.caption.monospaced())
+            }
+            .width(90)
+
+            TableColumn("DigiKey") { item in
+                Text(digiKeyPart(for: item))
+                    .font(.caption.monospaced())
+                    .lineLimit(1)
+            }
+            .width(100)
+
+            TableColumn("MPN") { item in
+                Text(item.component?.mpn ?? "—")
+                    .lineLimit(1)
+            }
+
+            TableColumn("Richiesti") { item in
+                Text("\(item.requiredQuantity)")
+                    .monospacedDigit()
+            }
+            .width(70)
+
+            TableColumn("Prezzo DK") { item in
+                Text(priceLabel(for: item))
+                    .font(.caption.monospacedDigit())
+            }
+            .width(100)
+
+            TableColumn("Disponibili") { item in
+                Text("\(item.availableQuantity)")
+                    .monospacedDigit()
+                    .foregroundStyle(item.isAvailable ? Color.primary : Color.orange)
+            }
+            .width(80)
+
+            TableColumn("Stato") { item in
+                HStack(spacing: 4) {
+                    StatusBadge(item: item)
+                    if isObsolete(item) { ObsoleteBadge() }
+                }
+            }
+            .width(130)
+
+            TableColumn("") { item in
+                bomRowActions(for: item)
+            }
+            .width(56)
+        }
+    }
+    #endif
+
+    #if os(iOS)
+    private var bomList: some View {
+        List {
+            ForEach(Array(sortedItems.enumerated()), id: \.element.persistentModelID) { _, item in
+                bomRowContent(for: item)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            try? projectStore?.removeItem(item, from: project)
+                        } label: {
+                            Label("Elimina", systemImage: "trash")
+                        }
+                    }
+            }
+        }
+    }
+
+    private func bomRowContent(for item: ProjectItem) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(item.designator.isEmpty ? "—" : item.designator)
+                    .font(.caption.monospaced().weight(.semibold))
+                Spacer()
+                bomRowActions(for: item)
+            }
+            HStack(spacing: 8) {
+                Text(item.component?.lcscCode ?? "—")
+                    .font(.caption2.monospaced())
+                Text(digiKeyPart(for: item))
+                    .font(.caption2.monospaced())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Text(item.component?.mpn ?? "—")
+                .font(.caption)
+                .lineLimit(1)
+            HStack {
+                Text("Rich. \(item.requiredQuantity)")
+                Text("Disp. \(item.availableQuantity)")
+                    .foregroundStyle(item.isAvailable ? Color.primary : Color.orange)
+                Text(priceLabel(for: item))
+                    .foregroundStyle(.secondary)
+                StatusBadge(item: item)
+                if isObsolete(item) { ObsoleteBadge() }
+            }
+            .font(.caption2)
+        }
+        .padding(.vertical, 4)
+    }
+    #endif
+
+    private func digiKeyPart(for item: ProjectItem) -> String {
+        let pn = item.component?.digikeyPartNumber
+            ?? item.component?.digikeySnapshot?.digikeyPartNumber
+        return pn?.isEmpty == false ? pn! : "—"
+    }
+
+    private func priceLabel(for item: ProjectItem) -> String {
+        if let line = bomSummary.lines.first(where: { $0.item.persistentModelID == item.persistentModelID }),
+           let unit = line.unitPrice,
+           let currency = line.currency {
+            return String(format: "%.3f %@", unit, currency)
+        }
+        return "—"
+    }
+
+    private func isObsolete(_ item: ProjectItem) -> Bool {
+        bomSummary.lines.first(where: { $0.item.persistentModelID == item.persistentModelID })?.isObsolete == true
+    }
+
+    @ViewBuilder
+    private func bomRowActions(for item: ProjectItem) -> some View {
+        HStack(spacing: 4) {
+            if isObsolete(item) {
+                Button {
+                    Task { await loadSubstitutes(for: item) }
+                } label: {
+                    Image(systemName: "arrow.triangle.swap")
+                }
+                .buttonStyle(.borderless)
+                .platformHelp("Cerca sostituti DigiKey")
+            }
+
+            Button(role: .destructive) {
+                try? projectStore?.removeItem(item, from: project)
+            } label: {
+                Image(systemName: "trash")
+            }
+            .buttonStyle(.borderless)
         }
     }
 

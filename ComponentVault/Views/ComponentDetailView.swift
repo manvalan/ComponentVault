@@ -87,7 +87,7 @@ struct ComponentDetailView: View {
                     Label("DigiKey", systemImage: "dollarsign.circle")
                 }
                 .disabled(isEnriching || store == nil || component.mpn.isEmpty)
-                .help(component.mpn.isEmpty ? "Serve un MPN" : "Arricchisci da DigiKey (richiede token in Impostazioni)")
+                .platformHelp(component.mpn.isEmpty ? "Serve un MPN" : "Arricchisci da DigiKey (richiede token in Impostazioni)")
 
                 if !component.mpn.isEmpty {
                     Button {
@@ -100,7 +100,7 @@ struct ComponentDetailView: View {
                         }
                     }
                     .disabled(isLookingUpMPN)
-                    .help("Cerca codice LCSC Cxxxxx dal MPN \(component.mpn)")
+                    .platformHelp("Cerca codice LCSC Cxxxxx dal MPN \(component.mpn)")
                 }
 
                 Link(destination: lcscURL) {
@@ -591,7 +591,7 @@ struct ComponentDetailView: View {
                 }
             }
         }
-        .frame(minWidth: 680, minHeight: 480)
+        .platformSheetFrame(minWidth: 680, minHeight: 480)
     }
 
     private func lookupLCSCFromMPN() async {
@@ -817,6 +817,6 @@ struct ComponentDetailSheet: View {
                     }
                 }
         }
-        .frame(minWidth: 720, minHeight: 600)
+        .platformSheetFrame(minWidth: 720, minHeight: 600)
     }
 }

@@ -33,6 +33,16 @@ enum AppSection: String, CaseIterable, Identifiable {
 }
 
 struct ContentView: View {
+    var body: some View {
+        #if os(macOS)
+        MacContentShell()
+        #else
+        PadContentView()
+        #endif
+    }
+}
+
+private struct MacContentShell: View {
     @State private var section: AppSection = .inventory
 
     var body: some View {
@@ -364,7 +374,7 @@ struct ComponentRowView: View {
                         Image(systemName: "cart.badge.clock")
                             .font(.caption2)
                             .foregroundStyle(.orange)
-                            .help("Da ordinare")
+                            .platformHelp("Da ordinare")
                     } else if component.isLowStock {
                         Image(systemName: "exclamationmark.circle.fill")
                             .font(.caption2)

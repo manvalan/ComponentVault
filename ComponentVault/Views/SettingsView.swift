@@ -1,12 +1,11 @@
 import SwiftUI
 import SwiftData
-import AppKit
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Component.lcscCode) private var components: [Component]
 
-    @AppStorage("defaultCSVPath") private var defaultCSVPath = "/Users/michelebigi/LCSC/Componenti Elettronici.csv"
+    @AppStorage("defaultCSVPath") private var defaultCSVPath = AppPaths.defaultCSVPath
     @AppStorage("lcscRequestDelayMs") private var lcscRequestDelayMs = 800.0
     @AppStorage("digikeyRequestDelayMs") private var digikeyRequestDelayMs = 800.0
     @AppStorage("apiBaseURL") private var apiBaseURL = "https://cvault.michelebigi.it"
@@ -26,7 +25,7 @@ struct SettingsView: View {
     @State private var isDigiKeyBusy = false
     @State private var digiKeyLoginTask: Task<Void, Never>?
     @State private var digiKeyTokenExists = FileManager.default.fileExists(
-        atPath: "/Users/michelebigi/LCSC/digikey_token_cache.json"
+        atPath: AppPaths.digiKeyTokenCachePath
     )
 
     private var digiKeyConfigured: Bool { DigiKeyConfig.load() != nil }
@@ -181,9 +180,22 @@ struct SettingsView: View {
 
     private var pathsSection: some View {
         GroupBox("Percorsi") {
-            LabeledContent("CSV inventario") {
-                TextField("Percorso", text: $defaultCSVPath)
-                    .textFieldStyle(.roundedBorder)
+            VStack(alignment: .leading, spacing: 10) {
+                LabeledContent("Cartella LCSC") {
+                    Text(AppPaths.lcscDataRoot.path)
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                }
+                LabeledContent("CSV inventario") {
+                    TextField("Percorso", text: $defaultCSVPath)
+                        .textFieldStyle(.roundedBorder)
+                }
+                #if os(iOS)
+                Text("Su iPad i dati arrivano principalmente dal sync remoto o da import CSV.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                #endif
             }
         }
     }
@@ -221,6 +233,7 @@ struct SettingsView: View {
                 }
 
                 if digiKeyConfigured {
+                    #if os(macOS)
                     HStack(spacing: 10) {
                         Button("Apri login DigiKey") {
                             digiKeyLoginTask?.cancel()
@@ -241,6 +254,11 @@ struct SettingsView: View {
                         }
                         .disabled(isDigiKeyBusy || !digiKeyTokenExists)
                     }
+                    #else
+                    Text("OAuth automatico disponibile solo su Mac. Usa la connessione manuale o sincronizza da un Mac con token già configurato.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    #endif
 
                     DisclosureGroup("Connessione manuale (fallback)") {
                         TextField("Incolla URL o solo il code dalla barra indirizzi", text: $digiKeyRedirectURL)
@@ -263,9 +281,11 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                #if os(macOS)
                 Text("Un clic: server HTTPS locale → login DigiKey → token salvato. Il rinnovo è automatico finché il refresh token è valido.")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
+                #endif
 
                 LabeledContent("Ritardo tra richieste bulk (ms)") {
                     HStack {
@@ -281,11 +301,10 @@ struct SettingsView: View {
     }
 
     private func refreshDigiKeyTokenStatus() {
-        digiKeyTokenExists = FileManager.default.fileExists(
-            atPath: "/Users/michelebigi/LCSC/digikey_token_cache.json"
-        )
+        digiKeyTokenExists = FileManager.default.fileExists(atPath: AppPaths.digiKeyTokenCachePath)
     }
 
+    #if os(macOS)
     private func startDigiKeyLogin() async {
         guard !Task.isCancelled else { return }
         guard let config = DigiKeyConfig.load() else { return }
@@ -306,12 +325,12 @@ struct SettingsView: View {
                 callbackURL: config.callbackURL
             ) {
                 if let warmupURL = URL(string: config.callbackURL) {
-                    NSWorkspace.shared.open(warmupURL)
+                    ExternalURLService.open(warmupURL)
                     digiKeyStatusMessage = "Se il browser avvisa sul certificato, clicca Continua/Avanzate."
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     guard !Task.isCancelled else { return }
-                    NSWorkspace.shared.open(loginURL)
+                    ExternalURLService.open(loginURL)
                     digiKeyStatusMessage = "Login DigiKey aperto — clicca Allow."
                 }
             }
@@ -336,6 +355,7 @@ struct SettingsView: View {
         isDigiKeyBusy = false
         digiKeyLoginTask = nil
     }
+    #endif
 
     private func connectDigiKey() async {
         guard let config = DigiKeyConfig.load() else { return }

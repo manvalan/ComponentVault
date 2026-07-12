@@ -1,7 +1,7 @@
 import Foundation
 
 enum LCSCArchiveSearcher {
-    private static let archivePath = "/Users/michelebigi/LCSC/json_full_data"
+    private static var archivePath: String { AppPaths.jsonArchivePath }
 
     static func search(
         query: CatalogSearchQuery,

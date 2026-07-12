@@ -29,7 +29,7 @@ actor DigiKeyAuthService {
     private let session: URLSession
     private let cachePath: String
 
-    init(config: DigiKeyConfig, cachePath: String = "/Users/michelebigi/LCSC/digikey_token_cache.json") {
+    init(config: DigiKeyConfig, cachePath: String = AppPaths.digiKeyTokenCachePath) {
         self.config = config
         self.session = URLSession.shared
         self.cachePath = cachePath

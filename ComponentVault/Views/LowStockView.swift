@@ -47,7 +47,7 @@ struct LowStockView: View {
                         showDigiKeyExport = true
                     }
                     .disabled(lowStock.isEmpty)
-                    .help("CSV con stock, prezzo e suggerimento riordino DigiKey")
+                    .platformHelp("CSV con stock, prezzo e suggerimento riordino DigiKey")
 
                     Spacer()
                     Text("\(lowStock.count) alert")

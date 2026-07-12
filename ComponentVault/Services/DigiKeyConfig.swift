@@ -28,19 +28,24 @@ struct DigiKeyConfig: Codable, Sendable {
     var currency: String
     var language: String
 
-    static let defaultPath = "/Users/michelebigi/LCSC/digikey_config.yml"
+    static var defaultPath: String { AppPaths.digiKeyConfigPath }
 
     var apiBaseURL: String { environment.apiBaseURL }
 
-    /// Server locale se callback ha porta esplicita (http o https).
+    /// Server locale se callback ha porta esplicita (http o https). Solo macOS.
     var supportsLocalCallbackServer: Bool {
+        #if os(macOS)
         guard let url = URL(string: callbackURL), url.port != nil else { return false }
         let scheme = url.scheme?.lowercased()
         return scheme == "http" || scheme == "https"
+        #else
+        false
+        #endif
     }
 
-    static func load(from path: String = defaultPath) -> DigiKeyConfig? {
-        guard let content = try? String(contentsOfFile: path, encoding: .utf8) else { return nil }
+    static func load(from path: String? = nil) -> DigiKeyConfig? {
+        let resolved = path ?? defaultPath
+        guard let content = try? String(contentsOfFile: resolved, encoding: .utf8) else { return nil }
         return parseYAML(content)
     }
 

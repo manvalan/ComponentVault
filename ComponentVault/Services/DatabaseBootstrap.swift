@@ -2,7 +2,7 @@ import Foundation
 
 /// Crea e popola il database locale dalla cartella LCSC predefinita.
 enum DatabaseBootstrap {
-    static let defaultBasePath = "/Users/michelebigi/LCSC"
+    static var defaultBasePath: String { AppPaths.lcscDataRoot.path }
 
     struct Result {
         let imported: Int
@@ -10,12 +10,7 @@ enum DatabaseBootstrap {
     }
 
     static func defaultPaths() -> (csv: URL, json: URL, bom: URL) {
-        let base = URL(fileURLWithPath: defaultBasePath, isDirectory: true)
-        return (
-            csv: base.appendingPathComponent("Componenti Elettronici.csv"),
-            json: base.appendingPathComponent("json_full_data", isDirectory: true),
-            bom: base.appendingPathComponent("bom_riepilogo.csv")
-        )
+        AppPaths.defaultPaths()
     }
 
     static func isDatabaseAvailable() -> Bool {

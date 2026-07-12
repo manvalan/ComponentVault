@@ -43,7 +43,7 @@ struct CatalogLookupView: View {
             Divider()
             resultsPanel
         }
-        .frame(minWidth: 760, minHeight: 560)
+        .platformSheetFrame(minWidth: 760, minHeight: 560)
         .navigationTitle("Trova componente — progettazione")
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -164,7 +164,7 @@ struct CatalogLookupView: View {
             Text("Ordine: inventario → archivio JSON locale → API LCSC live (+ DigiKey se configurato)")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
-            Text("API live LCSC integrata · archivio: `~/LCSC/json_full_data/`")
+            Text("API live LCSC integrata · archivio: `\(AppPaths.jsonArchivePath)`")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
@@ -449,7 +449,7 @@ struct CatalogMatchCardView: View {
             Spacer()
             Button("Salva scheda", action: onImport)
                 .buttonStyle(.bordered)
-                .help("Salva la scheda tecnica con qty 0 — da ordinare, non in magazzino")
+                .platformHelp("Salva la scheda tecnica con qty 0 — da ordinare, non in magazzino")
             Button("Nel progetto", action: onAddToProject)
                 .buttonStyle(.borderedProminent)
                 .disabled(!canAddToProject)
