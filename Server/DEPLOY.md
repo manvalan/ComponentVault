@@ -143,10 +143,38 @@ python3 ~/Documents/Develop/ComponentVault/Server/scripts/push_inventory.py \
 | Metodo | URL | Auth |
 |--------|-----|------|
 | GET | `/health` | no |
+| GET | `/oauth/digikey/callback` | no (bridge OAuth iPad → `componentvault://`) |
 | GET | `/components` | `X-API-Key` |
 | GET | `/components/{lcsc}` | `X-API-Key` |
 | PUT | `/components/{lcsc}` | `X-API-Key` |
 | POST | `/sync/push` | `X-API-Key` |
+
+### OAuth DigiKey (iPad)
+
+DigiKey accetta solo redirect **HTTPS**. L'app iPad usa:
+
+```
+https://cvault.michelebigi.it/oauth/digikey/callback
+```
+
+La route `GET /oauth/digikey/callback` in `api/main.py` reindirizza a `componentvault://digikey/callback?code=…`.
+
+**Se l'iPad mostra `{"detail":"Not Found"}`** dopo il login, l'API sul server non è aggiornata. Dal Mac:
+
+```bash
+chmod +x ~/Documents/Develop/ComponentVault/Server/scripts/redeploy_api.sh
+~/Documents/Develop/ComponentVault/Server/scripts/redeploy_api.sh
+```
+
+Oppure manualmente:
+
+```bash
+scp ~/Documents/Develop/ComponentVault/Server/api/main.py root@82.165.138.64:/opt/componentvault/api/main.py
+ssh root@82.165.138.64 "cd /opt/componentvault && docker compose up -d --build api"
+curl -s https://cvault.michelebigi.it/oauth/digikey/callback | head -3
+```
+
+Risposta attesa: HTML (`DigiKey — callback`), non JSON 404.
 
 ---
 

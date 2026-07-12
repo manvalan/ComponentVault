@@ -1,41 +1,34 @@
 import Foundation
 
 enum SyncSettings {
-    static let apiBaseURLKey = "apiBaseURL"
-    static let apiKeyKey = "apiKey"
-    static let autoSyncOnLaunchKey = "autoSyncOnLaunch"
-    static let autoSyncIntervalMinutesKey = "autoSyncIntervalMinutes"
-    static let lastSyncAtKey = "lastSyncAt"
-    static let lastRemoteCountKey = "lastRemoteCount"
-
     static var autoSyncOnLaunch: Bool {
-        UserDefaults.standard.bool(forKey: autoSyncOnLaunchKey)
+        AppConfigIO.current().sync.autoOnLaunch
     }
 
     static var autoSyncIntervalMinutes: Int {
-        UserDefaults.standard.integer(forKey: autoSyncIntervalMinutesKey)
+        AppConfigIO.current().sync.intervalMinutes
     }
 
     static var isConfigured: Bool {
-        let url = UserDefaults.standard.string(forKey: apiBaseURLKey) ?? ""
-        let key = UserDefaults.standard.string(forKey: apiKeyKey) ?? ""
-        return !url.trimmingCharacters(in: .whitespaces).isEmpty
-            && !key.trimmingCharacters(in: .whitespaces).isEmpty
+        AppConfigIO.current().isServerConfigured
     }
 
     static func remoteConfig() throws -> RemoteAPIConfig {
-        try RemoteAPIConfig.from(
-            baseURLString: UserDefaults.standard.string(forKey: apiBaseURLKey) ?? "",
-            apiKey: UserDefaults.standard.string(forKey: apiKeyKey) ?? ""
+        let server = AppConfigIO.current().server
+        return try RemoteAPIConfig.from(
+            baseURLString: server.apiBaseURL,
+            apiKey: server.apiKey
         )
     }
 
     static func markSyncSuccess(remoteCount: Int, message: String) {
+        var config = AppConfigIO.current()
         let formatter = DateFormatter()
         formatter.dateStyle = .short
         formatter.timeStyle = .short
-        UserDefaults.standard.set(formatter.string(from: Date()), forKey: lastSyncAtKey)
-        UserDefaults.standard.set(remoteCount, forKey: lastRemoteCountKey)
+        config.sync.lastSyncAt = formatter.string(from: Date())
+        config.sync.lastRemoteCount = remoteCount
+        try? AppConfigIO.save(config)
     }
 }
 

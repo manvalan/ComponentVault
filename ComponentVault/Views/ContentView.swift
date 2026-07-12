@@ -64,6 +64,7 @@ private struct MacContentShell: View {
                     LowStockView()
                 case .settings:
                     SettingsView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -112,8 +113,9 @@ struct InventoryView: View {
     @Query(sort: \Component.lcscCode) private var components: [Component]
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-    @AppStorage("lcscRequestDelayMs") private var lcscRequestDelayMs = 800.0
-    @AppStorage("digikeyRequestDelayMs") private var digikeyRequestDelayMs = 800.0
+
+    private var lcscRequestDelayMs: Int { AppConfigIO.current().lcsc.requestDelayMs }
+    private var digikeyRequestDelayMs: Int { AppConfigIO.current().digikey.requestDelayMs }
 
     @State private var store: ComponentStore?
     @State private var selection: Component?
@@ -240,7 +242,7 @@ struct InventoryView: View {
                     enrichProgress = ("LCSC", 0, filteredComponents.count)
                     await store.enrichAllFromLCSC(
                         components: filteredComponents,
-                        delayMs: Int(lcscRequestDelayMs)
+                        delayMs: lcscRequestDelayMs
                     ) { c, t in
                         enrichProgress = ("LCSC", c, t)
                     }
@@ -256,7 +258,7 @@ struct InventoryView: View {
                     enrichProgress = ("DigiKey", 0, eligible.count)
                     _ = await store.enrichAllFromDigiKey(
                         components: filteredComponents,
-                        delayMs: Int(digikeyRequestDelayMs)
+                        delayMs: digikeyRequestDelayMs
                     ) { c, t in
                         enrichProgress = ("DigiKey", c, t)
                     }

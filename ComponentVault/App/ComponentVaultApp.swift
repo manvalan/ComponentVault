@@ -77,6 +77,7 @@ struct ComponentVaultApp: App {
     private var settingsWindow: some Scene {
         Settings {
             SettingsView()
+                .frame(minWidth: 560, idealWidth: 680, minHeight: 520, idealHeight: 760)
         }
         .modelContainer(container)
     }

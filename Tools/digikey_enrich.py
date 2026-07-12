@@ -24,11 +24,11 @@ import time
 from pathlib import Path
 
 import requests
-import yaml
+
+from cvault_config import TOKEN_CACHE, load_digikey_config
 
 BASE_DIR = Path("/Users/michelebigi/LCSC")
-CONFIG_PATH = BASE_DIR / "digikey_config.yml"
-TOKEN_CACHE = BASE_DIR / "digikey_token_cache.json"
+TOKEN_CACHE = TOKEN_CACHE
 DEFAULT_JSON_DIR = BASE_DIR / "digikey_json_data"
 
 AUTH_URL = "https://api.digikey.com/v1/oauth2/authorize"
@@ -39,8 +39,7 @@ SANDBOX_SEARCH_URL = "https://sandbox-api.digikey.com/products/v4/search/keyword
 
 
 def load_config() -> dict:
-    with CONFIG_PATH.open(encoding="utf-8") as f:
-        return yaml.safe_load(f)
+    return load_digikey_config()
 
 
 def api_urls(config: dict) -> tuple[str, str]:

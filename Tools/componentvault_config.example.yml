@@ -1,0 +1,29 @@
+# ComponentVault — configurazione unificata
+# Copia in ~/LCSC/componentvault_config.yml (Mac) o Documents/LCSC/ (iPad)
+
+server:
+  api_base_url: 'https://cvault.michelebigi.it'
+  api_key: ''
+
+sync:
+  auto_on_launch: false
+  interval_minutes: 0
+  last_sync_at: ''
+  last_remote_count: -1
+
+paths:
+  csv: '/Users/michelebigi/LCSC/Componenti Elettronici.csv'
+
+lcsc:
+  request_delay_ms: 800
+
+digikey:
+  client_id: ''
+  client_secret: ''
+  environment: production
+  callback_url: 'https://localhost:8443/digikey/callback'
+  ios_callback_url: 'https://cvault.michelebigi.it/oauth/digikey/callback'
+  market: IT
+  currency: EUR
+  language: it
+  request_delay_ms: 800

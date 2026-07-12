@@ -5,15 +5,8 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Component.lcscCode) private var components: [Component]
 
-    @AppStorage("defaultCSVPath") private var defaultCSVPath = AppPaths.defaultCSVPath
-    @AppStorage("lcscRequestDelayMs") private var lcscRequestDelayMs = 800.0
-    @AppStorage("digikeyRequestDelayMs") private var digikeyRequestDelayMs = 800.0
-    @AppStorage("apiBaseURL") private var apiBaseURL = "https://cvault.michelebigi.it"
-    @AppStorage("apiKey") private var apiKey = ""
-    @AppStorage("lastSyncAt") private var lastSyncAt = ""
-    @AppStorage("lastRemoteCount") private var lastRemoteCount = -1
-    @AppStorage("autoSyncOnLaunch") private var autoSyncOnLaunch = false
-    @AppStorage("autoSyncIntervalMinutes") private var autoSyncIntervalMinutes = 0
+    @State private var config = AppConfigIO.current()
+    @State private var configStatusMessage: String?
 
     @State private var store: ComponentStore?
     @State private var isBusy = false
@@ -27,30 +20,31 @@ struct SettingsView: View {
     @State private var digiKeyTokenExists = FileManager.default.fileExists(
         atPath: AppPaths.digiKeyTokenCachePath
     )
+    @State private var digiKeyConfigNonce = 0
+    @State private var digiKeyConfigExpanded = !AppConfigIO.current().isDigiKeyConfigured
 
-    private var digiKeyConfigured: Bool { DigiKeyConfig.load() != nil }
+    private var digiKeyConfigured: Bool {
+        _ = digiKeyConfigNonce
+        return config.isDigiKeyConfigured
+    }
 
     private var serverConfigured: Bool {
-        !apiBaseURL.trimmingCharacters(in: .whitespaces).isEmpty
-            && !apiKey.trimmingCharacters(in: .whitespaces).isEmpty
+        config.isServerConfigured
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                serverSection
-                syncSection
-                autoSyncSection
-                pathsSection
-                lcscSection
-                digiKeySection
+        Group {
+            #if os(iOS)
+            NavigationStack {
+                settingsScrollContent
             }
-            .padding(24)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            #else
+            settingsScrollContent
+            #endif
         }
-        .navigationTitle("Impostazioni")
         .onAppear {
             if store == nil { store = ComponentStore(modelContext: modelContext) }
+            config = AppConfigIO.reload()
             refreshDigiKeyTokenStatus()
         }
         .alert("Scaricare dal server?", isPresented: $showPullConfirm) {
@@ -68,15 +62,98 @@ struct SettingsView: View {
         }
     }
 
+    private var settingsScrollContent: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(alignment: .leading, spacing: 20) {
+                    configFileSection
+                    serverSection
+                    digiKeySection
+                        .id("digikey-settings")
+                    syncSection
+                    autoSyncSection
+                    pathsSection
+                    lcscSection
+                }
+                .padding(24)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .onAppear {
+                if !digiKeyConfigured {
+                    scrollToDigiKey(proxy)
+                }
+            }
+            #if os(iOS)
+            .onReceive(NotificationCenter.default.publisher(for: .openSettings)) { _ in
+                scrollToDigiKey(proxy)
+            }
+            #endif
+        }
+        .navigationTitle("Impostazioni")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.large)
+        #endif
+    }
+
+    private func scrollToDigiKey(_ proxy: ScrollViewProxy) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            withAnimation {
+                proxy.scrollTo("digikey-settings", anchor: .top)
+            }
+        }
+    }
+
+    private var configFileSection: some View {
+        GroupBox("Configurazione") {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(AppConfigIO.configFile.path)
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+                HStack(spacing: 10) {
+                    Button("Salva tutto") {
+                        saveFullConfig()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    Button("Ricarica") {
+                        config = AppConfigIO.reload()
+                        configStatusMessage = "Ricaricato da \(AppConfig.fileName)"
+                    }
+                    .buttonStyle(.bordered)
+                }
+                if let configStatusMessage {
+                    Text(configStatusMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Text("Server, sync, percorsi, LCSC e DigiKey sono in un unico \(AppConfig.fileName). Il vecchio digikey_config.yml viene migrato automaticamente.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func saveFullConfig() {
+        do {
+            _ = try AppConfigIO.save(config)
+            digiKeyConfigNonce += 1
+            configStatusMessage = "Salvato \(AppConfig.fileName)"
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     private var serverSection: some View {
         GroupBox("Server remoto") {
             VStack(alignment: .leading, spacing: 12) {
                 LabeledContent("URL API") {
-                    TextField("https://cvault.michelebigi.it", text: $apiBaseURL)
+                    TextField("https://cvault.michelebigi.it", text: $config.server.apiBaseURL)
                         .textFieldStyle(.roundedBorder)
                 }
                 LabeledContent("API key") {
-                    SecureField("Chiave segreta", text: $apiKey)
+                    SecureField("Chiave segreta", text: $config.server.apiKey)
                         .textFieldStyle(.roundedBorder)
                 }
                 HStack(spacing: 8) {
@@ -84,8 +161,8 @@ struct SettingsView: View {
                         label: serverConfigured ? "Configurato" : "Incompleto",
                         ok: serverConfigured
                     )
-                    if lastRemoteCount >= 0 {
-                        Text("Server: \(lastRemoteCount) componenti")
+                    if config.sync.lastRemoteCount >= 0 {
+                        Text("Server: \(config.sync.lastRemoteCount) componenti")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -139,8 +216,8 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                if !lastSyncAt.isEmpty {
-                    Text("Ultima sync: \(lastSyncAt)")
+                if !config.sync.lastSyncAt.isEmpty {
+                    Text("Ultima sync: \(config.sync.lastSyncAt)")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
@@ -156,11 +233,11 @@ struct SettingsView: View {
     private var autoSyncSection: some View {
         GroupBox("Sync automatica") {
             VStack(alignment: .leading, spacing: 12) {
-                Toggle("All'avvio dell'app", isOn: $autoSyncOnLaunch)
+                Toggle("All'avvio dell'app", isOn: $config.sync.autoOnLaunch)
                     .disabled(!serverConfigured)
 
                 LabeledContent("Intervallo in background") {
-                    Picker("Intervallo", selection: $autoSyncIntervalMinutes) {
+                    Picker("Intervallo", selection: $config.sync.intervalMinutes) {
                         Text("Disattivato").tag(0)
                         Text("15 minuti").tag(15)
                         Text("30 minuti").tag(30)
@@ -188,7 +265,7 @@ struct SettingsView: View {
                         .textSelection(.enabled)
                 }
                 LabeledContent("CSV inventario") {
-                    TextField("Percorso", text: $defaultCSVPath)
+                    TextField("Percorso", text: $config.paths.csv)
                         .textFieldStyle(.roundedBorder)
                 }
                 #if os(iOS)
@@ -204,8 +281,15 @@ struct SettingsView: View {
         GroupBox("LCSC") {
             LabeledContent("Ritardo tra richieste (ms)") {
                 HStack {
-                    Slider(value: $lcscRequestDelayMs, in: 200...3000, step: 100)
-                    Text("\(Int(lcscRequestDelayMs))")
+                    Slider(
+                        value: Binding(
+                            get: { Double(config.lcsc.requestDelayMs) },
+                            set: { config.lcsc.requestDelayMs = Int($0) }
+                        ),
+                        in: 200...3000,
+                        step: 100
+                    )
+                    Text("\(config.lcsc.requestDelayMs)")
                         .monospacedDigit()
                         .frame(width: 50)
                 }
@@ -221,17 +305,39 @@ struct SettingsView: View {
                     statusPill(label: digiKeyTokenExists ? "Token ✓" : "Non autenticato", ok: digiKeyTokenExists)
                 }
 
-                if let config = DigiKeyConfig.load() {
-                    Text("Ambiente: \(config.environment.label) · \(config.apiBaseURL)")
+                DisclosureGroup(
+                    isExpanded: $digiKeyConfigExpanded,
+                    content: {
+                        DigiKeyConfigEditorView(digikey: $config.digikey) {
+                            digiKeyConfigNonce += 1
+                            config = AppConfigIO.current()
+                        }
+                    },
+                    label: {
+                        Label(
+                            digiKeyConfigured ? "Modifica DigiKey" : "Configura DigiKey",
+                            systemImage: digiKeyConfigured ? "pencil" : "exclamationmark.triangle"
+                        )
+                    }
+                )
+
+                if !digiKeyConfigured {
+                    Text("Compila client_id e client_secret, poi Salva tutto o Salva nella sezione DigiKey.")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+
+                if digiKeyConfigured, let dk = DigiKeyConfig.load() {
+                    Text("Ambiente: \(dk.environment.label) · \(dk.apiBaseURL)")
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
-                    Text("Redirect Mac: \(config.callbackURL)")
+                    Text("Redirect Mac: \(dk.callbackURL)")
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
                     #if os(iOS)
-                    Text("Redirect iPad (portale DigiKey): \(config.iosOAuthRedirectURI)")
+                    Text("Redirect iPad (portale DigiKey): \(dk.iosOAuthRedirectURI)")
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
@@ -306,8 +412,15 @@ struct SettingsView: View {
 
                 LabeledContent("Ritardo tra richieste bulk (ms)") {
                     HStack {
-                        Slider(value: $digikeyRequestDelayMs, in: 200...3000, step: 100)
-                        Text("\(Int(digikeyRequestDelayMs))")
+                        Slider(
+                            value: Binding(
+                                get: { Double(config.digikey.requestDelayMs) },
+                                set: { config.digikey.requestDelayMs = Int($0) }
+                            ),
+                            in: 200...3000,
+                            step: 100
+                        )
+                        Text("\(config.digikey.requestDelayMs)")
                             .monospacedDigit()
                             .frame(width: 50)
                     }
@@ -445,24 +558,30 @@ struct SettingsView: View {
     }
 
     private func remoteConfig() throws -> RemoteAPIConfig {
-        try RemoteAPIConfig.from(baseURLString: apiBaseURL, apiKey: apiKey)
+        try RemoteAPIConfig.from(
+            baseURLString: config.server.apiBaseURL,
+            apiKey: config.server.apiKey
+        )
     }
 
     private func markSyncSuccess(remoteCount: Int? = nil, message: String) {
+        var updated = AppConfigIO.current()
         let formatter = DateFormatter()
         formatter.dateStyle = .short
         formatter.timeStyle = .short
-        lastSyncAt = formatter.string(from: Date())
-        if let remoteCount { lastRemoteCount = remoteCount }
+        updated.sync.lastSyncAt = formatter.string(from: Date())
+        if let remoteCount { updated.sync.lastRemoteCount = remoteCount }
+        try? AppConfigIO.save(updated)
+        config = AppConfigIO.current()
         statusMessage = message
     }
 
     private func testConnection() async {
+        try? AppConfigIO.save(config)
         isBusy = true
         defer { isBusy = false }
         do {
             let health = try await RemoteAPIClient.checkConnection(config: try remoteConfig())
-            lastRemoteCount = health.components
             markSyncSuccess(remoteCount: health.components, message: "Connessione OK")
         } catch {
             errorMessage = error.localizedDescription
@@ -470,6 +589,7 @@ struct SettingsView: View {
     }
 
     private func syncBidirectional() async {
+        try? AppConfigIO.save(config)
         isBusy = true
         defer { isBusy = false }
         do {
@@ -482,6 +602,7 @@ struct SettingsView: View {
 
     private func pushToServer() async {
         guard let store else { return }
+        try? AppConfigIO.save(config)
         isBusy = true
         defer { isBusy = false }
         do {
@@ -500,6 +621,7 @@ struct SettingsView: View {
 
     private func pullFromServer() async {
         guard let store else { return }
+        try? AppConfigIO.save(config)
         isBusy = true
         defer { isBusy = false }
         do {

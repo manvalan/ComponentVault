@@ -32,7 +32,11 @@ enum AppPaths {
     }
 
     static var digiKeyConfigFile: URL {
-        lcscDataRoot.appendingPathComponent("digikey_config.yml")
+        appConfigFile
+    }
+
+    static var appConfigFile: URL {
+        lcscDataRoot.appendingPathComponent("componentvault_config.yml")
     }
 
     static var digiKeyTokenCacheFile: URL {
@@ -41,7 +45,7 @@ enum AppPaths {
 
     static var defaultCSVPath: String { defaultCSV.path }
     static var jsonArchivePath: String { jsonArchiveDirectory.path }
-    static var digiKeyConfigPath: String { digiKeyConfigFile.path }
+    static var digiKeyConfigPath: String { appConfigFile.path }
     static var digiKeyTokenCachePath: String { digiKeyTokenCacheFile.path }
 
     static func setLCSCDataRoot(_ path: String) {
@@ -50,5 +54,9 @@ enum AppPaths {
 
     static func defaultPaths() -> (csv: URL, json: URL, bom: URL) {
         (defaultCSV, jsonArchiveDirectory, bomCSV)
+    }
+
+    static func ensureLCSCDirectory() throws {
+        try FileManager.default.createDirectory(at: lcscDataRoot, withIntermediateDirectories: true)
     }
 }

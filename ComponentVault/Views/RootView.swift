@@ -5,8 +5,8 @@ struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Component.lcscCode) private var components: [Component]
 
-    @AppStorage("autoSyncOnLaunch") private var autoSyncOnLaunch = false
-    @AppStorage("autoSyncIntervalMinutes") private var autoSyncIntervalMinutes = 0
+    private var autoSyncOnLaunch: Bool { SyncSettings.autoSyncOnLaunch }
+    private var autoSyncIntervalMinutes: Int { SyncSettings.autoSyncIntervalMinutes }
 
     @State private var isBootstrapping = false
     @State private var bootstrapError: String?

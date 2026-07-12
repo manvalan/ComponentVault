@@ -1,8 +1,10 @@
 import Foundation
 
-enum DigiKeyEnvironment: String, Codable, Sendable {
+enum DigiKeyEnvironment: String, Codable, Sendable, CaseIterable, Identifiable {
     case production
     case sandbox
+
+    var id: String { rawValue }
 
     var apiBaseURL: String {
         switch self {
@@ -29,14 +31,12 @@ struct DigiKeyConfig: Codable, Sendable {
     var currency: String
     var language: String
 
-    static var defaultPath: String { AppPaths.digiKeyConfigPath }
+    static var defaultPath: String { AppPaths.appConfigFile.path }
 
-    /// Default bridge HTTPS per iPad — registrare nel portale DigiKey (non accetta custom scheme).
     static let defaultIOSCallbackURL = "https://cvault.michelebigi.it/oauth/digikey/callback"
 
     var apiBaseURL: String { environment.apiBaseURL }
 
-    /// Redirect URI HTTPS da registrare nel portale DigiKey per login iPad.
     var iosOAuthRedirectURI: String {
         let custom = iosCallbackURL?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if !custom.isEmpty, custom.lowercased().hasPrefix("https://") {
@@ -50,7 +50,6 @@ struct DigiKeyConfig: Codable, Sendable {
         return Self.defaultIOSCallbackURL
     }
 
-    /// Server locale se callback ha porta esplicita (http o https). Solo macOS.
     var supportsLocalCallbackServer: Bool {
         #if os(macOS)
         guard let url = URL(string: callbackURL), url.port != nil else { return false }
@@ -62,12 +61,73 @@ struct DigiKeyConfig: Codable, Sendable {
     }
 
     static func load(from path: String? = nil) -> DigiKeyConfig? {
-        let resolved = path ?? defaultPath
-        guard let content = try? String(contentsOfFile: resolved, encoding: .utf8) else { return nil }
-        return parseYAML(content)
+        if path != nil {
+            guard let content = try? String(contentsOfFile: path!, encoding: .utf8),
+                  let section = DigiKeyConfig.parseYAML(content) else { return nil }
+            return section
+        }
+        let app = AppConfigIO.current()
+        guard app.isDigiKeyConfigured else { return nil }
+        return app.digikey.toDigiKeyConfig()
+    }
+}
+
+enum DigiKeyConfigFileError: LocalizedError {
+    case missingClientCredentials
+    case invalidYAML(String)
+    case writeFailed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .missingClientCredentials:
+            "Servono client_id e client_secret."
+        case .invalidYAML(let detail):
+            detail
+        case .writeFailed(let detail):
+            "Salvataggio fallito: \(detail)"
+        }
+    }
+}
+
+extension DigiKeyConfig {
+    static func defaultTemplate() -> DigiKeyConfig {
+        AppConfigIO.defaultTemplate().digikey.toDigiKeyConfig()
     }
 
-    private static func parseYAML(_ content: String) -> DigiKeyConfig? {
+    static func loadOrTemplate() -> DigiKeyConfig {
+        load() ?? defaultTemplate()
+    }
+
+    static func readRawYAML() -> String? {
+        AppConfigIO.readRawYAML()
+    }
+
+    static func fileExists() -> Bool {
+        AppConfigIO.fileExists() && AppConfigIO.current().isDigiKeyConfigured
+    }
+
+    @discardableResult
+    static func save(_ config: DigiKeyConfig) throws -> URL {
+        var app = AppConfigIO.current()
+        app.digikey = AppConfig.DigiKey(config)
+        return try AppConfigIO.save(app)
+    }
+
+    static func saveRawYAML(_ content: String) throws -> DigiKeyConfig {
+        let app = try AppConfigIO.saveRawYAML(content)
+        guard app.isDigiKeyConfigured else {
+            throw DigiKeyConfigFileError.missingClientCredentials
+        }
+        return app.digikey.toDigiKeyConfig()
+    }
+
+    static var digiKeyConfigFile: URL { AppConfigIO.configFile }
+
+    func yamlString() -> String {
+        AppConfigIO.yamlString(for: AppConfigIO.current())
+    }
+
+    static func parseYAML(_ content: String) -> DigiKeyConfig? {
         var values: [String: String] = [:]
         for line in content.components(separatedBy: .newlines) {
             let trimmed = line.trimmingCharacters(in: .whitespaces)

@@ -92,11 +92,31 @@ Content-Type: application/json
 
 ## Config (`digikey_config.yml`)
 
-```env
+**Percorso file**
+
+| Piattaforma | Path |
+|-------------|------|
+| macOS | `~/LCSC/digikey_config.yml` |
+| iPad | `Documents/LCSC/digikey_config.yml` |
+
+### Creare o modificare dall'app (consigliato su iPad)
+
+1. Apri **Impostazioni → DigiKey**
+2. Espandi **Configura API (digikey_config.yml)**
+3. Inserisci **Client ID** e **Client Secret** dal [portale DigiKey](https://developer.digikey.com/)
+4. Verifica **Callback iPad** (`ios_callback_url`) — deve coincidere con l'URI HTTPS registrato nel portale
+5. Clicca **Salva** — l'app crea la cartella LCSC e scrive il file YAML
+
+**Import da Mac:** usa **Importa file…** e seleziona il `digikey_config.yml` esistente (Files, iCloud, AirDrop). Poi **Salva** per copiarlo in `Documents/LCSC`.
+
+Per modifiche avanzate attiva **Modifica YAML grezzo**.
+
+```yaml
 client_id: '...'
 client_secret: '...'
 environment: 'sandbox'   # oppure production
-callback_url: 'http://localhost:8000'
+callback_url: 'https://localhost:8443/digikey/callback'
+ios_callback_url: 'https://cvault.michelebigi.it/oauth/digikey/callback'
 market: 'IT'
 currency: 'EUR'
 language: 'it'
