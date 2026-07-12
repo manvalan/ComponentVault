@@ -220,6 +220,15 @@ final class Component {
         DigiKeySyntheticCode.isDigiKeyOnly(lcscCode) || !lcscCode.uppercased().hasPrefix("C")
     }
 
+    /// Codice C da mostrare: usa lo snapshot LCSC se il record ha ancora un placeholder DK-.
+    var resolvedLCSCCode: String {
+        if LCSCCode.isValid(lcscCode) { return lcscCode }
+        if let fromSnapshot = LCSCCode.extract(from: lcscSnapshot?.productURL) {
+            return fromSnapshot
+        }
+        return lcscCode
+    }
+
     func apply(_ record: ComponentRecord, preserveQuantity: Bool = true) {
         switch record.dataSource {
         case .lcsc:

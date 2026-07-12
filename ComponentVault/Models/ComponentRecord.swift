@@ -204,4 +204,38 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         self.lcscSnapshot = lcscSnapshot
         self.digikeySnapshot = digikeySnapshot
     }
+
+    func withLCSCCode(_ code: String) -> ComponentRecord {
+        ComponentRecord(
+            lcscCode: code,
+            mpn: mpn,
+            name: name,
+            description: description,
+            footprint: footprint,
+            quantity: quantity,
+            category: category,
+            value: value,
+            brand: brand,
+            datasheetURL: datasheetURL,
+            imageURLs: imageURLs,
+            price: price,
+            currency: currency,
+            supplierStock: supplierStock,
+            dataSource: dataSource,
+            parameters: parameters,
+            notes: notes,
+            minQuantity: minQuantity,
+            tags: tags,
+            updatedAt: updatedAt,
+            digikeyPartNumber: digikeyPartNumber,
+            supplierProductURL: supplierProductURL,
+            priceBreaks: priceBreaks,
+            minimumOrderQuantity: minimumOrderQuantity,
+            leadTimeWeeks: leadTimeWeeks,
+            digikeyProductStatus: digikeyProductStatus,
+            digikeyLastFetched: digikeyLastFetched,
+            lcscSnapshot: lcscSnapshot,
+            digikeySnapshot: digikeySnapshot
+        )
+    }
 }

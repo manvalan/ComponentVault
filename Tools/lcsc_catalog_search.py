@@ -57,6 +57,18 @@ def search_keyword(keyword: str, limit: int = 5) -> list[dict]:
     products = search_block.get("productList") or []
 
     output: list[dict] = []
+    exact = result.get("exactMatchResult") or []
+    if exact:
+        products = exact
+    elif result.get("tipProductDetailUrlVO"):
+        tip = result["tipProductDetailUrlVO"]
+        products = [{
+            "productCode": tip.get("productCode"),
+            "productModel": tip.get("productModel"),
+            "brandNameEn": tip.get("brandNameEn"),
+            "catalogName": tip.get("catalogName"),
+        }]
+
     for product in products[:limit]:
         code = product.get("productCode") or ""
         if not code:

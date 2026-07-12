@@ -75,6 +75,7 @@ enum LCSCArchiveSearcher {
         var seen = Set<String>()
 
         for component in inventory where CatalogMatchNormalizer.mpn(component.mpn) == target {
+            guard LCSCCode.isValid(component.lcscCode) else { continue }
             let record = component.toRecord()
             guard seen.insert(record.lcscCode).inserted else { continue }
             results.append(record)

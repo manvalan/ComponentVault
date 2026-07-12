@@ -4,6 +4,7 @@ import SwiftData
 struct ComponentDetailView: View {
     @Bindable var component: Component
     var store: ComponentStore?
+    var onReplaced: ((Component) -> Void)? = nil
 
     @Query(sort: \Component.lcscCode) private var inventory: [Component]
 
@@ -13,7 +14,9 @@ struct ComponentDetailView: View {
     @State private var digiKeyPicker: DigiKeyCandidatePicker?
     @State private var mpnLookupResults: [CatalogMatchCard] = []
     @State private var showMPNLookup = false
+    @State private var mpnLookupTitle = ""
     @State private var isLookingUpMPN = false
+    @State private var isLookingUpEquivalent = false
     @State private var infoMessage: String?
 
     var body: some View {
@@ -23,6 +26,9 @@ struct ComponentDetailView: View {
                     toOrderBanner
                 }
                 header
+                if component.needsLCSCCodeResolution {
+                    lcscResolutionBanner
+                }
                 HStack(alignment: .top, spacing: 24) {
                     imageGallery
                     inventoryCard
@@ -44,10 +50,14 @@ struct ComponentDetailView: View {
             guard component.needsLCSCCodeResolution,
                   !component.mpn.isEmpty,
                   let store else { return }
+            let originalID = component.persistentModelID
             Task {
-                if let updated = try? await store.assignLCSCFromMPN(component),
-                   updated.lcscCode != component.lcscCode {
-                    infoMessage = "Codice LCSC assegnato: \(updated.lcscCode)"
+                do {
+                    if let updated = try await store.assignLCSCFromMPN(component) {
+                        handleReplacement(updated, originalID: originalID)
+                    }
+                } catch {
+                    // Ricerca live non disponibile o nessun match: l'utente può usare «Trova LCSC».
                 }
             }
         }
@@ -129,6 +139,16 @@ struct ComponentDetailView: View {
         }
     }
 
+    private func handleReplacement(_ updated: Component, originalID: PersistentIdentifier) {
+        if updated.persistentModelID != originalID {
+            onReplaced?(updated)
+            infoMessage = "Codice LCSC assegnato: \(updated.lcscCode)"
+        } else if updated.lcscCode != component.lcscCode {
+            onReplaced?(updated)
+            infoMessage = "Codice LCSC assegnato: \(updated.lcscCode)"
+        }
+    }
+
     private var toOrderBanner: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "cart.badge.clock")
@@ -151,7 +171,7 @@ struct ComponentDetailView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                Text(component.lcscCode)
+                Text(component.resolvedLCSCCode)
                     .font(.title2.monospaced())
                 SourceBadge(source: component.source)
                 if component.isToOrder {
@@ -188,6 +208,58 @@ struct ComponentDetailView: View {
                     .clipShape(Capsule())
             }
         }
+    }
+
+    private var lcscResolutionBanner: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "magnifyingglass.circle")
+                .font(.title2)
+                .foregroundStyle(.blue)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("MPN non presente su LCSC")
+                    .font(.headline)
+                Text("Il codice \(component.mpn) non è catalogato su LCSC. Puoi cercare un equivalente cinese con le stesse specifiche (footprint, valore, dielettrico…).")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 10) {
+                    Button {
+                        Task { await lookupChineseEquivalent() }
+                    } label: {
+                        if isLookingUpEquivalent {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Label("Equivalente cinese", systemImage: "globe.asia.australia")
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(isLookingUpEquivalent || LCSCEquivalentSearchService.keyword(for: component) == nil)
+
+                    if !component.mpn.isEmpty {
+                        Button {
+                            Task { await lookupLCSCFromMPN() }
+                        } label: {
+                            if isLookingUpMPN {
+                                ProgressView().controlSize(.small)
+                            } else {
+                                Label("Riprova MPN", systemImage: "number")
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(isLookingUpMPN)
+                    }
+                }
+                if LCSCEquivalentSearchService.keyword(for: component) == nil {
+                    Text("Aggiungi footprint e valore (o arricchisci da DigiKey) per abilitare la ricerca equivalenti.")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.blue.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     private var imageGallery: some View {
@@ -512,7 +584,7 @@ struct ComponentDetailView: View {
                     }
                 }
             }
-            .navigationTitle("LCSC da \(component.mpn)")
+            .navigationTitle(mpnLookupTitle.isEmpty ? "Risultati LCSC" : mpnLookupTitle)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Chiudi") { showMPNLookup = false }
@@ -531,7 +603,30 @@ struct ComponentDetailView: View {
                 inventory: inventory
             )
             mpnLookupResults = cards
+            mpnLookupTitle = "LCSC da \(component.mpn)"
             showMPNLookup = true
+            if cards.isEmpty {
+                infoMessage = "\(component.mpn) non è presente nel catalogo LCSC — prova «Equivalente cinese» per alternative con le stesse specifiche."
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func lookupChineseEquivalent() async {
+        isLookingUpEquivalent = true
+        defer { isLookingUpEquivalent = false }
+        do {
+            let result = try await LCSCEquivalentSearchService.search(
+                component: component,
+                inventory: inventory
+            )
+            mpnLookupResults = result.cards
+            mpnLookupTitle = "Equivalenti LCSC · \(result.keyword)"
+            showMPNLookup = true
+            if result.cards.isEmpty {
+                infoMessage = "Nessun equivalente LCSC trovato per «\(result.keyword)». Verifica footprint e valore, o ordina solo da DigiKey."
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -539,11 +634,10 @@ struct ComponentDetailView: View {
 
     private func importMPNLookupCard(_ card: CatalogMatchCard) async {
         guard let store else { return }
+        let originalID = component.persistentModelID
         do {
             let updated = try await store.applyCatalogMatchToExisting(component, card: card)
-            if updated.lcscCode != component.lcscCode {
-                infoMessage = "Codice LCSC assegnato: \(updated.lcscCode)"
-            }
+            handleReplacement(updated, originalID: originalID)
             showMPNLookup = false
         } catch {
             errorMessage = error.localizedDescription
@@ -554,10 +648,14 @@ struct ComponentDetailView: View {
         guard let store else { return }
         isEnriching = true
         defer { isEnriching = false }
+        let originalID = component.persistentModelID
         do {
             switch try await store.enrichFromBoth(component) {
             case .applied:
-                break
+                if let focus = store.focusComponent {
+                    handleReplacement(focus, originalID: originalID)
+                    store.focusComponent = nil
+                }
             case .chooseCandidate(let candidates):
                 digiKeyPicker = DigiKeyCandidatePicker(candidates: candidates)
             }
@@ -570,21 +668,29 @@ struct ComponentDetailView: View {
         guard let store else { return }
         isEnriching = true
         defer { isEnriching = false }
+        let originalID = component.persistentModelID
         do {
             switch source {
             case .lcsc:
-                try await store.enrichFromLCSC(component)
+                let updated = try await store.enrichFromLCSC(component)
+                handleReplacement(updated, originalID: originalID)
             case .digikey:
                 switch try await store.enrichFromDigiKey(component) {
                 case .applied:
-                    break
+                    if let focus = store.focusComponent {
+                        handleReplacement(focus, originalID: originalID)
+                        store.focusComponent = nil
+                    }
                 case .chooseCandidate(let candidates):
                     digiKeyPicker = DigiKeyCandidatePicker(candidates: candidates)
                 }
             case .dual:
                 switch try await store.enrichFromBoth(component) {
                 case .applied:
-                    break
+                    if let focus = store.focusComponent {
+                        handleReplacement(focus, originalID: originalID)
+                        store.focusComponent = nil
+                    }
                 case .chooseCandidate(let candidates):
                     digiKeyPicker = DigiKeyCandidatePicker(candidates: candidates)
                 }

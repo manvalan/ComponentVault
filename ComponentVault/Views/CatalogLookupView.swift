@@ -132,7 +132,7 @@ struct CatalogLookupView: View {
                 .disabled(isSearching || query.isEmpty)
             }
 
-            Text("Flusso: DigiKey → MPN → LCSC · Richiede token DigiKey e `pip3 install gmssl requests`")
+            Text("Flusso: DigiKey → MPN → LCSC · Richiede token DigiKey")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
@@ -164,7 +164,7 @@ struct CatalogLookupView: View {
             Text("Ordine: inventario → archivio JSON locale → API LCSC live (+ DigiKey se configurato)")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
-            Text("API live: `pip3 install gmssl requests` · archivio: `~/LCSC/json_full_data/`")
+            Text("API live LCSC integrata · archivio: `~/LCSC/json_full_data/`")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }

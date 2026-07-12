@@ -39,3 +39,23 @@ enum DigiKeySyntheticCode {
         code.uppercased().hasPrefix("DK-")
     }
 }
+
+enum LCSCCode {
+    static func isValid(_ code: String) -> Bool {
+        let normalized = code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        return normalized.hasPrefix("C") && normalized.count >= 4
+    }
+
+    static func extract(from urlString: String?) -> String? {
+        guard let urlString, !urlString.isEmpty else { return nil }
+        guard let range = urlString.range(
+            of: #"product-detail/(C\d+)\.html"#,
+            options: .regularExpression
+        ) else { return nil }
+        let match = String(urlString[range])
+        let code = match
+            .replacingOccurrences(of: "product-detail/", with: "")
+            .replacingOccurrences(of: ".html", with: "")
+        return isValid(code) ? code.uppercased() : nil
+    }
+}

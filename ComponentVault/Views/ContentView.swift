@@ -119,12 +119,12 @@ struct InventoryView: View {
         filteredComponents = filter.apply(to: components)
     }
 
-    var body: some View {
-        NavigationSplitView {
-            inventorySidebar
-        } detail: {
-            if let selection {
-                ComponentDetailView(component: selection, store: store)
+    private var inventoryDetail: some View {
+        Group {
+            if let selected = selection {
+                ComponentDetailView(component: selected, store: store) { replacement in
+                    selection = replacement
+                }
             } else if components.isEmpty {
                 emptyState
             } else {
@@ -134,6 +134,14 @@ struct InventoryView: View {
                     description: Text("Scegli un componente dalla lista.")
                 )
             }
+        }
+    }
+
+    var body: some View {
+        NavigationSplitView {
+            inventorySidebar
+        } detail: {
+            inventoryDetail
         }
         .navigationTitle("Inventario")
         .navigationSplitViewStyle(.balanced)
@@ -364,7 +372,7 @@ struct ComponentRowView: View {
                     }
                 }
                 HStack(spacing: 6) {
-                    Text(component.lcscCode)
+                    Text(component.resolvedLCSCCode)
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                     if !component.value.isEmpty && component.value != "N/A" {
