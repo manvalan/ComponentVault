@@ -113,8 +113,8 @@ struct LCSCParser {
         lcscCode: String,
         webData: NextData.Props.PageProps.WebData?
     ) -> ComponentRecord {
-        let parameters = Dictionary(
-            uniqueKeysWithValues: (ld.additionalProperty ?? []).map { ($0.name, $0.value) }
+        let parameters = ComponentRecord.deduplicatedParameters(
+            (ld.additionalProperty ?? []).map { ($0.name, $0.value) }
         )
 
         let value = inferValue(from: parameters, category: ld.category ?? "")

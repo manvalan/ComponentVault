@@ -116,7 +116,6 @@ final class ComponentStore {
         }
         if count > 0 {
             try modelContext.save()
-            publishStatus("Migrati \(count) codici DK- → CV-")
         }
         return count
     }
@@ -150,7 +149,6 @@ final class ComponentStore {
         }
         if count > 0 {
             try modelContext.save()
-            publishStatus("Migrati \(count) componenti a codice CV con LCSC separato")
         }
         return count
     }
@@ -193,7 +191,7 @@ final class ComponentStore {
         for (index, component) in components.enumerated() {
             progress?(index + 1, total)
             do {
-                try await enrichFromLCSC(component)
+                _ = try await enrichFromLCSC(component)
                 try await Task.sleep(for: .milliseconds(delayMs))
             } catch {
                 publishStatus("Errore su \(component.lcscCode): \(error.localizedDescription)", autoDismissAfter: 8)
@@ -399,6 +397,18 @@ final class ComponentStore {
 
     func updateMinQuantity(_ component: Component, to minQuantity: Int) throws {
         component.minQuantity = max(0, minQuantity)
+        component.lastUpdated = Date()
+        try modelContext.save()
+    }
+
+    func setLowStockAlertEnabled(_ component: Component, enabled: Bool) throws {
+        if enabled {
+            if component.minQuantity == 0 {
+                component.minQuantity = 1
+            }
+        } else {
+            component.minQuantity = 0
+        }
         component.lastUpdated = Date()
         try modelContext.save()
     }

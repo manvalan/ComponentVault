@@ -19,14 +19,24 @@ struct LowStockView: View {
             .lowStockComponents(from: components)
     }
 
+    private var monitoredCount: Int {
+        components.filter(\.hasLowStockAlertEnabled).count
+    }
+
     var body: some View {
         NavigationSplitView {
             VStack(spacing: 0) {
-                if lowStock.isEmpty {
+                if monitoredCount == 0 {
+                    ContentUnavailableView(
+                        "Avvisi non attivi",
+                        systemImage: "bell.slash",
+                        description: Text("Abilita «Avviso scorte basse» nella scheda di ogni componente e imposta una soglia minima.")
+                    )
+                } else if lowStock.isEmpty {
                     ContentUnavailableView(
                         "Tutto OK",
                         systemImage: "checkmark.circle",
-                        description: Text("Nessun componente sotto soglia o esaurito.")
+                        description: Text("Nessun componente monitorato è sotto soglia o esaurito.")
                     )
                 } else {
                     List(lowStock, selection: $selection) { component in
@@ -36,6 +46,7 @@ struct LowStockView: View {
                 }
 
                 HStack(spacing: 12) {
+                    #if os(macOS)
                     Button("Esporta alert") {
                         exportDocument = CSVDocument(text: ExportService.lowStockCSV(components: components))
                         showExport = true
@@ -48,6 +59,7 @@ struct LowStockView: View {
                     }
                     .disabled(lowStock.isEmpty)
                     .platformHelp("CSV con stock, prezzo e suggerimento riordino DigiKey")
+                    #endif
 
                     Spacer()
                     Text("\(lowStock.count) alert")
@@ -68,12 +80,34 @@ struct LowStockView: View {
                 ContentUnavailableView(
                     "Alert scorte",
                     systemImage: "exclamationmark.triangle",
-                    description: Text("Componenti esauriti o sotto la soglia minima.")
+                    description: Text("Componenti con avviso attivo sotto la soglia minima.")
                 )
             }
         }
         .navigationSplitViewStyle(.balanced)
+        .navigationTitle("Scorte basse")
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #if os(iOS)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button("Esporta alert") {
+                        exportDocument = CSVDocument(text: ExportService.lowStockCSV(components: components))
+                        showExport = true
+                    }
+                    .disabled(lowStock.isEmpty)
+                    Button("Esporta DigiKey") {
+                        digikeyExportDocument = CSVDocument(text: ExportService.lowStockDigiKeyCSV(components: components))
+                        showDigiKeyExport = true
+                    }
+                    .disabled(lowStock.isEmpty)
+                } label: {
+                    Label("Esporta", systemImage: "square.and.arrow.up")
+                }
+                .disabled(lowStock.isEmpty)
+            }
+        }
+        #endif
         .onAppear {
             if store == nil { store = ComponentStore(modelContext: modelContext) }
         }

@@ -1,13 +1,19 @@
 import Foundation
 
 enum CatalogSearchService {
-    /// Flusso progettazione: DigiKey (tipo+valore+footprint) → MPN → LCSC per codice C.
+    private static let defaultLimit = 25
+
+    /// Ricerca catalogo DigiKey (+ risoluzione LCSC opzionale per codice C).
     static func search(
         query: CatalogSearchQuery,
         inventory: [Component],
-        digiKeyLimit: Int = 8
+        limit: Int = defaultLimit
     ) async throws -> [CatalogMatchCard] {
-        guard !query.isEmpty else { return [] }
+        let trimmedValue = query.value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedFootprint = query.footprint.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedValue.isEmpty || !trimmedFootprint.isEmpty else {
+            throw ProviderError.networkFailure("Imposta almeno valore o footprint.")
+        }
 
         guard let provider = DigiKeyProvider.configured() else {
             throw ProviderError.networkFailure(
@@ -15,20 +21,64 @@ enum CatalogSearchService {
             )
         }
 
-        let digikeyCandidates = try await provider.searchCatalog(
-            keyword: query.digiKeyKeyword(),
-            recordCount: digiKeyLimit
+        let keyword = query.digiKeySearchKeyword()
+        let candidates = try await provider.searchCatalog(
+            keyword: keyword,
+            recordCount: limit
         )
 
-        guard !digikeyCandidates.isEmpty else { return [] }
+        return try await cards(
+            from: candidates,
+            query: query,
+            inventory: inventory
+        )
+    }
+
+    /// Ricerca diretta per MPN / part number su DigiKey.
+    static func searchMPN(
+        _ mpn: String,
+        inventory: [Component],
+        limit: Int = defaultLimit
+    ) async throws -> [CatalogMatchCard] {
+        guard let provider = DigiKeyProvider.configured() else {
+            throw ProviderError.networkFailure(
+                "DigiKey non configurato. Autenticati da Impostazioni → DigiKey."
+            )
+        }
+
+        let trimmed = mpn.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+
+        let candidates = try await provider.searchCatalog(
+            keyword: trimmed,
+            recordCount: limit
+        )
+
+        var query = CatalogSearchQuery()
+        query.valueAmount = trimmed
+        query.type = nil
+
+        return try await cards(
+            from: candidates,
+            query: query,
+            inventory: inventory
+        )
+    }
+
+    private static func cards(
+        from candidates: [DigiKeyCandidate],
+        query: CatalogSearchQuery,
+        inventory: [Component]
+    ) async throws -> [CatalogMatchCard] {
+        guard !candidates.isEmpty else { return [] }
 
         var cards: [CatalogMatchCard] = []
-        for candidate in digikeyCandidates {
+        for candidate in candidates {
             let mpn = candidate.mpn.trimmingCharacters(in: .whitespacesAndNewlines)
             var lcscRecord: ComponentRecord?
 
             if !mpn.isEmpty {
-                let lcscHits = try await LCSCCatalogProvider.searchByMPN(mpn, limit: 5)
+                let lcscHits = (try? await LCSCCatalogProvider.searchByMPN(mpn, limit: 5)) ?? []
                 lcscRecord = pickBestLCSC(lcscHits, query: query, mpn: mpn)
             }
 
@@ -42,8 +92,13 @@ enum CatalogSearchService {
             )
         }
 
-        return cards.sorted { lhs, rhs in
+        let filtered = cards.filter {
+            CatalogMatchNormalizer.matchesBrand(recordBrand: $0.brand, queryBrand: query.brand)
+        }
+
+        return filtered.sorted { lhs, rhs in
             if lhs.hasBothCodes != rhs.hasBothCodes { return lhs.hasBothCodes }
+            if lhs.hasDigiKey != rhs.hasDigiKey { return lhs.hasDigiKey }
             return lhs.mpn.localizedStandardCompare(rhs.mpn) == .orderedAscending
         }
     }
@@ -60,12 +115,17 @@ enum CatalogSearchService {
         }
         let pool = exact.isEmpty ? records : exact
 
+        if query.isKeywordQuery {
+            return pool.first
+        }
+
         if let footprintMatch = pool.first(where: { record in
             CatalogMatchNormalizer.matches(
                 recordType: ComponentType.from(category: record.category),
                 recordValue: displayValue(from: record),
                 recordFootprint: displayFootprint(from: record),
-                query: query
+                query: query,
+                record: record
             )
         }) {
             return footprintMatch
@@ -80,6 +140,10 @@ enum CatalogSearchService {
         lcsc: ComponentRecord?,
         inventory: [Component]
     ) -> CatalogMatchCard {
+        let resolvedType = lcsc.map { ComponentType.from(category: $0.category) }
+            ?? ComponentType.from(category: digikey.record.category)
+        let cardType = (query.type == nil) ? resolvedType : query.resolvedType
+
         let value = query.value.isEmpty
             ? displayValue(from: lcsc ?? digikey.record)
             : query.value
@@ -88,8 +152,11 @@ enum CatalogSearchService {
             : query.footprint
 
         let lcscCode = lcsc?.lcscCode
-        let inventoryItem = lcscCode.flatMap { code in
-            inventory.first { $0.lcscCode == code }
+        let inventoryItem = inventory.first {
+            if let lcscCode, $0.lcscCode == lcscCode { return true }
+            let dk = digikey.digikeyPartNumber
+            if !dk.isEmpty, $0.digikeyPartNumber == dk { return true }
+            return CatalogMatchNormalizer.mpn($0.mpn) == CatalogMatchNormalizer.mpn(digikey.mpn)
         }
 
         let cardID = [
@@ -100,7 +167,7 @@ enum CatalogSearchService {
 
         return CatalogMatchCard(
             id: cardID.isEmpty ? UUID().uuidString : cardID,
-            type: query.type,
+            type: cardType,
             value: value,
             footprint: footprint,
             mpn: digikey.mpn,
@@ -121,7 +188,7 @@ enum CatalogSearchService {
             inventoryQuantity: inventoryItem?.quantity,
             digikeyRecord: digikey.record,
             lcscRecord: lcsc,
-            lcscSource: nil
+            lcscSource: lcsc == nil ? nil : .live
         )
     }
 

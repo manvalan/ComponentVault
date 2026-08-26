@@ -1,21 +1,9 @@
 import SwiftUI
 import SwiftData
 
-enum CatalogLookupMode: String, CaseIterable, Identifiable {
-    case design
-    case mpn
-
-    var id: String { rawValue }
-
-    var label: String {
-        switch self {
-        case .design: "Progettazione"
-        case .mpn: "Da MPN"
-        }
-    }
-}
-
 struct CatalogLookupView: View {
+    var embeddedInNavigation = false
+
     @Query(sort: \Component.lcscCode) private var inventory: [Component]
     @Query(sort: \Project.updatedAt, order: .reverse) private var projects: [Project]
 
@@ -23,8 +11,7 @@ struct CatalogLookupView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var query = CatalogSearchQuery()
-    @State private var mode: CatalogLookupMode = .design
-    @State private var mpnQuery = ""
+    @State private var searchProvider = AppConfigIO.current().catalog.searchProvider
     @State private var results: [CatalogMatchCard] = []
     @State private var isSearching = false
     @State private var errorMessage: String?
@@ -36,23 +23,19 @@ struct CatalogLookupView: View {
     @State private var addDesignator = ""
     @State private var addQuantity = 1
     @State private var importedComponent: Component?
+    @State private var kicadMessage: String?
 
     var body: some View {
-        VStack(spacing: 0) {
-            searchForm
-            Divider()
-            resultsPanel
-        }
-        .platformSheetFrame(minWidth: 760, minHeight: 560)
-        .navigationTitle("Trova componente — progettazione")
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Chiudi") { dismiss() }
+        resultsPanel
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                searchForm
             }
-        }
+            .modifier(CatalogLookupChrome(embeddedInNavigation: embeddedInNavigation))
         .onAppear {
             if store == nil { store = ComponentStore(modelContext: modelContext) }
             if projectStore == nil { projectStore = ProjectStore(modelContext: modelContext) }
+            searchProvider = AppConfigIO.current().catalog.searchProvider
         }
         .sheet(isPresented: Binding(
             get: { projectPickerCard != nil },
@@ -65,181 +48,170 @@ struct CatalogLookupView: View {
         .sheet(item: $importedComponent) { component in
             ComponentDetailSheet(component: component, store: store)
         }
+        .alert("KiCad", isPresented: .constant(kicadMessage != nil)) {
+            Button("OK") { kicadMessage = nil }
+        } message: {
+            Text(kicadMessage ?? "")
+        }
     }
 
     private var searchForm: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Picker("Modalità", selection: $mode) {
-                ForEach(CatalogLookupMode.allCases) { item in
-                    Text(item.label).tag(item)
-                }
-            }
-            .pickerStyle(.segmented)
-
-            switch mode {
-            case .design:
-                designSearchForm
-            case .mpn:
-                mpnSearchForm
-            }
+        VStack(spacing: 0) {
+            CatalogDesignFilterBar(
+                query: $query,
+                inventory: inventory,
+                isSearching: isSearching,
+                searchProvider: searchProvider,
+                onSearch: { Task { await runSearch() } }
+            )
 
             if let statusMessage {
                 Text(statusMessage)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 4)
             }
             if let errorMessage {
                 Text(errorMessage)
                     .font(.caption)
                     .foregroundStyle(.red)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
             }
         }
-        .padding(16)
         .background(.bar)
-    }
-
-    private var designSearchForm: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Cerca nei cataloghi fornitori: DigiKey trova il componente, LCSC restituisce il codice C.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-
-            HStack(spacing: 12) {
-                Picker("Tipo", selection: $query.type) {
-                    ForEach(ComponentType.allCases) { type in
-                        Text(type.label).tag(type)
-                    }
-                }
-                .frame(width: 220)
-
-                TextField("Valore (es. 10kΩ, 100nF)", text: $query.value)
-                    .textFieldStyle(.roundedBorder)
-
-                TextField("Footprint (es. 0805, SOT-23)", text: $query.footprint)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 180)
-
-                Button {
-                    Task { await runDesignSearch() }
-                } label: {
-                    if isSearching {
-                        ProgressView().controlSize(.small)
-                    } else {
-                        Label("Cerca", systemImage: "magnifyingglass")
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(isSearching || query.isEmpty)
-            }
-
-            Text("Flusso: DigiKey → MPN → LCSC · Richiede token DigiKey")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+        .onAppear {
+            restoreCatalogSearchDefaults()
+            searchProvider = AppConfigIO.current().catalog.searchProvider
         }
     }
 
-    private var mpnSearchForm: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Trova il codice LCSC (Cxxxxx) dal Manufacturer Part Number.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+    private func restoreCatalogSearchDefaults() {
+        let defaults = UserDefaults.standard
+        if defaults.bool(forKey: CatalogSearchDefaults.typeClearedKey) {
+            query.type = nil
+        } else if let raw = defaults.string(forKey: CatalogSearchDefaults.typeKey),
+                  let type = ComponentType(rawValue: raw) {
+            query.type = type
+        }
+        if let unitRaw = defaults.string(forKey: CatalogSearchDefaults.valueUnitKey),
+           let unit = ComponentValueUnit(rawValue: unitRaw) {
+            query.valueUnit = unit
+        } else if let type = query.type {
+            query.valueUnit = ComponentValueUnit.defaultUnit(for: type)
+        }
+        if let amount = defaults.string(forKey: CatalogSearchDefaults.valueAmountKey), !amount.isEmpty {
+            query.valueAmount = amount
+        } else if let legacy = defaults.string(forKey: CatalogSearchDefaults.legacyValueKey), !legacy.isEmpty {
+            let parsed = ComponentValueFormatter.parse(legacy, type: query.resolvedType)
+            query.valueAmount = parsed.amount
+            query.valueUnit = parsed.unit
+        }
+        if let footprint = defaults.string(forKey: CatalogSearchDefaults.footprintKey), !footprint.isEmpty {
+            query.footprint = footprint
+        }
+        if let brand = defaults.string(forKey: CatalogSearchDefaults.brandKey), !brand.isEmpty {
+            query.brand = brand
+        }
+        sanitizeCatalogQuerySelections()
+    }
 
-            HStack(spacing: 12) {
-                TextField("MPN (es. INA219AIDR, FRC0805F1002TS)", text: $mpnQuery)
-                    .textFieldStyle(.roundedBorder)
+    private func persistCatalogSearchDefaults() {
+        let defaults = UserDefaults.standard
+        if let type = query.type {
+            defaults.set(type.rawValue, forKey: CatalogSearchDefaults.typeKey)
+            defaults.set(false, forKey: CatalogSearchDefaults.typeClearedKey)
+        } else {
+            defaults.set(true, forKey: CatalogSearchDefaults.typeClearedKey)
+        }
+        defaults.set(query.valueAmount, forKey: CatalogSearchDefaults.valueAmountKey)
+        defaults.set(query.valueUnit.rawValue, forKey: CatalogSearchDefaults.valueUnitKey)
+        defaults.set(query.footprint, forKey: CatalogSearchDefaults.footprintKey)
+        defaults.set(query.brand, forKey: CatalogSearchDefaults.brandKey)
+    }
 
-                Button {
-                    Task { await runMPNSearch() }
-                } label: {
-                    if isSearching {
-                        ProgressView().controlSize(.small)
-                    } else {
-                        Label("Trova LCSC", systemImage: "number")
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(isSearching || mpnQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+    private func sanitizeCatalogQuerySelections() {
+        let footprints = CatalogFilterOptions.footprints(in: inventory, for: query.resolvedType)
+        if !query.footprint.isEmpty, !footprints.contains(query.footprint) {
+            query.footprint = ""
+        }
+        let brands = CatalogFilterOptions.brands(
+            in: inventory,
+            type: query.resolvedType,
+            value: query.value,
+            footprint: query.footprint
+        )
+        if !query.brand.isEmpty {
+            if !query.hasValueAndFootprint || !brands.contains(query.brand) {
+                query.brand = ""
             }
-
-            Text("Ordine: inventario → archivio JSON locale → API LCSC live (+ DigiKey se configurato)")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-            Text("API live LCSC integrata · archivio: `\(AppPaths.jsonArchivePath)`")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
         }
     }
 
     @ViewBuilder
     private var resultsPanel: some View {
-        if results.isEmpty && !isSearching {
-            ContentUnavailableView(
-                mode == .mpn ? "Ricerca da MPN" : "Catalogo fornitori",
-                systemImage: mode == .mpn ? "number" : "cpu",
-                description: Text(
-                    mode == .mpn
-                        ? "Inserisci un MPN per trovare il codice LCSC.\nEsempio: INA219AIDR"
-                        : "Imposta tipo, valore e footprint.\nEsempio: Resistenze · 10kΩ · 0805"
+        ZStack {
+            if results.isEmpty && !isSearching {
+                ContentUnavailableView(
+                    "Catalogo fornitori",
+                    systemImage: "cpu",
+                    description: Text(emptyStateDescription)
                 )
-            )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else {
-            ScrollView {
-                LazyVStack(spacing: 12) {
-                    ForEach(results) { card in
-                        CatalogMatchCardView(
-                            card: card,
-                            canAddToProject: !projects.isEmpty,
-                            onImport: { Task { await importCard(card) } },
-                            onAddToProject: {
-                                projectPickerCard = card
-                                selectedProjectID = ""
-                                addDesignator = ""
-                                addQuantity = 1
-                            }
-                        )
-                    }
-                }
-                .padding(16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                LCSCSearchResultsTable(
+                    results: results,
+                    canAddToProject: !projects.isEmpty,
+                    onImport: { card in Task { await importCard(card) } },
+                    onAddToProject: { card in
+                        projectPickerCard = card
+                        selectedProjectID = ""
+                        addDesignator = ""
+                        addQuantity = 1
+                    },
+                    onAddToKiCad: { card in addCardToKiCad(card) }
+                )
+            }
+
+            if isSearching {
+                ProgressView("Ricerca in corso…")
+                    .padding(16)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
             }
         }
     }
 
-    private func runDesignSearch() async {
-        isSearching = true
-        errorMessage = nil
-        statusMessage = nil
-        defer { isSearching = false }
+    private var emptyStateDescription: String {
+        let provider = searchProvider.label
+        return """
+        Provider: \(provider) (Impostazioni)
 
-        do {
-            let cards = try await CatalogSearchService.search(query: query, inventory: inventory)
-            results = cards
-            let dual = cards.filter(\.hasBothCodes).count
-            statusMessage = "\(cards.count) da DigiKey · \(dual) con codice LCSC"
-        } catch {
-            errorMessage = error.localizedDescription
-            results = []
-        }
+        Parametrica: Tipo · Valore · Footprint
+        Da MPN: scrivi l'MPN nel campo Valore (es. INA219AIDR)
+        """
     }
 
-    private func runMPNSearch() async {
+    private func runSearch() async {
         isSearching = true
         errorMessage = nil
         statusMessage = nil
         defer { isSearching = false }
 
+        searchProvider = AppConfigIO.current().catalog.searchProvider
+
         do {
-            let (cards, stats) = try await MPNLookupService.search(
-                mpn: mpnQuery,
-                inventory: inventory
+            persistCatalogSearchDefaults()
+            let outcome = try await SupplierCatalogSearchService.search(
+                query: query,
+                inventory: inventory,
+                provider: searchProvider
             )
-            results = cards
-            let withLCSC = cards.filter(\.hasLCSC).count
-            var parts = ["\(withLCSC) con codice LCSC"]
-            if stats.archiveCount > 0 { parts.append("\(stats.archiveCount) da archivio") }
-            if stats.liveCount > 0 { parts.append("\(stats.liveCount) da LCSC live") }
-            if stats.digikeyFound { parts.append("DigiKey OK") }
-            statusMessage = parts.joined(separator: " · ")
+            results = outcome.cards
+            statusMessage = outcome.statusMessage
+            if results.isEmpty {
+                statusMessage = (statusMessage ?? "") + " · nessun risultato"
+            }
         } catch {
             errorMessage = error.localizedDescription
             results = []
@@ -311,6 +283,19 @@ struct CatalogLookupView: View {
         }
     }
 
+    private func addCardToKiCad(_ card: CatalogMatchCard) {
+        do {
+            if let record = card.lcscRecord {
+                let url = try KiCadExportService.appendToPersonalLibrary(record: record)
+                kicadMessage = "Simbolo aggiunto a \(url.lastPathComponent)"
+            } else {
+                kicadMessage = "Serve un codice LCSC valido per KiCad."
+            }
+        } catch {
+            kicadMessage = error.localizedDescription
+        }
+    }
+
     private func projectID(_ project: Project) -> String {
         String(describing: project.persistentModelID)
     }
@@ -321,6 +306,7 @@ struct CatalogMatchCardView: View {
     let canAddToProject: Bool
     let onImport: () -> Void
     let onAddToProject: () -> Void
+    var onAddToKiCad: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -447,6 +433,11 @@ struct CatalogMatchCardView: View {
                 .font(.caption)
             }
             Spacer()
+            if let onAddToKiCad, card.hasLCSC {
+                Button("KiCad", action: onAddToKiCad)
+                    .buttonStyle(.bordered)
+                    .platformHelp("Aggiunge il simbolo alla libreria KiCad personale")
+            }
             Button("Salva scheda", action: onImport)
                 .buttonStyle(.bordered)
                 .platformHelp("Salva la scheda tecnica con qty 0 — da ordinare, non in magazzino")
@@ -497,5 +488,217 @@ private struct SupplierCodeTile: View {
         .padding(10)
         .background(tint.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+}
+
+struct LCSCSearchResultsTable: View {
+    let results: [CatalogMatchCard]
+    let canAddToProject: Bool
+    let onImport: (CatalogMatchCard) -> Void
+    let onAddToProject: (CatalogMatchCard) -> Void
+    let onAddToKiCad: (CatalogMatchCard) -> Void
+
+    @State private var selectedCard: CatalogMatchCard?
+
+    var body: some View {
+        #if os(macOS)
+        macTable
+        #else
+        iosList
+        #endif
+    }
+
+    #if os(macOS)
+    private var macTable: some View {
+        Table(results) {
+            TableColumn("Codice") { card in
+                primaryCodeCell(for: card)
+            }
+            .width(min: 120, ideal: 160)
+
+            TableColumn("MPN") { card in
+                Text(card.mpn)
+                    .font(.caption.monospaced())
+                    .lineLimit(1)
+            }
+            .width(min: 140, ideal: 180)
+
+            TableColumn("Footprint") { card in
+                Text(card.footprint)
+                    .font(.caption)
+                    .lineLimit(1)
+            }
+            .width(min: 80, ideal: 100)
+
+            TableColumn("Produttore") { card in
+                Text(card.brand.isEmpty ? "—" : card.brand)
+                    .font(.caption)
+                    .lineLimit(1)
+            }
+            .width(min: 100, ideal: 140)
+
+            TableColumn("Stock") { card in
+                stockCell(for: card)
+            }
+            .width(min: 90, ideal: 110)
+
+            TableColumn("") { card in
+                rowActions(for: card)
+            }
+            .width(min: 180, ideal: 220)
+        }
+    }
+    #endif
+
+    private var iosList: some View {
+        List(results) { card in
+            Button {
+                selectedCard = card
+            } label: {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        primaryCodeCell(for: card)
+                        Spacer()
+                        stockCell(for: card)
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    Text(card.mpn)
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.primary)
+                    if !card.description.isEmpty {
+                        Text(card.description)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                    HStack {
+                        Text(card.footprint).font(.caption2)
+                        Text("·").foregroundStyle(.tertiary)
+                        Text(card.brand.isEmpty ? "—" : card.brand).font(.caption2)
+                    }
+                    .foregroundStyle(.secondary)
+                    rowActions(for: card)
+                }
+                .padding(.vertical, 4)
+            }
+            .buttonStyle(.plain)
+        }
+        .sheet(item: $selectedCard) { card in
+            NavigationStack {
+                ScrollView {
+                    CatalogMatchCardView(
+                        card: card,
+                        canAddToProject: canAddToProject,
+                        onImport: { onImport(card); selectedCard = nil },
+                        onAddToProject: { onAddToProject(card); selectedCard = nil },
+                        onAddToKiCad: { onAddToKiCad(card) }
+                    )
+                    .padding(16)
+                }
+                .navigationTitle(card.mpn)
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Chiudi") { selectedCard = nil }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func primaryCodeCell(for card: CatalogMatchCard) -> some View {
+        HStack(spacing: 8) {
+            if card.hasLCSC, let lcsc = card.lcscCode {
+                codeChip(lcsc, tint: .orange)
+            }
+            if card.hasDigiKey, let dk = card.digikeyPartNumber {
+                codeChip(dk, tint: .red)
+            }
+            if !card.hasLCSC && !card.hasDigiKey {
+                Text("—")
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.tertiary)
+            }
+        }
+    }
+
+    private func codeChip(_ code: String, tint: Color) -> some View {
+        Button(code) {
+            PlatformPasteboard.copy(code)
+        }
+        .buttonStyle(.plain)
+        .font(.caption.monospaced().weight(.semibold))
+        .foregroundStyle(tint)
+    }
+
+    @ViewBuilder
+    private func lcscCell(for card: CatalogMatchCard) -> some View {
+        primaryCodeCell(for: card)
+    }
+
+    @ViewBuilder
+    private func stockCell(for card: CatalogMatchCard) -> some View {
+        VStack(alignment: .trailing, spacing: 2) {
+            if card.hasLCSC, let stock = card.lcscStock {
+                Text("LCSC \(stock)")
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(stock > 0 ? Color.orange : Color.secondary)
+            }
+            if card.hasDigiKey, let stock = card.digikeyStock {
+                Text("DK \(stock)")
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(stock > 0 ? Color.red : Color.secondary)
+            }
+            if !card.hasLCSC && !card.hasDigiKey {
+                Text("—")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func rowActions(for card: CatalogMatchCard) -> some View {
+        HStack(spacing: 8) {
+            Button("Salva") { onImport(card) }
+                .buttonStyle(.bordered)
+            if card.hasLCSC {
+                Button("KiCad") { onAddToKiCad(card) }
+                    .buttonStyle(.bordered)
+            }
+            Button("Progetto") { onAddToProject(card) }
+                .buttonStyle(.borderedProminent)
+                .disabled(!canAddToProject)
+        }
+        .controlSize(.small)
+    }
+}
+
+private struct CatalogLookupChrome: ViewModifier {
+    let embeddedInNavigation: Bool
+    @Environment(\.dismiss) private var dismiss
+
+    func body(content: Content) -> some View {
+        if embeddedInNavigation {
+            content
+                .navigationTitle("Ricerca catalogo")
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+        } else {
+            content
+                .platformSheetFrame(minWidth: 760, minHeight: 560)
+                .navigationTitle("Trova componente — progettazione")
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Chiudi") { dismiss() }
+                    }
+                }
+        }
     }
 }

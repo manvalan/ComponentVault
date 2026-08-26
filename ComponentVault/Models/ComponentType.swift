@@ -18,19 +18,24 @@ enum ComponentType: String, CaseIterable, Identifiable, Sendable {
     var id: String { rawValue }
 
     var label: String {
+        englishLabel
+    }
+
+    /// Etichetta categoria in inglese (filtri e catalogo LCSC).
+    var englishLabel: String {
         switch self {
-        case .resistor: "Resistenze"
-        case .capacitor: "Condensatori"
-        case .inductor: "Induttori"
-        case .ic: "Circuiti integrati"
-        case .connector: "Connettori"
-        case .diode: "Diodi"
-        case .led: "LED"
-        case .switch_: "Interruttori"
-        case .module: "Moduli"
-        case .regulator: "Regolatori"
-        case .display: "Display"
-        case .other: "Altro"
+        case .resistor: "Resistors"
+        case .capacitor: "Capacitors"
+        case .inductor: "Inductors"
+        case .ic: "Integrated Circuits"
+        case .connector: "Connectors"
+        case .diode: "Diodes"
+        case .led: "LEDs"
+        case .switch_: "Switches"
+        case .module: "Modules"
+        case .regulator: "Power Management"
+        case .display: "Displays"
+        case .other: "Other"
         }
     }
 
@@ -83,12 +88,12 @@ enum ComponentType: String, CaseIterable, Identifiable, Sendable {
         if lower.hasPrefix("iot/") || lower.contains("communication modules") { return .module }
         if lower.hasPrefix("power management") || lower.contains("voltage regulator") { return .regulator }
 
-        if root == "resistors" || lower.contains("resistor") { return .resistor }
-        if root == "capacitors" || lower.contains("capacitor") { return .capacitor }
-        if lower.contains("inductor") || lower.contains("choke") || lower.contains("coil") { return .inductor }
+        if root == "resistors" || root == "resistenze" || root == "resistenza" || lower.contains("resistor") { return .resistor }
+        if root == "capacitors" || root == "condensatori" || root == "condensatore" || lower.contains("capacitor") || lower.contains("condensator") { return .capacitor }
+        if root == "inductors" || root == "induttori" || root == "induttore" || lower.contains("inductor") || lower.contains("indutt") || lower.contains("choke") || lower.contains("coil") { return .inductor }
 
-        if lower.contains("connector") || lower.contains("header") { return .connector }
-        if lower.contains("switch") { return .switch_ }
+        if lower.contains("connett") || lower.contains("connector") || lower.contains("header") { return .connector }
+        if lower.contains("interrutt") || lower.contains("switch") { return .switch_ }
 
         if lower.hasPrefix("optoelectronics/led")
             || lower.contains("led indication")
@@ -104,6 +109,152 @@ enum ComponentType: String, CaseIterable, Identifiable, Sendable {
         }
 
         return .other
+    }
+
+    /// Parametri LCSC usati in `paramNameValueMap` per filtrare per valore.
+    func lcscValueParamNames(for value: String) -> [String] {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+
+        switch self {
+        case .resistor:
+            return ["Resistance"]
+        case .capacitor:
+            if trimmed.range(of: #"(\d+(\.\d+)?)\s*v"#, options: [.regularExpression, .caseInsensitive]) != nil {
+                return ["Capacitance", "Voltage - Rated"]
+            }
+            return ["Capacitance"]
+        case .inductor:
+            return ["Inductance"]
+        case .diode:
+            return ["Forward Voltage (Vf)", "Voltage - Rated", "Reverse Voltage (Vr)"]
+        case .led:
+            if trimmed.range(of: #"(\d+(\.\d+)?)\s*v"#, options: [.regularExpression, .caseInsensitive]) != nil
+                || trimmed.lowercased().contains("vf") {
+                return ["Forward Voltage (Vf)"]
+            }
+            if trimmed.range(of: #"(\d+(\.\d+)?)\s*(ma|a)"#, options: [.regularExpression, .caseInsensitive]) != nil {
+                return ["Current - Continuous Forward (If)"]
+            }
+            return ["Color", "Luminous Intensity"]
+        case .regulator:
+            if trimmed.range(of: #"(\d+(\.\d+)?)\s*v"#, options: [.regularExpression, .caseInsensitive]) != nil {
+                return ["Output Voltage", "Voltage - Supply"]
+            }
+            return ["Output Current"]
+        case .display:
+            return ["Display Size", "Resolution"]
+        case .switch_:
+            return ["Contact Rating (Current)", "Voltage - AC"]
+        case .connector, .ic, .module, .other:
+            return []
+        }
+    }
+
+    /// Mappa parametri LCSC → valore per la ricerca parametrica.
+    func lcscParamMap(for value: String) -> [String: [String]] {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, let primary = lcscValueParamNames(for: trimmed).first else {
+            return [:]
+        }
+        return [primary: ElectricalValueNormalizer.lcscVariants(raw: trimmed, type: self)]
+    }
+
+    /// Radici categoria LCSC accettate quando si filtra per tipo componente.
+    var lcscCategoryRoots: [String] {
+        switch self {
+        case .resistor:
+            ["resistors", "resistor", "resistenze", "resistenza"]
+        case .capacitor:
+            ["capacitors", "capacitor", "condensatori", "condensatore"]
+        case .inductor:
+            ["inductors", "inductor", "induttori", "induttore", "coil", "choke", "ferrite"]
+        case .ic:
+            [
+                "integrated circuits", "circuiti integrati", "microcontroller", "microcontrollori",
+                "mcu", "processor", "processori", "embedded", "memory", "memorie",
+                "interface", "interfacce", "amplifier", "amplificatori", "optoisolator", "logic", "fpga", "cpld"
+            ]
+        case .connector:
+            ["connectors", "connector", "connettori", "connettore", "header", "socket", "terminal", "wire-to-board", "ffc", "fpc"]
+        case .diode:
+            ["diodes", "diode", "diodi", "transistors", "transistor", "transistori", "tvs", "zener", "schottky"]
+        case .led:
+            ["led", "optoelectronics", "optoelettronica", "lamp"]
+        case .switch_:
+            ["switch", "switches", "interruttori", "interruttore", "keypad"]
+        case .module:
+            ["module", "modules", "moduli", "modulo", "iot", "communication", "wireless", "bluetooth", "wifi", "lora", "rf"]
+        case .regulator:
+            ["power management", "regulator", "regolatori", "ldo", "dc-dc", "buck", "boost", "converter", "alimentazione"]
+        case .display:
+            ["displays", "display", "lcd", "oled", "tft", "screen", "schermi"]
+        case .other:
+            []
+        }
+    }
+
+    /// Verifica se una categoria LCSC appartiene a questo tipo ComponentVault.
+    func matchesLCSCCategory(_ category: String) -> Bool {
+        if self == .other { return true }
+        if ComponentType.from(category: category) == self { return true }
+        let lower = category.lowercased()
+        return lcscCategoryRoots.contains { lower.contains($0) }
+    }
+
+    /// Etichetta campo «valore» nella ricerca catalogo.
+    var catalogValueLabel: String {
+        switch self {
+        case .resistor: "Valore (es. 10kΩ)"
+        case .capacitor: "Valore (es. 100nF, 50V)"
+        case .inductor: "Valore (es. 10uH)"
+        case .ic: "MPN / part number"
+        case .connector: "Tipo / passo (es. 2.54mm)"
+        case .diode: "Tensione / corrente (es. 40V 1A)"
+        case .led: "Colore / Vf (es. rosso, 3.3V)"
+        case .switch_: "Rating (es. 50mA 12V)"
+        case .module: "Modello / protocollo (es. ESP32)"
+        case .regulator: "Output (es. 3.3V 1A)"
+        case .display: "Dimensione / risoluzione"
+        case .other: "Valore o MPN"
+        }
+    }
+
+    /// Parametro LCSC per ricerca parametrica (legacy — preferire lcscParamMap(for:)).
+    var lcscParamName: String? {
+        lcscValueParamNames(for: "1").first
+    }
+
+    var lcscSearchKeyword: String {
+        switch self {
+        case .resistor: "resistor"
+        case .capacitor: "capacitor"
+        case .inductor: "inductor"
+        case .ic: "integrated circuit"
+        case .connector: "connector"
+        case .diode: "diode"
+        case .led: "led"
+        case .switch_: "switch"
+        case .module: "module"
+        case .regulator: "voltage regulator"
+        case .display: "display"
+        case .other: "electronic component"
+        }
+    }
+
+    /// Prefisso reference KiCad (R, C, L, …).
+    var kicadReference: String {
+        switch self {
+        case .resistor: "R"
+        case .capacitor: "C"
+        case .inductor: "L"
+        case .diode, .led: "D"
+        case .connector: "J"
+        case .switch_: "SW"
+        case .ic, .regulator, .module: "U"
+        case .display: "DS"
+        case .other: "U"
+        }
     }
 }
 
@@ -206,8 +357,8 @@ enum CatalogValueSortKey {
     static func compare(_ lhs: String, _ rhs: String, for type: ComponentType) -> ComparisonResult {
         switch type {
         case .resistor, .capacitor, .inductor:
-            let ln = parseElectrical(lhs)
-            let rn = parseElectrical(rhs)
+            let ln = parseElectrical(lhs, for: type)
+            let rn = parseElectrical(rhs, for: type)
             if let ln, let rn {
                 if ln == rn { return .orderedSame }
                 return ln < rn ? .orderedAscending : .orderedDescending
@@ -218,7 +369,7 @@ enum CatalogValueSortKey {
         return lhs.localizedStandardCompare(rhs)
     }
 
-    static func parseElectrical(_ raw: String) -> Double? {
+    static func parseElectrical(_ raw: String, for type: ComponentType = .other) -> Double? {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, trimmed != "—", trimmed != "N/A" else { return nil }
 
@@ -229,8 +380,31 @@ enum CatalogValueSortKey {
             .replacingOccurrences(of: "µ", with: "u")
             .replacingOccurrences(of: "μ", with: "u")
             .trimmingCharacters(in: .whitespaces)
+            .lowercased()
 
-        let pattern = #"^([\d.]+)\s*([kKmMuUnNpP]?)([FfHhVv]?)$"#
+        if normalized.hasSuffix("f"), type == .capacitor || type == .other {
+            if let parsed = parsePrefixedValue(String(normalized.dropLast()), unitMultiplier: 1) {
+                return parsed
+            }
+        }
+
+        if normalized.hasSuffix("h"), type == .inductor || type == .other {
+            if let parsed = parsePrefixedValue(String(normalized.dropLast()), unitMultiplier: 1) {
+                return parsed
+            }
+        }
+
+        if normalized.hasSuffix("v"), type == .other {
+            if let parsed = parsePrefixedValue(String(normalized.dropLast()), unitMultiplier: 1) {
+                return parsed
+            }
+        }
+
+        return parsePrefixedValue(normalized, unitMultiplier: 1)
+    }
+
+    private static func parsePrefixedValue(_ normalized: String, unitMultiplier: Double) -> Double? {
+        let pattern = #"^([\d.]+)\s*([kKmMuUnNpP]?)$"#
         guard let regex = try? NSRegularExpression(pattern: pattern),
               let match = regex.firstMatch(in: normalized, range: NSRange(normalized.startIndex..., in: normalized)),
               let numberRange = Range(match.range(at: 1), in: normalized),
@@ -239,9 +413,7 @@ enum CatalogValueSortKey {
         }
 
         let prefixRange = Range(match.range(at: 2), in: normalized)
-        let unitRange = Range(match.range(at: 3), in: normalized)
         let prefix = prefixRange.map { String(normalized[$0]).lowercased() } ?? ""
-        let unit = unitRange.map { String(normalized[$0]).lowercased() } ?? ""
 
         let prefixMultiplier: Double = switch prefix {
         case "k": 1e3
@@ -252,13 +424,113 @@ enum CatalogValueSortKey {
         default: 1
         }
 
-        let unitMultiplier: Double = switch unit {
-        case "f": 1e-6
-        case "h": 1e-6
-        default: 1
+        return number * prefixMultiplier * unitMultiplier
+    }
+}
+
+/// Unifica radici categoria LCSC in inglese (es. Condensatori → Capacitors).
+enum CategoryNormalizer {
+    private static let rootAliases: [String: String] = [
+        "resistors": "Resistors",
+        "resistor": "Resistors",
+        "resistenze": "Resistors",
+        "resistenza": "Resistors",
+        "resistore": "Resistors",
+        "capacitors": "Capacitors",
+        "capacitor": "Capacitors",
+        "condensatori": "Capacitors",
+        "condensatore": "Capacitors",
+        "inductors": "Inductors",
+        "inductor": "Inductors",
+        "induttori": "Inductors",
+        "induttore": "Inductors",
+        "connectors": "Connectors",
+        "connector": "Connectors",
+        "connettori": "Connectors",
+        "connettore": "Connectors",
+        "diodes": "Diodes",
+        "diode": "Diodes",
+        "diodi": "Diodes",
+        "transistors": "Transistors",
+        "transistor": "Transistors",
+        "transistori": "Transistors",
+        "optoelectronics": "Optoelectronics",
+        "optoelettronica": "Optoelectronics",
+        "integrated circuits": "Integrated Circuits",
+        "circuiti integrati": "Integrated Circuits",
+        "microcontrollers": "Microcontrollers",
+        "microcontroller": "Microcontrollers",
+        "microcontrollori": "Microcontrollers",
+        "microcontrollore": "Microcontrollers",
+        "memory": "Memory",
+        "memories": "Memory",
+        "memorie": "Memory",
+        "memoria": "Memory",
+        "power management": "Power Management",
+        "power management (PMIC)": "Power Management",
+        "gestione alimentazione": "Power Management",
+        "sensors": "Sensors",
+        "sensori": "Sensors",
+        "sensore": "Sensors",
+        "displays": "Displays",
+        "display": "Displays",
+        "schermi": "Displays",
+        "schermo": "Displays",
+        "switches": "Switches",
+        "switch": "Switches",
+        "interruttori": "Switches",
+        "interruttore": "Switches",
+        "modules": "Modules",
+        "module": "Modules",
+        "moduli": "Modules",
+        "modulo": "Modules",
+        "iot": "IoT / Wireless",
+        "wireless": "IoT / Wireless",
+        "led": "LEDs",
+        "leds": "LEDs",
+        "crystals": "Crystals & Oscillators",
+        "oscillators": "Crystals & Oscillators",
+        "cristalli": "Crystals & Oscillators",
+        "oscillatori": "Crystals & Oscillators",
+        "relays": "Relays",
+        "relè": "Relays",
+        "rele": "Relays",
+        "fuses": "Fuses",
+        "fusibili": "Fuses",
+        "fusibile": "Fuses",
+        "transformers": "Transformers",
+        "transformatori": "Transformers",
+        "transformer": "Transformers",
+        "transformatore": "Transformers",
+    ]
+
+    static func englishRoot(from category: String) -> String {
+        let trimmed = category.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+
+        let rawRoot = trimmed.components(separatedBy: "/").first?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? trimmed
+        let key = rawRoot.lowercased()
+
+        if let canonical = rootAliases[key] {
+            return canonical
         }
 
-        return number * prefixMultiplier * unitMultiplier
+        let type = ComponentType.from(category: trimmed)
+        if type != .other {
+            return type.englishLabel
+        }
+
+        return titleCase(rawRoot)
+    }
+
+    static func matches(filterRoot: String, componentCategory: String) -> Bool {
+        guard filterRoot != "Tutte" else { return true }
+        return englishRoot(from: componentCategory) == filterRoot
+    }
+
+    private static func titleCase(_ value: String) -> String {
+        value.prefix(1).uppercased() + value.dropFirst()
     }
 }
 

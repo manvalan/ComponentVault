@@ -7,16 +7,24 @@ enum AppSection: String, CaseIterable, Identifiable {
     case catalog
     case projects
     case alerts
+    case search
     case settings
 
     var id: String { rawValue }
+
+    /// Sezioni sidebar escluse Impostazioni (in fondo).
+    static var warehouseCases: [AppSection] { [.inventory, .alerts] }
+    static var workspaceCases: [AppSection] { [.catalog, .projects] }
+    static var toolCases: [AppSection] { [.search] }
+    static var navigableCases: [AppSection] { warehouseCases + workspaceCases + toolCases }
 
     var title: String {
         switch self {
         case .inventory: "Inventario"
         case .catalog: "Catalogo"
         case .projects: "Progetti"
-        case .alerts: "Alert"
+        case .alerts: "Scorte basse"
+        case .search: "Ricerca"
         case .settings: "Impostazioni"
         }
     }
@@ -27,6 +35,7 @@ enum AppSection: String, CaseIterable, Identifiable {
         case .catalog: "square.grid.2x2"
         case .projects: "folder"
         case .alerts: "exclamationmark.triangle"
+        case .search: "magnifyingglass"
         case .settings: "gearshape"
         }
     }
@@ -43,31 +52,22 @@ struct ContentView: View {
 }
 
 private struct MacContentShell: View {
+    @Query(sort: \Component.quantity) private var components: [Component]
     @State private var section: AppSection = .inventory
+
+    private var lowStockCount: Int {
+        components.filter(\.isLowStock).count
+    }
 
     var body: some View {
         HStack(spacing: 0) {
-            AppSectionSidebar(selection: $section)
+            AppSectionSidebar(selection: $section, lowStockCount: lowStockCount)
                 .frame(width: AppLayout.sectionSidebarWidth)
 
             Divider()
 
-            Group {
-                switch section {
-                case .inventory:
-                    InventoryView()
-                case .catalog:
-                    CatalogView()
-                case .projects:
-                    ProjectsView()
-                case .alerts:
-                    LowStockView()
-                case .settings:
-                    SettingsView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            AppSectionContent(section: section)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -75,6 +75,7 @@ private struct MacContentShell: View {
 
 struct AppSectionSidebar: View {
     @Binding var selection: AppSection
+    var lowStockCount: Int = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -84,27 +85,61 @@ struct AppSectionSidebar: View {
                 .padding(.horizontal, 10)
                 .padding(.top, 4)
 
-            ForEach(AppSection.allCases) { item in
-                Button {
-                    selection = item
-                } label: {
-                    Label(item.title, systemImage: item.icon)
-                        .font(.subheadline)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 8)
-                        .background(
-                            selection == item ? Color.accentColor.opacity(0.14) : Color.clear,
-                            in: RoundedRectangle(cornerRadius: 8)
-                        )
-                }
-                .buttonStyle(.plain)
-            }
+            sidebarGroup("Magazzino", items: AppSection.warehouseCases)
+            sidebarGroup("Catalogo & Progetti", items: AppSection.workspaceCases)
+            sidebarGroup("Strumenti", items: AppSection.toolCases)
+
+            Divider()
+                .padding(.vertical, 4)
+
+            sidebarButton(.settings)
 
             Spacer(minLength: 0)
         }
         .padding(8)
         .background(.bar)
+    }
+
+    private func sidebarGroup(_ title: String, items: [AppSection]) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.tertiary)
+                .padding(.horizontal, 10)
+                .padding(.top, 6)
+            ForEach(items) { item in
+                sidebarButton(item)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func sidebarButton(_ item: AppSection) -> some View {
+        Button {
+            selection = item
+        } label: {
+            HStack(spacing: 8) {
+                Label(item.title, systemImage: item.icon)
+                    .font(.subheadline)
+                Spacer(minLength: 0)
+                if item == .alerts, lowStockCount > 0 {
+                    Text("\(lowStockCount)")
+                        .font(.caption2.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(.orange, in: Capsule())
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                selection == item ? Color.accentColor.opacity(0.14) : Color.clear,
+                in: RoundedRectangle(cornerRadius: 8)
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -155,9 +190,75 @@ struct InventoryView: View {
         } detail: {
             inventoryDetail
         }
-        .navigationTitle("Inventario")
         .navigationSplitViewStyle(.balanced)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if !components.isEmpty {
+                FilterBar(filter: $filter, components: components)
+            }
+        }
+        .navigationTitle("Inventario")
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #if os(iOS)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Ricarica") {
+                    Task { await reloadInventory() }
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button {
+                        showImportPanel = true
+                    } label: {
+                        Label("Importa CSV", systemImage: "square.and.arrow.down")
+                    }
+                    Button {
+                        exportDocument = CSVDocument(text: ExportService.inventoryCSV(components: filteredComponents))
+                        showExport = true
+                    } label: {
+                        Label("Esporta CSV", systemImage: "square.and.arrow.up")
+                    }
+                    .disabled(filteredComponents.isEmpty)
+                    Divider()
+                    Button {
+                        guard let store else { return }
+                        Task {
+                            enrichProgress = ("LCSC", 0, filteredComponents.count)
+                            await store.enrichAllFromLCSC(
+                                components: filteredComponents,
+                                delayMs: lcscRequestDelayMs
+                            ) { c, t in
+                                enrichProgress = ("LCSC", c, t)
+                            }
+                            enrichProgress = nil
+                        }
+                    } label: {
+                        Label("Arricchisci LCSC", systemImage: "arrow.triangle.2.circlepath")
+                    }
+                    .disabled(filteredComponents.isEmpty || store?.isLoading == true)
+                    Button {
+                        guard let store else { return }
+                        let eligible = filteredComponents.filter { !$0.mpn.isEmpty }
+                        Task {
+                            enrichProgress = ("DigiKey", 0, eligible.count)
+                            _ = await store.enrichAllFromDigiKey(
+                                components: filteredComponents,
+                                delayMs: digikeyRequestDelayMs
+                            ) { c, t in
+                                enrichProgress = ("DigiKey", c, t)
+                            }
+                            enrichProgress = nil
+                        }
+                    } label: {
+                        Label("Arricchisci DigiKey", systemImage: "arrow.triangle.2.circlepath")
+                    }
+                    .disabled(filteredComponents.isEmpty || store?.isLoading == true)
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
+        }
+        #endif
         .onAppear {
             if store == nil { store = ComponentStore(modelContext: modelContext) }
             refreshFilteredComponents()
@@ -204,10 +305,6 @@ struct InventoryView: View {
 
     private var inventorySidebar: some View {
         VStack(spacing: 0) {
-            if !components.isEmpty {
-                FilterBar(filter: $filter, components: components)
-            }
-
             if components.isEmpty {
                 emptyState.frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -225,7 +322,9 @@ struct InventoryView: View {
         )
     }
 
+    @ViewBuilder
     private var inventoryToolbar: some View {
+        #if os(macOS)
         HStack {
             Button("Ricarica") {
                 Task { await reloadInventory() }
@@ -274,6 +373,17 @@ struct InventoryView: View {
         }
         .padding(8)
         .background(.bar)
+        #else
+        HStack {
+            Spacer()
+            Text("\(filteredComponents.count) componenti")
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(.bar)
+        #endif
     }
 
     @ViewBuilder

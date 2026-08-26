@@ -33,20 +33,12 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        Group {
-            #if os(iOS)
-            NavigationStack {
-                settingsScrollContent
+        settingsScrollContent
+            .onAppear {
+                if store == nil { store = ComponentStore(modelContext: modelContext) }
+                config = AppConfigIO.reload()
+                refreshDigiKeyTokenStatus()
             }
-            #else
-            settingsScrollContent
-            #endif
-        }
-        .onAppear {
-            if store == nil { store = ComponentStore(modelContext: modelContext) }
-            config = AppConfigIO.reload()
-            refreshDigiKeyTokenStatus()
-        }
         .alert("Scaricare dal server?", isPresented: $showPullConfirm) {
             Button("Annulla", role: .cancel) {}
             Button("Scarica", role: .destructive) {
@@ -68,6 +60,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     configFileSection
                     serverSection
+                    catalogSearchSection
                     digiKeySection
                         .id("digikey-settings")
                     syncSection
@@ -268,12 +261,56 @@ struct SettingsView: View {
                     TextField("Percorso", text: $config.paths.csv)
                         .textFieldStyle(.roundedBorder)
                 }
+                LabeledContent("Libreria KiCad") {
+                    TextField("~/Documents/KiCad/9.0/symbols/ComponentVault.kicad_sym", text: Binding(
+                        get: { KiCadExportService.personalLibraryPath },
+                        set: { KiCadExportService.personalLibraryPath = $0 }
+                    ))
+                    .textFieldStyle(.roundedBorder)
+                }
+                Text("Il simbolo viene aggiunto a questa libreria con LCSC, MPN e produttore.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
                 #if os(iOS)
                 Text("Su iPad i dati arrivano principalmente dal sync remoto o da import CSV.")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                 #endif
             }
+        }
+    }
+
+    private var catalogSearchSection: some View {
+        GroupBox("Ricerca catalogo fornitori") {
+            VStack(alignment: .leading, spacing: 12) {
+                Picker("Provider", selection: $config.catalog.searchProvider) {
+                    ForEach(CatalogSearchProvider.allCases) { provider in
+                        Text(provider.label).tag(provider)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                Text(config.catalog.searchProvider.detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if config.catalog.searchProvider == .digikey, !digiKeyConfigured {
+                    Label(
+                        "Configura e autentica DigiKey qui sotto per usare questo provider.",
+                        systemImage: "exclamationmark.triangle"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                }
+
+                HStack(spacing: 10) {
+                    Button("Salva provider") {
+                        saveFullConfig()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

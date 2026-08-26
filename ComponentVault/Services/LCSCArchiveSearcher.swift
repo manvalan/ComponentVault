@@ -11,12 +11,16 @@ enum LCSCArchiveSearcher {
         var results: [ComponentRecord] = []
         var seen = Set<String>()
 
-        for component in inventory where CatalogMatchNormalizer.matches(
-            recordType: component.componentType,
-            recordValue: component.displayValue,
-            recordFootprint: component.displayFootprint,
-            query: query
-        ) {
+        for component in inventory {
+            guard CatalogMatchNormalizer.matches(
+                recordType: component.componentType,
+                recordValue: component.displayValue,
+                recordFootprint: component.displayFootprint,
+                query: query,
+                record: component.toRecord()
+            ), CatalogMatchNormalizer.matchesBrand(recordBrand: component.brand, queryBrand: query.brand) else {
+                continue
+            }
             let record = component.toRecord()
             guard seen.insert(record.lcscCode).inserted else { continue }
             results.append(record)
@@ -49,8 +53,9 @@ enum LCSCArchiveSearcher {
                 recordType: type,
                 recordValue: value,
                 recordFootprint: footprint,
-                query: query
-            ) else { continue }
+                query: query,
+                record: record
+            ), CatalogMatchNormalizer.matchesBrand(recordBrand: record.brand, queryBrand: query.brand) else { continue }
 
             results.append(record)
             if results.count >= limit { break }

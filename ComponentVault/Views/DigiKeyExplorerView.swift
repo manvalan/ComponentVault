@@ -18,6 +18,8 @@ enum DigiKeyExplorerMode: String, CaseIterable, Identifiable {
 }
 
 struct DigiKeyExplorerView: View {
+    var embeddedInNavigation = false
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
@@ -41,13 +43,7 @@ struct DigiKeyExplorerView: View {
             Divider()
             content
         }
-        .platformSheetFrame(minWidth: 760, minHeight: 560)
-        .navigationTitle("Esplora DigiKey")
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Chiudi") { dismiss() }
-            }
-        }
+        .modifier(DigiKeyExplorerChrome(embeddedInNavigation: embeddedInNavigation))
         .onAppear {
             if store == nil { store = ComponentStore(modelContext: modelContext) }
         }
@@ -288,5 +284,29 @@ private struct DigiKeyExplorerRow: View {
                 .buttonStyle(.bordered)
         }
         .padding(.vertical, 4)
+    }
+}
+
+private struct DigiKeyExplorerChrome: ViewModifier {
+    let embeddedInNavigation: Bool
+    @Environment(\.dismiss) private var dismiss
+
+    func body(content: Content) -> some View {
+        if embeddedInNavigation {
+            content
+                .navigationTitle("Esplora DigiKey")
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+        } else {
+            content
+                .platformSheetFrame(minWidth: 760, minHeight: 560)
+                .navigationTitle("Esplora DigiKey")
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Chiudi") { dismiss() }
+                    }
+                }
+        }
     }
 }

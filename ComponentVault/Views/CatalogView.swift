@@ -14,8 +14,6 @@ struct CatalogView: View {
     @State private var selectedGroupID: String?
     @State private var selectedComponent: Component?
     @State private var searchText = ""
-    @State private var showSupplierLookup = false
-    @State private var showDigiKeyExplorer = false
     @State private var store: ComponentStore?
 
     @Environment(\.modelContext) private var modelContext
@@ -56,6 +54,14 @@ struct CatalogView: View {
     }
 
     var body: some View {
+        #if os(iOS)
+        iosCatalogLayout
+        #else
+        macCatalogLayout
+        #endif
+    }
+
+    private var macCatalogLayout: some View {
         NavigationSplitView {
             typeSidebar
         } content: {
@@ -65,38 +71,79 @@ struct CatalogView: View {
         }
         .navigationSplitViewStyle(.balanced)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear {
-            if store == nil { store = ComponentStore(modelContext: modelContext) }
-            if selectedType == nil { selectedType = typeRows.first?.type }
+        .onAppear(perform: catalogOnAppear)
+        .onChange(of: selectedType) { _, _ in catalogTypeChanged() }
+        .onChange(of: searchText) { _, _ in syncSelection() }
+        .onChange(of: components.count) { _, _ in syncSelection() }
+    }
+
+    #if os(iOS)
+    private var iosCatalogLayout: some View {
+        NavigationSplitView {
+            iosGroupPanel
+        } detail: {
+            detailPanel
         }
-        .onChange(of: selectedType) { _, _ in
-            searchText = ""
-            selectedGroupID = nil
-            selectedComponent = nil
-            syncSelection()
+        .navigationSplitViewStyle(.balanced)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            CatalogTypeFilterBar(selectedType: $selectedType, typeRows: typeRows)
         }
-        .onChange(of: searchText) { _, _ in
-            syncSelection()
-        }
-        .onChange(of: components.count) { _, _ in
-            syncSelection()
-        }
-        .sheet(isPresented: $showSupplierLookup) {
-            NavigationStack {
-                CatalogLookupView()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear(perform: catalogOnAppear)
+        .onChange(of: selectedType) { _, _ in catalogTypeChanged() }
+        .onChange(of: searchText) { _, _ in syncSelection() }
+        .onChange(of: components.count) { _, _ in syncSelection() }
+    }
+    #endif
+
+    private func catalogOnAppear() {
+        if store == nil { store = ComponentStore(modelContext: modelContext) }
+        if selectedType == nil { selectedType = typeRows.first?.type }
+    }
+
+    private func catalogTypeChanged() {
+        searchText = ""
+        selectedGroupID = nil
+        selectedComponent = nil
+        syncSelection()
+    }
+
+    #if os(iOS)
+    @ViewBuilder
+    private var iosGroupPanel: some View {
+        if let selectedType {
+            VStack(spacing: 0) {
+                catalogSearchBar
+
+                catalogGroupsList
+
+                if let group = activeGroup, group.componentCount > 1 {
+                    variantBar(for: group)
+                }
             }
-            #if os(iOS)
-            .presentationDetents([.large])
-            #endif
+            .navigationTitle(selectedType.label)
+            .navigationSplitViewColumnWidth(
+                min: AppLayout.catalogGroupMin,
+                ideal: AppLayout.catalogGroupIdeal
+            )
+            .onAppear { syncSelection() }
+        } else {
+            ContentUnavailableView("Nessun tipo", systemImage: "square.grid.2x2")
         }
-        .sheet(isPresented: $showDigiKeyExplorer) {
-            NavigationStack {
-                DigiKeyExplorerView()
-            }
-            #if os(iOS)
-            .presentationDetents([.large])
-            #endif
+    }
+    #endif
+
+    private var catalogSearchBar: some View {
+        HStack(spacing: 12) {
+            TextField("Cerca valore, footprint, MPN…", text: $searchText)
+                .textFieldStyle(.roundedBorder)
+            Text("\(filteredGroups.count) gruppi")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.bar)
     }
 
     #if os(macOS)
@@ -272,23 +319,13 @@ struct CatalogView: View {
 
                 Spacer()
 
-                Button {
-                    showSupplierLookup = true
-                } label: {
-                    Label("Progettazione", systemImage: "magnifyingglass.circle")
-                }
-                .platformHelp("Cerca nei cataloghi LCSC e DigiKey per tipo, valore e footprint")
-
-                Button {
-                    showDigiKeyExplorer = true
-                } label: {
-                    Label("Esplora DigiKey", systemImage: "shippingbox")
-                }
-                .platformHelp("Ricerca keyword, barcode, sostituti e packaging alternativo DigiKey")
-
                 TextField("Cerca valore, footprint, MPN…", text: $searchText)
                     .textFieldStyle(.roundedBorder)
+                    #if os(macOS)
                     .frame(minWidth: 180, maxWidth: 260)
+                    #else
+                    .frame(maxWidth: 280)
+                    #endif
             }
         }
         .padding(.horizontal, 16)

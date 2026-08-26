@@ -18,6 +18,7 @@ struct ProjectsView: View {
                         .tag(project)
                 }
 
+                #if os(macOS)
                 HStack {
                     Button {
                         showNewProject = true
@@ -31,6 +32,17 @@ struct ProjectsView: View {
                 }
                 .padding(8)
                 .background(.bar)
+                #else
+                HStack {
+                    Spacer()
+                    Text("\(projects.count) progetti")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(.bar)
+                #endif
             }
             .navigationSplitViewColumnWidth(
                 min: AppLayout.projectsListMin,
@@ -48,7 +60,19 @@ struct ProjectsView: View {
             }
         }
         .navigationSplitViewStyle(.balanced)
+        .navigationTitle("Progetti")
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #if os(iOS)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showNewProject = true
+                } label: {
+                    Label("Nuovo progetto", systemImage: "plus")
+                }
+            }
+        }
+        #endif
         .onAppear {
             if projectStore == nil {
                 projectStore = ProjectStore(modelContext: modelContext)

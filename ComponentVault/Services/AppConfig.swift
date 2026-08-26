@@ -22,6 +22,10 @@ struct AppConfig: Codable, Sendable, Equatable {
         var requestDelayMs: Int = 800
     }
 
+    struct Catalog: Codable, Sendable, Equatable {
+        var searchProvider: CatalogSearchProvider = .lcsc
+    }
+
     struct DigiKey: Codable, Sendable, Equatable {
         var clientID: String = ""
         var clientSecret: String = ""
@@ -38,6 +42,7 @@ struct AppConfig: Codable, Sendable, Equatable {
     var sync: Sync = Sync()
     var paths: Paths = Paths()
     var lcsc: LCSC = LCSC()
+    var catalog: Catalog = Catalog()
     var digikey: DigiKey = DigiKey()
 
     static let fileName = "componentvault_config.yml"
@@ -144,7 +149,7 @@ enum AppConfigIO {
             config.digikey = legacy
         }
         migrateUserDefaults(into: &config)
-        try? save(config)
+        _ = try? save(config)
         removeLegacyDigiKeyConfig()
         return config
     }
@@ -194,7 +199,7 @@ enum AppConfigIO {
 
     static func yamlString(for config: AppConfig) -> String {
         let csv = config.paths.csv.isEmpty ? AppPaths.defaultCSV.path : config.paths.csv
-        var lines = [
+        let lines = [
             "# ComponentVault — configurazione unificata",
             "server:",
             "  api_base_url: \(yamlQuote(config.server.apiBaseURL))",
@@ -208,6 +213,8 @@ enum AppConfigIO {
             "  csv: \(yamlQuote(csv))",
             "lcsc:",
             "  request_delay_ms: \(config.lcsc.requestDelayMs)",
+            "catalog:",
+            "  search_provider: \(config.catalog.searchProvider.rawValue)",
             "digikey:",
             "  client_id: \(yamlQuote(config.digikey.clientID))",
             "  client_secret: \(yamlQuote(config.digikey.clientSecret))",
@@ -281,6 +288,10 @@ enum AppConfigIO {
         config.sync.lastRemoteCount = intValue("sync", "last_remote_count", default: -1)
         config.paths.csv = value("paths", "csv") ?? AppPaths.defaultCSV.path
         config.lcsc.requestDelayMs = intValue("lcsc", "request_delay_ms", default: 800)
+        if let providerRaw = value("catalog", "search_provider"),
+           let provider = CatalogSearchProvider(rawValue: providerRaw.lowercased()) {
+            config.catalog.searchProvider = provider
+        }
 
         let dk = config.digikey
         config.digikey.clientID = value("digikey", "client_id") ?? ""

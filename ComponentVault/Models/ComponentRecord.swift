@@ -253,6 +253,11 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         )
     }
 
+    /// Unisce parametri duplicati (LCSC/DigiKey possono ripetere lo stesso nome).
+    static func deduplicatedParameters(_ entries: [(String, String)]) -> [String: String] {
+        Dictionary(entries, uniquingKeysWith: { _, last in last })
+    }
+
     /// Separa codice inventario CV-* da codice fornitore LCSC Cxxxxx.
     func normalizedForInventory() -> ComponentRecord {
         if InternalComponentCode.isInternal(lcscCode) { return self }

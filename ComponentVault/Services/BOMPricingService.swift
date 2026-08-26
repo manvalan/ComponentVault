@@ -1,6 +1,6 @@
 import Foundation
 
-struct BOMLineCost: Identifiable, Sendable {
+struct BOMLineCost: Identifiable {
     var id: String { "\(item.persistentModelID)" }
 
     let item: ProjectItem
@@ -12,7 +12,7 @@ struct BOMLineCost: Identifiable, Sendable {
     let isObsolete: Bool
 }
 
-struct BOMCostSummary: Sendable {
+struct BOMCostSummary {
     let lines: [BOMLineCost]
     let total: Double?
     let currency: String?

@@ -18,6 +18,8 @@ struct ComponentDetailView: View {
     @State private var isLookingUpMPN = false
     @State private var isLookingUpEquivalent = false
     @State private var infoMessage: String?
+    @State private var showKiCadExport = false
+    @State private var kicadExportDocument = CSVDocument()
 
     var body: some View {
         ScrollView {
@@ -122,8 +124,39 @@ struct ComponentDetailView: View {
                         Label("Apri su DigiKey", systemImage: "cart")
                     }
                 }
+
+                Menu {
+                    Button {
+                        kicadExportDocument = CSVDocument(
+                            text: KiCadExportService.libraryFileContent(for: component)
+                        )
+                        showKiCadExport = true
+                    } label: {
+                        Label("Esporta file .kicad_sym", systemImage: "square.and.arrow.up")
+                    }
+
+                    Button {
+                        do {
+                            let url = try KiCadExportService.appendToPersonalLibrary(component: component)
+                            infoMessage = "Simbolo aggiunto a \(url.lastPathComponent)"
+                        } catch {
+                            errorMessage = error.localizedDescription
+                        }
+                    } label: {
+                        Label("Aggiungi a libreria personale", systemImage: "books.vertical")
+                    }
+                } label: {
+                    Label("KiCad", systemImage: "books.vertical")
+                }
+                .platformHelp("Esporta simbolo KiCad con LCSC, MPN e produttore")
             }
         }
+        .fileExporter(
+            isPresented: $showKiCadExport,
+            document: kicadExportDocument,
+            contentType: .plainText,
+            defaultFilename: "\(KiCadExportService.symbolName(for: component)).kicad_sym"
+        ) { _ in }
         .sheet(item: $digiKeyPicker) { picker in
             DigiKeyCandidateSheet(
                 candidates: picker.candidates,
@@ -343,13 +376,26 @@ struct ComponentDetailView: View {
                     }
                 }
 
-                LabeledContent("Soglia minima") {
-                    Stepper(value: Binding(
-                        get: { component.minQuantity },
-                        set: { try? store?.updateMinQuantity(component, to: $0) }
-                    ), in: 0...999_999) {
-                        Text("\(component.minQuantity)")
-                            .monospacedDigit()
+                LabeledContent("Avviso scorte basse") {
+                    Toggle("", isOn: Binding(
+                        get: { component.hasLowStockAlertEnabled },
+                        set: { enabled in
+                            try? store?.setLowStockAlertEnabled(component, enabled: enabled)
+                        }
+                    ))
+                    .labelsHidden()
+                }
+                .platformHelp("Attiva per ricevere avvisi quando la quantità scende sotto la soglia")
+
+                if component.hasLowStockAlertEnabled {
+                    LabeledContent("Soglia minima") {
+                        Stepper(value: Binding(
+                            get: { component.minQuantity },
+                            set: { try? store?.updateMinQuantity(component, to: $0) }
+                        ), in: 1...999_999) {
+                            Text("\(component.minQuantity)")
+                                .monospacedDigit()
+                        }
                     }
                 }
 
@@ -360,6 +406,10 @@ struct ComponentDetailView: View {
                     )
                     .font(.caption)
                     .foregroundStyle(component.quantity == 0 ? .red : .orange)
+                } else if component.hasLowStockAlertEnabled {
+                    Label("Scorte OK", systemImage: "checkmark.circle")
+                        .font(.caption)
+                        .foregroundStyle(.green)
                 } else if component.isToOrder {
                     Label("Da ordinare — qty 0 in magazzino", systemImage: "cart.badge.clock")
                         .font(.caption)

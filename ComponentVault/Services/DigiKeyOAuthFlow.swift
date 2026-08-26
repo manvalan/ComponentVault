@@ -41,6 +41,7 @@ enum DigiKeyOAuthFlow {
         )
     }
 
+    @MainActor
     static func authorize(config: DigiKeyConfig) async throws -> String {
         let redirectURI = config.iosOAuthRedirectURI
         try await verifyBridgeAvailable(redirectURI: redirectURI)

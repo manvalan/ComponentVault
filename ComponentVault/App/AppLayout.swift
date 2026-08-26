@@ -6,7 +6,11 @@ enum AppLayout {
     static let minWidth: CGFloat = 1120
     static let minHeight: CGFloat = 680
 
-    static let sectionSidebarWidth: CGFloat = 148
+    static let sectionSidebarWidth: CGFloat = 168
+
+    /// Sidebar NavigationSplitView su iPad.
+    static let padSidebarMin: CGFloat = 240
+    static let padSidebarIdeal: CGFloat = 280
 
     static let inventoryListMin: CGFloat = 280
     static let inventoryListIdeal: CGFloat = 320

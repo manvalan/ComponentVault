@@ -28,7 +28,7 @@ enum SyncSettings {
         formatter.timeStyle = .short
         config.sync.lastSyncAt = formatter.string(from: Date())
         config.sync.lastRemoteCount = remoteCount
-        try? AppConfigIO.save(config)
+        _ = try? AppConfigIO.save(config)
     }
 }
 

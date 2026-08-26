@@ -162,12 +162,15 @@ final class Component {
         return URL(string: first)
     }
 
+    /// Avviso scorte basse attivo solo se l'utente ha impostato una soglia (> 0).
+    var hasLowStockAlertEnabled: Bool {
+        minQuantity > 0
+    }
+
     var isLowStock: Bool {
         if isToOrder { return false }
-        if minQuantity > 0 {
-            return quantity <= minQuantity
-        }
-        return quantity == 0
+        guard hasLowStockAlertEnabled else { return false }
+        return quantity <= minQuantity
     }
 
     static let toOrderTag = "da ordinare"
@@ -216,6 +219,11 @@ final class Component {
     }
 
     var categoryRoot: String {
+        CategoryNormalizer.englishRoot(from: category)
+    }
+
+    /// Radice categoria LCSC grezza (prima segmento del path).
+    var rawCategoryRoot: String {
         category.components(separatedBy: "/").first ?? category
     }
 
@@ -454,7 +462,7 @@ final class Component {
             currency: currency,
             supplierStock: supplierStock,
             dataSource: source,
-            parameters: Dictionary(uniqueKeysWithValues: parameters.map { ($0.name, $0.value) }),
+            parameters: ComponentRecord.deduplicatedParameters(parameters.map { ($0.name, $0.value) }),
             notes: notes,
             minQuantity: minQuantity,
             tags: tags,

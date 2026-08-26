@@ -109,8 +109,8 @@ enum DigiKeyParser {
         lcscCode: String,
         currency: String
     ) -> ComponentRecord {
-        let parameters = Dictionary(
-            uniqueKeysWithValues: (product.parameters ?? []).compactMap { param -> (String, String)? in
+        let parameters = ComponentRecord.deduplicatedParameters(
+            (product.parameters ?? []).compactMap { param -> (String, String)? in
                 guard let key = param.parameterText, let value = param.valueText else { return nil }
                 return (key, value)
             }

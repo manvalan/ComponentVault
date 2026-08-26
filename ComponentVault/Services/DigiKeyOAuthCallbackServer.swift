@@ -43,29 +43,10 @@ enum DigiKeyOAuthCallbackServer {
 
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
             let queue = DispatchQueue(label: "DigiKeyOAuthCallbackServer")
-            let lock = NSLock()
-            var completed = false
-            var timeoutTask: DispatchWorkItem?
-            var listener: NWListener?
+            let session = OAuthCallbackSession(continuation: continuation)
 
-            func finish(_ result: Result<String, Error>) {
-                lock.lock()
-                defer { lock.unlock() }
-                guard !completed else { return }
-                completed = true
-
-                timeoutTask?.cancel()
-                listener?.cancel()
-                listener = nil
-
-                DispatchQueue.main.async {
-                    switch result {
-                    case .success(let code):
-                        continuation.resume(returning: code)
-                    case .failure(let error):
-                        continuation.resume(throwing: error)
-                    }
-                }
+            @Sendable func finish(_ result: Result<String, Error>) {
+                session.finish(result)
             }
 
             let parameters: NWParameters
@@ -98,13 +79,13 @@ enum DigiKeyOAuthCallbackServer {
             }
 
             do {
-                listener = try NWListener(using: parameters, on: nwPort)
+                session.listener = try NWListener(using: parameters, on: nwPort)
             } catch {
                 finish(.failure(CallbackError.listenerFailed(error.localizedDescription)))
                 return
             }
 
-            listener?.stateUpdateHandler = { state in
+            session.listener?.stateUpdateHandler = { state in
                 switch state {
                 case .ready:
                     DispatchQueue.main.async {
@@ -117,7 +98,7 @@ enum DigiKeyOAuthCallbackServer {
                 }
             }
 
-            listener?.newConnectionHandler = { connection in
+            session.listener?.newConnectionHandler = { connection in
                 connection.start(queue: queue)
                 connection.receive(minimumIncompleteLength: 1, maximumLength: 16_384) { data, _, _, _ in
                     defer { connection.cancel() }
@@ -170,12 +151,45 @@ enum DigiKeyOAuthCallbackServer {
                 }
             }
 
-            listener?.start(queue: queue)
+            session.listener?.start(queue: queue)
 
-            timeoutTask = DispatchWorkItem {
+            let timeoutTask = DispatchWorkItem {
                 finish(.failure(CallbackError.timeout))
             }
-            queue.asyncAfter(deadline: .now() + timeout, execute: timeoutTask!)
+            session.timeoutTask = timeoutTask
+            queue.asyncAfter(deadline: .now() + timeout, execute: timeoutTask)
+        }
+    }
+
+    private final class OAuthCallbackSession: @unchecked Sendable {
+        private let lock = NSLock()
+        private var completed = false
+        private let continuation: CheckedContinuation<String, Error>
+        var timeoutTask: DispatchWorkItem?
+        var listener: NWListener?
+
+        init(continuation: CheckedContinuation<String, Error>) {
+            self.continuation = continuation
+        }
+
+        func finish(_ result: Result<String, Error>) {
+            lock.lock()
+            defer { lock.unlock() }
+            guard !completed else { return }
+            completed = true
+
+            timeoutTask?.cancel()
+            listener?.cancel()
+            listener = nil
+
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let code):
+                    self.continuation.resume(returning: code)
+                case .failure(let error):
+                    self.continuation.resume(throwing: error)
+                }
+            }
         }
     }
 

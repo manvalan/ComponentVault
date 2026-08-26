@@ -177,7 +177,7 @@ struct DigiKeyProvider: ComponentDataProvider {
 
         let body: [String: Any] = [
             "Keywords": keyword,
-            "RecordCount": max(1, min(recordCount, 10)),
+            "RecordCount": max(1, min(recordCount, 25)),
         ]
         let bodyData = try JSONSerialization.data(withJSONObject: body)
 

@@ -24,7 +24,11 @@ struct ComponentFilter {
     }
 
     static func categories(from components: [Component]) -> [String] {
-        let roots = Set(components.map(\.categoryRoot).filter { !$0.isEmpty })
+        let roots = Set(
+            components
+                .map { CategoryNormalizer.englishRoot(from: $0.category) }
+                .filter { !$0.isEmpty }
+        )
         return ["Tutte"] + roots.sorted()
     }
 
@@ -65,7 +69,7 @@ struct ComponentFilter {
     }
 
     private func matchesCategory(_ component: Component) -> Bool {
-        category == "Tutte" || component.categoryRoot == category
+        CategoryNormalizer.matches(filterRoot: category, componentCategory: component.category)
     }
 
     private func matchesFootprint(_ component: Component) -> Bool {
