@@ -429,22 +429,22 @@ public class ECPoint: Equatable {
         return ECPoint(x: FpElement.fromHex(xHex), y: FpElement.fromHex(yHex))
     }
 
-    public static func fromEncoded(_ data: [UInt8]) -> ECPoint {
+    public static func fromEncoded(_ data: [UInt8]) throws -> ECPoint {
         if data.isEmpty {
             return ECPoint.infinityPoint()
         }
         if data[0] != 0x04 {
-            fatalError("Only uncompressed point format is supported")
+            throw SM2Error.invalidInput("Only uncompressed point format is supported")
         }
         if data.count != 65 {
-            fatalError("Invalid point encoding length")
+            throw SM2Error.invalidInput("Invalid point encoding length")
         }
         let x = FpElement(BigInt256.fromBEBytes(Array(data[1..<33])))
         let y = FpElement(BigInt256.fromBEBytes(Array(data[33..<65])))
         return ECPoint(x: x, y: y)
     }
 
-    public static func fromHexEncoded(_ hex: String) -> ECPoint {
+    public static func fromHexEncoded(_ hex: String) throws -> ECPoint {
         var hexStr = hex
         if hexStr.hasPrefix("0x") || hexStr.hasPrefix("0X") {
             hexStr = String(hexStr.dropFirst(2))
@@ -458,7 +458,7 @@ public class ECPoint: Equatable {
             }
             index = nextIndex
         }
-        return fromEncoded(bytes)
+        return try fromEncoded(bytes)
     }
 
     public func toEncoded() -> [UInt8] {
@@ -603,7 +603,7 @@ public class SM2 {
             throw SM2Error.invalidInput("Plaintext cannot be empty")
         }
 
-        let pubPoint = ECPoint.fromHexEncoded(publicKey)
+        let pubPoint = try ECPoint.fromHexEncoded(publicKey)
         if !pubPoint.isOnCurve() {
             throw SM2Error.invalidKey("Invalid public key")
         }
@@ -665,7 +665,7 @@ public class SM2 {
         let c3Hex = String(ciphertext.dropFirst(130).prefix(64))
         let c2Hex = String(ciphertext.dropFirst(194))
 
-        let c1 = ECPoint.fromHexEncoded(c1Hex)
+        let c1 = try ECPoint.fromHexEncoded(c1Hex)
         if !c1.isOnCurve() {
             throw SM2Error.invalidInput("Invalid C1 point")
         }
@@ -784,7 +784,9 @@ public class SM2 {
             return false
         }
 
-        let pubPoint = ECPoint.fromHexEncoded(publicKey)
+        guard let pubPoint = try? ECPoint.fromHexEncoded(publicKey) else {
+            return false
+        }
         if !pubPoint.isOnCurve() {
             return false
         }
@@ -929,8 +931,8 @@ public class SM2 {
 
     // MARK: - 辅助方法
 
-    static func decodePoint(_ hex: String) -> ECPoint {
-        return ECPoint.fromHexEncoded(hex)
+    static func decodePoint(_ hex: String) throws -> ECPoint {
+        return try ECPoint.fromHexEncoded(hex)
     }
 
     static func getPublicKey(_ privateKey: BigInt256) -> ECPoint {

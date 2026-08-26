@@ -5,17 +5,37 @@ import SwiftData
 import AppKit
 #endif
 
-@main
-struct ComponentVaultApp: App {
-    let container: ModelContainer
+@MainActor
+@Observable
+final class AppContainer {
+    private(set) var modelContainer: ModelContainer?
+    private(set) var startupError: String?
 
     init() {
-        do {
-            container = try Persistence.makeContainer()
-        } catch {
-            fatalError("Impossibile avviare il database: \(error.localizedDescription)")
-        }
+        reload()
+    }
 
+    func reload() {
+        do {
+            modelContainer = try Persistence.makeContainer()
+            startupError = nil
+        } catch {
+            modelContainer = nil
+            startupError = error.localizedDescription
+        }
+    }
+
+    func resetStoreAndReload() {
+        Persistence.resetStoreForRecovery()
+        reload()
+    }
+}
+
+@main
+struct ComponentVaultApp: App {
+    @State private var appContainer = AppContainer()
+
+    init() {
         #if os(macOS)
         DispatchQueue.main.async {
             Self.applyApplicationIcon()
@@ -46,8 +66,17 @@ struct ComponentVaultApp: App {
 
     private var mainWindow: some Scene {
         WindowGroup {
-            RootView()
-                .platformWindowMinSize(width: AppLayout.minWidth, height: AppLayout.minHeight)
+            Group {
+                if appContainer.modelContainer != nil {
+                    RootView()
+                } else {
+                    DatabaseStartupErrorView(
+                        message: appContainer.startupError ?? "Database locale non disponibile.",
+                        onReset: { appContainer.resetStoreAndReload() }
+                    )
+                }
+            }
+            .platformWindowMinSize(width: AppLayout.minWidth, height: AppLayout.minHeight)
         }
         #if os(macOS)
         .defaultSize(
@@ -70,18 +99,71 @@ struct ComponentVaultApp: App {
             }
         }
         #endif
-        .modelContainer(container)
+        .modelContainer(appContainer.modelContainer ?? Self.ephemeralContainer)
     }
 
     #if os(macOS)
     private var settingsWindow: some Scene {
         Settings {
-            SettingsView()
-                .frame(minWidth: 560, idealWidth: 680, minHeight: 520, idealHeight: 760)
+            if appContainer.modelContainer != nil {
+                SettingsView()
+                    .frame(minWidth: 560, idealWidth: 680, minHeight: 520, idealHeight: 760)
+            } else {
+                DatabaseStartupErrorView(
+                    message: appContainer.startupError ?? "Database locale non disponibile.",
+                    onReset: { appContainer.resetStoreAndReload() }
+                )
+                .frame(minWidth: 560, minHeight: 400)
+            }
         }
-        .modelContainer(container)
+        .modelContainer(appContainer.modelContainer ?? Self.ephemeralContainer)
     }
     #endif
+
+    /// Container in-memory solo per soddisfare SwiftUI quando il database disco non è disponibile.
+    private static let ephemeralContainer: ModelContainer = {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        return try! ModelContainer(for: Persistence.schema, configurations: config)
+    }()
+}
+
+struct DatabaseStartupErrorView: View {
+    let message: String
+    let onReset: () -> Void
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "externaldrive.badge.exclamationmark")
+                .font(.system(size: 48))
+                .foregroundStyle(.orange)
+
+            Text("Database non disponibile")
+                .font(.title2.weight(.semibold))
+
+            Text(message)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 420)
+
+            Text("Un backup del database precedente è in Application Support/backups/ se disponibile.")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 420)
+
+            HStack(spacing: 12) {
+                Button("Riprova") { onReset() }
+                    .buttonStyle(.borderedProminent)
+                #if os(macOS)
+                Button("Esci") { NSApplication.shared.terminate(nil) }
+                    .buttonStyle(.bordered)
+                #endif
+            }
+        }
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
 }
 
 extension Notification.Name {

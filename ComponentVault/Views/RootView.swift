@@ -12,6 +12,8 @@ struct RootView: View {
     @State private var bootstrapError: String?
     @State private var bootstrapBannerDismissed = false
 
+    private static let legacyMigrationDoneKey = "ComponentVault.legacyInventoryMigrationDone"
+
     var body: some View {
         ContentView()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -98,9 +100,18 @@ struct RootView: View {
     }
 
     private func runInventoryMigrations() {
+        guard !UserDefaults.standard.bool(forKey: Self.legacyMigrationDoneKey) else { return }
+
         let store = ComponentStore(modelContext: modelContext)
-        _ = try? store.migrateLegacyInventoryCodesIfNeeded()
-        _ = try? store.migrateLegacyPrimaryKeysToCVIfNeeded()
+        do {
+            let dkCount = try store.migrateLegacyInventoryCodesIfNeeded()
+            let cvCount = try store.migrateLegacyPrimaryKeysToCVIfNeeded()
+            if dkCount == 0 && cvCount == 0 {
+                UserDefaults.standard.set(true, forKey: Self.legacyMigrationDoneKey)
+            }
+        } catch {
+            // Migrazione silenziosa: non disturba l'utente; riproverà al prossimo avvio.
+        }
     }
 
     private func loadInventoryIfNeeded() async {
