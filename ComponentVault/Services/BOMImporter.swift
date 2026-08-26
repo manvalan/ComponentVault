@@ -7,6 +7,8 @@ struct BOMImportLine: Identifiable {
     let mpn: String
     let quantity: Int
     let notes: String
+    let footprint: String
+    let value: String
 }
 
 struct BOMImportResult {
@@ -47,7 +49,8 @@ enum BOMImporter {
         ])
         let qtyIdx = index(of: ["quantity", "quantità", "quantita", "qty", "q.ty"])
         let mpnIdx = index(of: ["mpn", "part name", "partname", "manufacturer part"])
-        let notesIdx = index(of: ["comment", "notes", "descrizione", "description", "value", "name"])
+        let notesIdx = index(of: ["comment", "notes", "descrizione", "description", "name"])
+        let valueIdx = index(of: ["value", "valore"])
         let footprintIdx = index(of: ["footprint", "package", "pacco"])
 
         return lines.dropFirst().compactMap { line in
@@ -62,12 +65,17 @@ enum BOMImporter {
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let designator = designatorIdx.flatMap { fields[safe: $0] }?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let footprint = footprintIdx.flatMap { fields[safe: $0] }?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let value = valueIdx.flatMap { fields[safe: $0] }?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             var notes = notesIdx.flatMap { fields[safe: $0] }?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            if let footprintIdx,
-               let fp = fields[safe: footprintIdx]?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !fp.isEmpty, !notes.contains(fp) {
-                notes = notes.isEmpty ? fp : "\(notes) · \(fp)"
+            if !footprint.isEmpty, !notes.contains(footprint) {
+                notes = notes.isEmpty ? footprint : "\(notes) · \(footprint)"
+            }
+            if !value.isEmpty, !notes.contains(value) {
+                notes = notes.isEmpty ? value : "\(notes) · \(value)"
             }
 
             let quantity: Int
@@ -84,9 +92,31 @@ enum BOMImporter {
                 lcscCode: lcsc,
                 mpn: mpn,
                 quantity: quantity,
-                notes: notes
+                notes: notes,
+                footprint: footprint,
+                value: value
             )
         }
+    }
+
+    /// Nome progetto suggerito dal nome file (es. `DigiRadio-BOM.csv` → `DigiRadio`).
+    static func suggestedProjectName(from url: URL) -> String {
+        var name = url.deletingPathExtension().lastPathComponent
+        let suffixes = [
+            "-EasyEDA-BOM", "_EasyEDA_BOM", "-EasyEDA", "_EasyEDA",
+            "-BOM", "_BOM", "-JLC", "_JLC", " BOM",
+        ]
+        var changed = true
+        while changed {
+            changed = false
+            for suffix in suffixes {
+                if name.lowercased().hasSuffix(suffix.lowercased()) {
+                    name = String(name.dropLast(suffix.count))
+                    changed = true
+                }
+            }
+        }
+        return name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private static func parseRow(_ line: String, delimiter: String) -> [String] {

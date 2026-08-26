@@ -83,8 +83,57 @@ final class ProjectStore {
         statusMessage = "Riservati componenti per \(project.name) (\(reserved) righe)"
     }
 
-    func importBOM(from url: URL, into project: Project, components: [Component]) throws -> BOMImportResult {
-        let lines = try BOMImporter.parse(from: url)
+    func importBOM(
+        from url: URL,
+        into project: Project,
+        components: [Component],
+        replaceExisting: Bool = false
+    ) throws -> BOMImportResult {
+        if replaceExisting {
+            try clearProjectItems(project)
+        }
+        return try importBOMLines(into: project, lines: try BOMImporter.parse(from: url), components: components)
+    }
+
+    /// Import BOM EasyEDA: crea un progetto nuovo o aggiorna uno esistente con lo stesso nome.
+    func importBOMCreatingProject(
+        from url: URL,
+        projectName: String,
+        components: [Component],
+        replaceExisting: Bool = true
+    ) throws -> (project: Project, result: BOMImportResult) {
+        let trimmedName = projectName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else {
+            throw BOMImportError.emptyProjectName
+        }
+
+        let project = try findProject(named: trimmedName) ?? createProject(name: trimmedName)
+        let result = try importBOM(from: url, into: project, components: components, replaceExisting: replaceExisting)
+        return (project, result)
+    }
+
+    func findProject(named name: String) throws -> Project? {
+        let descriptor = FetchDescriptor<Project>()
+        let projects = try modelContext.fetch(descriptor)
+        return projects.first {
+            $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame
+        }
+    }
+
+    func clearProjectItems(_ project: Project) throws {
+        for item in project.items {
+            modelContext.delete(item)
+        }
+        project.items.removeAll()
+        project.updatedAt = Date()
+        try modelContext.save()
+    }
+
+    private func importBOMLines(
+        into project: Project,
+        lines: [BOMImportLine],
+        components: [Component]
+    ) throws -> BOMImportResult {
         var imported = 0
         var skipped = 0
         var missingLCSC: [String] = []
@@ -254,6 +303,16 @@ final class ProjectStore {
             item.project = project
             project.items.append(item)
             modelContext.insert(item)
+        }
+    }
+}
+
+enum BOMImportError: LocalizedError {
+    case emptyProjectName
+
+    var errorDescription: String? {
+        switch self {
+        case .emptyProjectName: "Il nome del progetto non può essere vuoto."
         }
     }
 }
