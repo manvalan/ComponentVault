@@ -73,11 +73,19 @@ final class KiCadLibraryStore {
         apply(decoded)
     }
 
-    /// Aggiorna dalla cartella condivisa; se non raggiungibile resta la copia locale.
+    /// Sul Mac con la libreria: indice letto direttamente dalla cartella KiCad e
+    /// pubblicato nella cartella condivisa. Altrove: dalla cartella condivisa,
+    /// e se non raggiungibile resta la copia locale.
     func refresh() async {
         guard !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false }
+        #if os(macOS)
+        if let root = KiCadLocalLibrary.url, KiCadLocalLibrary.isAvailable {
+            await rebuildFromLocalLibrary(root: root)
+            return
+        }
+        #endif
         do {
             let known = index == nil ? nil : UserDefaults.standard.object(forKey: Self.dateKey) as? Date
             guard let fresh = try await KiCadQueue.libraryIndex(newerThan: known) else {
@@ -96,6 +104,29 @@ final class KiCadLibraryStore {
             errorMessage = error.localizedDescription
         }
     }
+
+    #if os(macOS)
+    private func rebuildFromLocalLibrary(root: URL) async {
+        let name = AppConfigIO.current().kicad.libraryName
+        do {
+            let (file, data) = try await Task.detached(priority: .userInitiated) {
+                let file = try KiCadLocalLibrary.buildIndex(root: root, libraryName: name)
+                return (file, try JSONEncoder().encode(file))
+            }.value
+            try AppPaths.ensureLocalDirectory()
+            try data.write(to: Self.cacheFile, options: .atomic)
+            apply(file)
+            errorMessage = nil
+            // Lo stesso indice per l'iPad, nella cartella condivisa.
+            if let shared = SharedFolder.url {
+                let target = shared.appendingPathComponent("kicad/library_index.json")
+                try? await Task.detached { try CoordinatedFile.write(data, to: target) }.value
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+    #endif
 
     func match(mpn: String, lcsc: String?) -> KiCadLibraryMatch {
         let mpnKey = Self.normalize(mpn)

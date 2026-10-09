@@ -5,7 +5,7 @@ import SwiftData
 struct PadContentView: View {
     @Query(sort: \Component.quantity) private var components: [Component]
 
-    @State private var section: AppSection? = .inventory
+    @State private var section: AppSection? = .search
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     private var lowStockCount: Int {
@@ -36,27 +36,17 @@ struct PadContentView: View {
     private var sidebar: some View {
         List(selection: $section) {
             Section {
-                ForEach(AppSection.warehouseCases) { item in
+                ForEach(AppSection.mainCases) { item in
                     sidebarRow(item)
                 }
-            } header: {
-                Text("Magazzino")
             }
 
             Section {
-                ForEach(AppSection.workspaceCases) { item in
+                ForEach(AppSection.moreCases) { item in
                     sidebarRow(item)
                 }
             } header: {
-                Text("Catalogo & Progetti")
-            }
-
-            Section {
-                ForEach(AppSection.toolCases) { item in
-                    sidebarRow(item)
-                }
-            } header: {
-                Text("Strumenti")
+                Text("Altro")
             }
 
             Section {
@@ -109,7 +99,7 @@ struct AppSectionContent: View {
             case .alerts:
                 LowStockView()
             case .search:
-                ComponentSearchView()
+                UnifiedSearchView()
             case .kicadLibrary:
                 KiCadLibraryView()
             case .settings:

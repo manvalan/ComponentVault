@@ -115,7 +115,14 @@ struct SettingsView: View {
                         .textSelection(.enabled)
                     Button("Scegli…") { showKiCadPicker = true }
                         .fileImporter(isPresented: $showKiCadPicker, allowedContentTypes: [.folder]) { result in
-                            if let url = try? result.get() { config.kicad.libraryPath = url.path }
+                            guard let url = try? result.get() else { return }
+                            do {
+                                try KiCadLocalLibrary.set(url)
+                                config.kicad.libraryPath = url.path
+                                Task { await KiCadLibraryStore.shared.refresh() }
+                            } catch {
+                                errorMessage = error.localizedDescription
+                            }
                         }
                 }
             }

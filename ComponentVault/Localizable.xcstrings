@@ -81,6 +81,38 @@
         }
       }
     },
+    "%@ aggiunto a %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ added to %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ aggiunto a %@"
+          }
+        }
+      }
+    },
+    "%@ in magazzino, da ordinare": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ in inventory, to order"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ in magazzino, da ordinare"
+          }
+        }
+      }
+    },
     "%@ non è presente nel catalogo LCSC": {
       "localizations": {
         "en": {
@@ -723,6 +755,38 @@
         }
       }
     },
+    "Aggiungi a KiCad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to KiCad"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi a KiCad"
+          }
+        }
+      }
+    },
+    "Aggiungi al magazzino (stock 0, da ordinare)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to inventory (stock 0, to order)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi al magazzino (stock 0, da ordinare)"
+          }
+        }
+      }
+    },
     "Aggiungi al progetto": {
       "localizations": {
         "en": {
@@ -995,6 +1059,22 @@
         }
       }
     },
+    "Arancio: quasi (scorta bassa, manca il 3D).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orange: almost (low stock, 3D model missing)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arancio: quasi (scorta bassa, manca il 3D)."
+          }
+        }
+      }
+    },
     "Archivio LCSC locale": {
       "localizations": {
         "en": {
@@ -1135,6 +1215,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Azzera"
+          }
+        }
+      }
+    },
+    "BOM": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BOM"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BOM"
           }
         }
       }
@@ -1460,6 +1556,22 @@
         }
       }
     },
+    "Cerca": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca"
+          }
+        }
+      }
+    },
     "Cerca EasyEDA": {
       "localizations": {
         "en": {
@@ -1636,6 +1748,22 @@
         }
       }
     },
+    "Cerca «%@» su %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search %2$@ for “%1$@”"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca «%@» su %@"
+          }
+        }
+      }
+    },
     "Cerca…": {
       "localizations": {
         "en": {
@@ -1648,6 +1776,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cerca…"
+          }
+        }
+      }
+    },
+    "Cerco su %@…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching %@…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerco su %@…"
           }
         }
       }
@@ -4172,6 +4316,54 @@
         }
       }
     },
+    "KiCad: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KiCad: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KiCad: %@"
+          }
+        }
+      }
+    },
+    "KiCad: %@, senza 3D": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KiCad: %@, no 3D model"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KiCad: %@, senza 3D"
+          }
+        }
+      }
+    },
+    "KiCad: indice non disponibile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KiCad: index not available"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KiCad: indice non disponibile"
+          }
+        }
+      }
+    },
     "LCSC": {
       "localizations": {
         "en": {
@@ -4401,6 +4593,22 @@
         }
       }
     },
+    "Le tre spie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The three lights"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le tre spie"
+          }
+        }
+      }
+    },
     "Libreria": {
       "localizations": {
         "en": {
@@ -4497,6 +4705,22 @@
         }
       }
     },
+    "MPN, valore, codice LCSC, cassetto…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MPN, value, LCSC code, drawer…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MPN, valore, codice LCSC, cassetto…"
+          }
+        }
+      }
+    },
     "Mac con KiCad": {
       "localizations": {
         "en": {
@@ -4577,6 +4801,22 @@
         }
       }
     },
+    "Magazzino e libreria": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inventory and library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Magazzino e libreria"
+          }
+        }
+      }
+    },
     "Magazzino, valore, MPN o codice LCSC": {
       "localizations": {
         "en": {
@@ -4589,6 +4829,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Magazzino, valore, MPN o codice LCSC"
+          }
+        }
+      }
+    },
+    "Magazzino: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inventory: %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Magazzino: %lld"
+          }
+        }
+      }
+    },
+    "Magazzino: %lld, scorta bassa": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inventory: %lld, low stock"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Magazzino: %lld, scorta bassa"
+          }
+        }
+      }
+    },
+    "Magazzino: 0": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inventory: 0"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Magazzino: 0"
           }
         }
       }
@@ -4669,6 +4957,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mercato · valuta"
+          }
+        }
+      }
+    },
+    "Mercato: %lld disponibili": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Market: %lld available"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mercato: %lld disponibili"
+          }
+        }
+      }
+    },
+    "Mercato: non noto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Market: unknown"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mercato: non noto"
           }
         }
       }
@@ -4978,6 +5298,22 @@
         }
       }
     },
+    "Nessun progetto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No projects"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun progetto"
+          }
+        }
+      }
+    },
     "Nessun risultato": {
       "localizations": {
         "en": {
@@ -5154,6 +5490,22 @@
         }
       }
     },
+    "Niente in magazzino né in libreria.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing in inventory or in the library."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niente in magazzino né in libreria."
+          }
+        }
+      }
+    },
     "Nome progetto": {
       "localizations": {
         "en": {
@@ -5231,6 +5583,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Non in libreria KiCad"
+          }
+        }
+      }
+    },
+    "Non in magazzino": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not in inventory"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non in magazzino"
           }
         }
       }
@@ -5443,6 +5811,22 @@
         }
       }
     },
+    "Online": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online"
+          }
+        }
+      }
+    },
     "Ordina %lld componenti": {
       "localizations": {
         "en": {
@@ -5536,6 +5920,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pausa tra richieste LCSC"
+          }
+        }
+      }
+    },
+    "Per categoria": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By category"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per categoria"
           }
         }
       }
@@ -5760,6 +6160,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Progetto eliminato"
+          }
+        }
+      }
+    },
+    "Prova": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prova"
           }
         }
       }
@@ -6612,6 +7028,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Scarica mancanti"
+          }
+        }
+      }
+    },
+    "Scarica simbolo, footprint e modello 3D nella libreria": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download symbol, footprint and 3D model into the library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scarica simbolo, footprint e modello 3D nella libreria"
           }
         }
       }
@@ -7531,6 +7963,38 @@
         }
       }
     },
+    "Verde: c'è (in magazzino, in libreria con 3D, disponibile).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Green: you have it (in inventory, in the library with 3D, available)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verde: c'è (in magazzino, in libreria con 3D, disponibile)."
+          }
+        }
+      }
+    },
+    "Vuota: manca. Usa i pulsanti della riga per rimediare.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty: missing. Use the row's buttons to fix it."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuota: manca. Usa i pulsanti della riga per rimediare."
+          }
+        }
+      }
+    },
     "a qty %lld": {
       "localizations": {
         "en": {
@@ -7627,6 +8091,54 @@
         }
       }
     },
+    "fornitore predefinito": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "default supplier"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fornitore predefinito"
+          }
+        }
+      }
+    },
+    "in %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in %@"
+          }
+        }
+      }
+    },
+    "in magazzino": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in inventory"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in magazzino"
+          }
+        }
+      }
+    },
     "nuovo": {
       "localizations": {
         "en": {
@@ -7719,6 +8231,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "stock %lld"
+          }
+        }
+      }
+    },
+    "tutti i fornitori": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "all suppliers"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tutti i fornitori"
           }
         }
       }

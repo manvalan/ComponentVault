@@ -13,19 +13,18 @@ enum AppSection: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    /// Sezioni sidebar escluse Impostazioni (in fondo).
-    static var warehouseCases: [AppSection] { [.inventory, .alerts] }
-    static var workspaceCases: [AppSection] { [.catalog, .projects, .kicadLibrary] }
-    static var toolCases: [AppSection] { [.search] }
-    static var navigableCases: [AppSection] { warehouseCases + workspaceCases + toolCases }
+    /// I tre posti di tutti i giorni; il resto sta sotto "Altro". Impostazioni in fondo.
+    static var mainCases: [AppSection] { [.search, .projects, .inventory] }
+    static var moreCases: [AppSection] { [.alerts, .catalog, .kicadLibrary] }
+    static var navigableCases: [AppSection] { mainCases + moreCases }
 
     var title: String {
         switch self {
-        case .inventory: String(localized: "Inventario")
-        case .catalog: String(localized: "Catalogo")
+        case .inventory: String(localized: "Magazzino")
+        case .catalog: String(localized: "Per categoria")
         case .projects: String(localized: "Progetti")
         case .alerts: String(localized: "Scorte basse")
-        case .search: String(localized: "Ricerca")
+        case .search: String(localized: "Cerca")
         case .kicadLibrary: String(localized: "Libreria KiCad")
         case .settings: String(localized: "Impostazioni")
         }
@@ -56,7 +55,7 @@ struct ContentView: View {
 
 private struct MacContentShell: View {
     @Query(sort: \Component.quantity) private var components: [Component]
-    @State private var section: AppSection = .inventory
+    @State private var section: AppSection = .search
 
     private var lowStockCount: Int {
         components.filter(\.isLowStock).count
@@ -88,9 +87,10 @@ struct AppSectionSidebar: View {
                 .padding(.horizontal, 10)
                 .padding(.top, 4)
 
-            sidebarGroup("Magazzino", items: AppSection.warehouseCases)
-            sidebarGroup("Catalogo & Progetti", items: AppSection.workspaceCases)
-            sidebarGroup("Strumenti", items: AppSection.toolCases)
+            ForEach(AppSection.mainCases) { item in
+                sidebarButton(item)
+            }
+            sidebarGroup("Altro", items: AppSection.moreCases)
 
             Divider()
                 .padding(.vertical, 4)
