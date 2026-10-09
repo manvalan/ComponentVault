@@ -19,6 +19,7 @@ struct ComponentDetailView: View {
     @State private var isLookingUpEquivalent = false
     @State private var infoMessage: String?
     @State private var showKiCadExport = false
+    @State private var showKiCadFetch = false
     @State private var kicadExportDocument = CSVDocument()
 
     var body: some View {
@@ -145,6 +146,13 @@ struct ComponentDetailView: View {
                     } label: {
                         Label("Aggiungi a libreria personale", systemImage: "books.vertical")
                     }
+
+                    Button {
+                        showKiCadFetch = true
+                    } label: {
+                        Label("Scarica nella libreria MIKILAB…", systemImage: "square.and.arrow.down.on.square")
+                    }
+                    .disabled(component.mpn.isEmpty || !SyncSettings.isConfigured)
                 } label: {
                     Label("KiCad", systemImage: "books.vertical")
                 }
@@ -169,6 +177,9 @@ struct ComponentDetailView: View {
         }
         .sheet(isPresented: $showMPNLookup) {
             mpnLookupSheet
+        }
+        .sheet(isPresented: $showKiCadFetch) {
+            KiCadFetchView(component: component)
         }
         .alert("Errore", isPresented: .constant(errorMessage != nil)) {
             Button("OK") { errorMessage = nil }

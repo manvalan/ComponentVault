@@ -8,13 +8,14 @@ enum AppSection: String, CaseIterable, Identifiable {
     case projects
     case alerts
     case search
+    case kicadLibrary
     case settings
 
     var id: String { rawValue }
 
     /// Sezioni sidebar escluse Impostazioni (in fondo).
     static var warehouseCases: [AppSection] { [.inventory, .alerts] }
-    static var workspaceCases: [AppSection] { [.catalog, .projects] }
+    static var workspaceCases: [AppSection] { [.catalog, .projects, .kicadLibrary] }
     static var toolCases: [AppSection] { [.search] }
     static var navigableCases: [AppSection] { warehouseCases + workspaceCases + toolCases }
 
@@ -25,6 +26,7 @@ enum AppSection: String, CaseIterable, Identifiable {
         case .projects: "Progetti"
         case .alerts: "Scorte basse"
         case .search: "Ricerca"
+        case .kicadLibrary: "Libreria KiCad"
         case .settings: "Impostazioni"
         }
     }
@@ -36,6 +38,7 @@ enum AppSection: String, CaseIterable, Identifiable {
         case .projects: "folder"
         case .alerts: "exclamationmark.triangle"
         case .search: "magnifyingglass"
+        case .kicadLibrary: "books.vertical"
         case .settings: "gearshape"
         }
     }

@@ -110,6 +110,8 @@ struct AppSectionContent: View {
                 LowStockView()
             case .search:
                 ComponentSearchView()
+            case .kicadLibrary:
+                KiCadLibraryView()
             case .settings:
                 SettingsView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

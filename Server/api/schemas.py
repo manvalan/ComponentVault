@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -64,3 +66,41 @@ class ProjectSyncPushRequest(BaseModel):
 
 class ProjectSyncPushResponse(BaseModel):
     upserted: int
+
+
+# --- KiCad fetch queue -------------------------------------------------------
+
+KiCadCategory = Literal[
+    "analog", "audio", "display", "fpga_cpld", "interface", "logic",
+    "mechanical", "memory", "microcontrollers", "other", "power", "rf",
+]
+
+
+class FetchItemIn(BaseModel):
+    mpn: str = Field(min_length=1, max_length=128)
+    lcsc: str | None = Field(default=None, pattern=r"^C\d{1,12}$")
+    ref: str = Field(default="", max_length=64)
+    funzione: str = Field(default="", max_length=256)
+    nome: str | None = Field(default=None, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z0-9._+-]*$")
+    categoria: KiCadCategory | None = None
+
+
+class FetchJobIn(BaseModel):
+    items: list[FetchItemIn] = Field(min_length=1, max_length=100)
+    update: bool = False
+
+
+class FetchJobOut(BaseModel):
+    id: str
+    status: str
+    createdAt: str | None = None
+    updatedAt: str | None = None
+    request: dict = {}
+    result: dict = {}
+    error: str = ""
+
+
+class FetchJobComplete(BaseModel):
+    status: Literal["done", "partial", "failed"]
+    result: dict = {}
+    error: str = Field(default="", max_length=4000)

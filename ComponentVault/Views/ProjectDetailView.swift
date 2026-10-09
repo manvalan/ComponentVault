@@ -31,6 +31,10 @@ struct ProjectDetailView: View {
     @State private var substitutes: [DigiKeyCrossReference] = []
     @State private var isLoadingSubstitutes = false
     @State private var substituteError: String?
+    @State private var showKiCadCheck = false
+    @State private var showKiCadFetch = false
+    @State private var focus: BOMFocus?
+    @State private var library = KiCadLibraryStore.shared
 
     private var bomSummary: BOMCostSummary {
         BOMPricingService.digikeyCostSummary(for: project)
@@ -52,17 +56,110 @@ struct ProjectDetailView: View {
         project.items.sorted { $0.designator < $1.designator }
     }
 
-    var body: some View {
-        VStack(spacing: 0) {
-            summaryBar
+    private func kicadMatch(_ item: ProjectItem) -> KiCadLibraryMatch {
+        guard let component = item.component else { return .noPartNumber }
+        return library.match(mpn: component.mpn, lcsc: component.supplierLCSCCode)
+    }
 
-            #if os(macOS)
-            bomTable
-            #else
-            bomList
-            #endif
+    private func isMissingInKiCad(_ item: ProjectItem) -> Bool {
+        if case .missing = kicadMatch(item) { return !(item.component?.mpn.isEmpty ?? true) }
+        return false
+    }
+
+    private func hasPrice(_ item: ProjectItem) -> Bool {
+        bomSummary.lines.first(where: { $0.item.persistentModelID == item.persistentModelID })?.unitPrice != nil
+    }
+
+    private var stockReadyCount: Int { project.items.filter(\.isAvailable).count }
+
+    private var kicadReadyCount: Int {
+        project.items.filter { if case .present = kicadMatch($0) { true } else { false } }.count
+    }
+
+    /// Componenti distinti (per MPN) da scaricare nella libreria KiCad.
+    private var kicadMissingItems: [KiCadFetchItem] {
+        var seen = Set<String>()
+        var result: [KiCadFetchItem] = []
+        for item in sortedItems where isMissingInKiCad(item) {
+            guard let component = item.component, seen.insert(component.mpn.uppercased()).inserted else { continue }
+            let refs = sortedItems.filter { $0.component?.mpn == component.mpn }.map(\.designator)
+            result.append(KiCadFetchItem(
+                mpn: String(component.mpn.prefix(128)),
+                lcsc: component.supplierLCSCCode,
+                ref: String(refs.joined(separator: ",").prefix(64)),
+                funzione: String(component.category.prefix(256))
+            ))
+        }
+        return result
+    }
+
+    private var visibleItems: [ProjectItem] {
+        switch focus {
+        case nil: sortedItems
+        case .stock: sortedItems.filter { !$0.isAvailable }
+        case .kicad: sortedItems.filter { if case .present = kicadMatch($0) { false } else { true } }
+        case .price: sortedItems.filter { !hasPrice($0) }
+        }
+    }
+
+    var body: some View {
+        List {
+            Section {
+                healthHeader
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+            }
+
+            Section {
+                if visibleItems.isEmpty {
+                    emptyState
+                        .listRowSeparator(.hidden)
+                }
+                ForEach(visibleItems, id: \.persistentModelID) { item in
+                    BOMRow(item: item, kicad: kicadMatch(item), price: hasPrice(item) ? priceLabel(for: item) : nil)
+                        .contextMenu { rowMenu(for: item) }
+                        #if os(iOS)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                try? projectStore?.removeItem(item, from: project)
+                            } label: {
+                                Label("Elimina", systemImage: "trash")
+                            }
+                            if isObsolete(item) {
+                                Button {
+                                    Task { await loadSubstitutes(for: item) }
+                                } label: {
+                                    Label("Sostituti", systemImage: "arrow.triangle.swap")
+                                }
+                                .tint(.indigo)
+                            }
+                        }
+                        #endif
+                }
+            } header: {
+                if let focus {
+                    HStack {
+                        Text("\(focus.title): da completare")
+                        Spacer()
+                        Button("Mostra tutto") { withAnimation(.snappy) { self.focus = nil } }
+                            .font(.caption)
+                    }
+                } else {
+                    Text("\(project.totalItems) righe")
+                }
+            }
+        }
+        #if os(iOS)
+        .listStyle(.insetGrouped)
+        #else
+        .listStyle(.inset)
+        #endif
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            primaryAction
         }
         .navigationTitle(project.name)
+        .task { await library.refresh() }
         .toolbar {
             ToolbarItemGroup {
                 Button {
@@ -71,64 +168,55 @@ struct ProjectDetailView: View {
                     Label("Aggiungi", systemImage: "plus")
                 }
 
-                Button {
-                    showImportBOM = true
-                } label: {
-                    Label("Importa BOM", systemImage: "square.and.arrow.down")
-                }
-
                 Menu {
                     Button {
-                        exportDocument = CSVDocument(text: ExportService.projectBOMCSV(project: project))
-                        showExport = true
+                        showImportBOM = true
                     } label: {
-                        Label("BOM inventario", systemImage: "square.and.arrow.up")
+                        Label("Importa BOM…", systemImage: "square.and.arrow.down")
+                    }
+
+                    Menu {
+                        Button("BOM inventario") {
+                            exportDocument = CSVDocument(text: ExportService.projectBOMCSV(project: project))
+                            showExport = true
+                        }
+                        Button("BOM EasyEDA / JLC") {
+                            easyEDAExportDocument = CSVDocument(text: ExportService.projectBOMEasyEDACSV(project: project))
+                            showEasyEDAExport = true
+                        }
+                        .disabled(easyEDAReadyCount == 0)
+                        Button("Da ordinare (mancanti stock)") { exportMissingStock() }
+                        Button("BOM DigiKey (costi)") {
+                            digikeyExportDocument = CSVDocument(text: ExportService.projectBOMDigiKeyCSV(project: project))
+                            showDigiKeyExport = true
+                        }
+                    } label: {
+                        Label("Esporta", systemImage: "square.and.arrow.up")
+                    }
+
+                    Divider()
+
+                    Button {
+                        showKiCadCheck = true
+                    } label: {
+                        Label("Libreria KiCad…", systemImage: "books.vertical")
                     }
 
                     Button {
-                        easyEDAExportDocument = CSVDocument(text: ExportService.projectBOMEasyEDACSV(project: project))
-                        showEasyEDAExport = true
+                        Task { await resolveLCSCForEasyEDA() }
                     } label: {
-                        Label("BOM EasyEDA / JLC", systemImage: "square.grid.2x2")
+                        Label("Risolvi codici LCSC", systemImage: "number")
                     }
-                    .disabled(easyEDAReadyCount == 0)
+                    .disabled(isResolvingLCSC || store == nil || easyEDAMissingCount == 0)
 
                     Button {
-                        easyEDAMissingExportDocument = CSVDocument(text: ExportService.projectBOMMissingEasyEDACSV(project: project))
-                        showEasyEDAMissingExport = true
+                        reserveStock()
                     } label: {
-                        Label("Da ordinare (mancanti stock)", systemImage: "cart")
-                    }
-
-                    Button {
-                        digikeyExportDocument = CSVDocument(text: ExportService.projectBOMDigiKeyCSV(project: project))
-                        showDigiKeyExport = true
-                    } label: {
-                        Label("BOM DigiKey (costi)", systemImage: "dollarsign.circle")
+                        Label("Riserva stock", systemImage: "minus.circle")
                     }
                 } label: {
-                    Label("Esporta BOM", systemImage: "square.and.arrow.up")
+                    Label("Altro", systemImage: "ellipsis.circle")
                 }
-
-                Button {
-                    Task { await resolveLCSCForEasyEDA() }
-                } label: {
-                    if isResolvingLCSC {
-                        ProgressView().controlSize(.small)
-                    } else {
-                        Label("Risolvi LCSC", systemImage: "number")
-                    }
-                }
-                .disabled(isResolvingLCSC || store == nil || easyEDAMissingCount == 0)
-                .platformHelp("Cerca codici Cxxxxx LCSC dal MPN per EasyEDA")
-
-                Button {
-                    guard let store else { return }
-                    try? projectStore?.reserveForProject(project, store: store)
-                } label: {
-                    Label("Riserva stock", systemImage: "minus.circle")
-                }
-                .platformHelp("Scala le quantità dall'inventario per i componenti disponibili")
             }
         }
         .onAppear {
@@ -136,6 +224,12 @@ struct ProjectDetailView: View {
         }
         .sheet(isPresented: $showAddComponent) {
             addComponentSheet
+        }
+        .sheet(isPresented: $showKiCadCheck) {
+            ProjectKiCadCheckView(project: project)
+        }
+        .sheet(isPresented: $showKiCadFetch) {
+            KiCadFetchView(items: kicadMissingItems, title: "Scarica in KiCad")
         }
         .sheet(item: $substituteItem) { item in
             substituteSheet(for: item)
@@ -304,142 +398,135 @@ struct ProjectDetailView: View {
         }
     }
 
-    #if os(macOS)
-    private var bomTable: some View {
-        Table(sortedItems) {
-            TableColumn("Ref") { item in
-                Text(item.designator.isEmpty ? "—" : item.designator)
-                    .font(.caption.monospaced())
-            }
-            .width(60)
-
-            TableColumn("CV") { item in
-                Text(item.component?.inventoryCode ?? "—")
-                    .font(.caption.monospaced())
-            }
-            .width(100)
-
-            TableColumn("LCSC") { item in
-                lcscCell(for: item)
-            }
-            .width(90)
-
-            TableColumn("DigiKey") { item in
-                Text(digiKeyPart(for: item))
-                    .font(.caption.monospaced())
-                    .lineLimit(1)
-            }
-            .width(100)
-
-            TableColumn("MPN") { item in
-                Text(item.component?.mpn ?? "—")
-                    .lineLimit(1)
-            }
-
-            TableColumn("Richiesti") { item in
-                Text("\(item.requiredQuantity)")
-                    .monospacedDigit()
-            }
-            .width(70)
-
-            TableColumn("Prezzo DK") { item in
-                Text(priceLabel(for: item))
-                    .font(.caption.monospacedDigit())
-            }
-            .width(100)
-
-            TableColumn("Disponibili") { item in
-                Text("\(item.availableQuantity)")
-                    .monospacedDigit()
-                    .foregroundStyle(item.isAvailable ? Color.primary : Color.orange)
-            }
-            .width(80)
-
-            TableColumn("Stato") { item in
-                HStack(spacing: 4) {
-                    StatusBadge(item: item)
-                    if item.component?.hasValidLCSCCode == true {
-                        EasyEDABadge()
-                    }
-                    if isObsolete(item) { ObsoleteBadge() }
-                }
-            }
-            .width(150)
-
-            TableColumn("") { item in
-                bomRowActions(for: item)
-            }
-            .width(56)
-        }
-    }
-    #endif
-
-    #if os(iOS)
-    private var bomList: some View {
-        List {
-            ForEach(Array(sortedItems.enumerated()), id: \.element.persistentModelID) { _, item in
-                bomRowContent(for: item)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            try? projectStore?.removeItem(item, from: project)
-                        } label: {
-                            Label("Elimina", systemImage: "trash")
-                        }
-                    }
-            }
-        }
-    }
-
-    private func bomRowContent(for item: ProjectItem) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(item.designator.isEmpty ? "—" : item.designator)
-                    .font(.caption.monospaced().weight(.semibold))
-                Spacer()
-                bomRowActions(for: item)
-            }
+    private var healthHeader: some View {
+        VStack(spacing: 14) {
             HStack(spacing: 8) {
-                Text(item.component?.inventoryCode ?? "—")
-                    .font(.caption2.monospaced())
-                if let lcsc = item.component?.supplierLCSCCode {
-                    Button(lcsc) {
-                        PlatformPasteboard.copy(lcsc)
+                ForEach(BOMFocus.allCases) { item in
+                    HealthRing(
+                        focus: item,
+                        done: done(for: item),
+                        total: project.totalItems,
+                        isSelected: focus == item
+                    ) {
+                        withAnimation(.snappy) { focus = focus == item ? nil : item }
                     }
-                    .font(.caption2.monospaced())
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.orange)
-                } else {
-                    Text("—")
-                        .font(.caption2.monospaced())
-                        .foregroundStyle(.tertiary)
                 }
-                Text(digiKeyPart(for: item))
-                    .font(.caption2.monospaced())
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
             }
-            Text(item.component?.mpn ?? "—")
-                .font(.caption)
-                .lineLimit(1)
-            HStack {
-                Text("Rich. \(item.requiredQuantity)")
-                Text("Disp. \(item.availableQuantity)")
-                    .foregroundStyle(item.isAvailable ? Color.primary : Color.orange)
-                Text(priceLabel(for: item))
-                    .foregroundStyle(.secondary)
-                StatusBadge(item: item)
-                if isObsolete(item) { ObsoleteBadge() }
+            HStack(spacing: 6) {
+                Text(bomSummary.formattedTotal)
+                    .font(.system(.title2, design: .rounded).weight(.semibold))
+                    .monospacedDigit()
+                Text("costo BOM").foregroundStyle(.secondary)
+                if obsoleteCount > 0 {
+                    Text("· \(obsoleteCount) obsoleti").foregroundStyle(.red)
+                }
             }
-            .font(.caption2)
+            .font(.subheadline)
+            if !project.projectDescription.isEmpty {
+                Text(project.projectDescription)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
         }
-        .padding(.vertical, 4)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
     }
-    #endif
 
-    private func digiKeyPart(for item: ProjectItem) -> String {
-        let pn = item.component?.digikeyPartNumber
-            ?? item.component?.digikeySnapshot?.digikeyPartNumber
-        return pn?.isEmpty == false ? pn! : "—"
+    private func done(for focus: BOMFocus) -> Int {
+        switch focus {
+        case .stock: stockReadyCount
+        case .kicad: kicadReadyCount
+        case .price: bomSummary.pricedLines
+        }
+    }
+
+    @ViewBuilder
+    private var emptyState: some View {
+        if project.items.isEmpty {
+            ContentUnavailableView {
+                Label("BOM vuota", systemImage: "list.bullet.rectangle")
+            } description: {
+                Text("Importa un file BOM o aggiungi i componenti uno alla volta.")
+            } actions: {
+                Button("Importa BOM…") { showImportBOM = true }
+            }
+        } else {
+            ContentUnavailableView(
+                "Tutto a posto",
+                systemImage: "checkmark.seal",
+                description: Text("Nessuna riga da completare per \(focus?.title.lowercased() ?? "questo filtro").")
+            )
+        }
+    }
+
+    /// L'azione che serve adesso: prima la libreria KiCad, poi gli ordini, poi lo stock.
+    @ViewBuilder
+    private var primaryAction: some View {
+        let kicadMissing = kicadMissingItems.count
+        let stockMissing = project.items.filter { !$0.isAvailable && $0.component != nil }.count
+        if project.items.isEmpty {
+            EmptyView()
+        } else if kicadMissing > 0 && SyncSettings.isConfigured {
+            PrimaryActionBar(
+                title: "Scarica \(kicadMissing) \(kicadMissing == 1 ? "componente" : "componenti") in KiCad",
+                systemImage: "square.and.arrow.down.on.square",
+                subtitle: library.index == nil ? "Indice libreria non ancora disponibile" : nil
+            ) { showKiCadFetch = true }
+        } else if stockMissing > 0 {
+            PrimaryActionBar(
+                title: "Ordina \(stockMissing) \(stockMissing == 1 ? "componente" : "componenti")",
+                systemImage: "cart",
+                subtitle: "Esporta la lista per JLC / LCSC"
+            ) { exportMissingStock() }
+        } else {
+            PrimaryActionBar(
+                title: "Riserva stock",
+                systemImage: "checkmark.circle",
+                subtitle: "Tutto disponibile: scala le quantità dal magazzino"
+            ) { reserveStock() }
+        }
+    }
+
+    @ViewBuilder
+    private func rowMenu(for item: ProjectItem) -> some View {
+        if let lcsc = item.component?.supplierLCSCCode {
+            Button {
+                PlatformPasteboard.copy(lcsc)
+            } label: {
+                Label("Copia \(lcsc)", systemImage: "doc.on.doc")
+            }
+        }
+        if let mpn = item.component?.mpn, !mpn.isEmpty {
+            Button {
+                PlatformPasteboard.copy(mpn)
+            } label: {
+                Label("Copia MPN", systemImage: "doc.on.doc")
+            }
+        }
+        if isObsolete(item) {
+            Button {
+                Task { await loadSubstitutes(for: item) }
+            } label: {
+                Label("Cerca sostituti", systemImage: "arrow.triangle.swap")
+            }
+        }
+        Divider()
+        Button(role: .destructive) {
+            try? projectStore?.removeItem(item, from: project)
+        } label: {
+            Label("Elimina riga", systemImage: "trash")
+        }
+    }
+
+    private func exportMissingStock() {
+        easyEDAMissingExportDocument = CSVDocument(text: ExportService.projectBOMMissingEasyEDACSV(project: project))
+        showEasyEDAMissingExport = true
+    }
+
+    private func reserveStock() {
+        guard let store else { return }
+        try? projectStore?.reserveForProject(project, store: store)
     }
 
     private func priceLabel(for item: ProjectItem) -> String {
@@ -453,86 +540,6 @@ struct ProjectDetailView: View {
 
     private func isObsolete(_ item: ProjectItem) -> Bool {
         bomSummary.lines.first(where: { $0.item.persistentModelID == item.persistentModelID })?.isObsolete == true
-    }
-
-    @ViewBuilder
-    private func lcscCell(for item: ProjectItem) -> some View {
-        if let lcsc = item.component?.supplierLCSCCode {
-            Button(lcsc) {
-                PlatformPasteboard.copy(lcsc)
-            }
-            .buttonStyle(.plain)
-            .font(.caption.monospaced())
-            .foregroundStyle(.orange)
-            .platformHelp("Copia Cxxxxx per EasyEDA")
-        } else {
-            Text("—")
-                .font(.caption.monospaced())
-                .foregroundStyle(.tertiary)
-        }
-    }
-
-    @ViewBuilder
-    private func bomRowActions(for item: ProjectItem) -> some View {
-        HStack(spacing: 4) {
-            if isObsolete(item) {
-                Button {
-                    Task { await loadSubstitutes(for: item) }
-                } label: {
-                    Image(systemName: "arrow.triangle.swap")
-                }
-                .buttonStyle(.borderless)
-                .platformHelp("Cerca sostituti DigiKey")
-            }
-
-            Button(role: .destructive) {
-                try? projectStore?.removeItem(item, from: project)
-            } label: {
-                Image(systemName: "trash")
-            }
-            .buttonStyle(.borderless)
-        }
-    }
-
-    private var summaryBar: some View {
-        HStack(spacing: 16) {
-            SummaryPill(title: "Righe", value: "\(project.totalItems)", color: .blue)
-            SummaryPill(title: "Mancanti", value: "\(project.missingCount)", color: project.missingCount > 0 ? .orange : .green)
-            SummaryPill(title: "Scorta bassa", value: "\(project.lowStockCount)", color: project.lowStockCount > 0 ? .yellow : .green)
-
-            SummaryPill(
-                title: "EasyEDA",
-                value: "\(easyEDAReadyCount)/\(project.totalItems)",
-                color: easyEDAMissingCount > 0 ? .orange : .green
-            )
-
-            if obsoleteCount > 0 {
-                SummaryPill(title: "Obsoleti", value: "\(obsoleteCount)", color: .red)
-            }
-
-            VStack(spacing: 2) {
-                Text(bomSummary.formattedTotal)
-                    .font(.title3.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(bomSummary.total != nil ? .purple : .secondary)
-                Text("Costo DigiKey")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                if bomSummary.missingLines > 0 {
-                    Text("\(bomSummary.missingLines) senza prezzo")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-            }
-
-            Spacer()
-            if !project.projectDescription.isEmpty {
-                Text(project.projectDescription)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding()
-        .background(.bar)
     }
 
     private var addComponentSheet: some View {

@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session, joinedload
 
 from config import extract_api_key, require_api_key, settings
 from database import get_db, init_db
+from fastapi.middleware.gzip import GZipMiddleware
+from fetch_jobs import library_router, router as fetch_router
 from models import ComponentRow, ProjectItemRow, ProjectRow
 from schemas import (
     ComponentIn,
@@ -23,7 +25,10 @@ from schemas import (
     SyncPushResponse,
 )
 
-app = FastAPI(title="ComponentVault API", version="0.4.0")
+app = FastAPI(title="ComponentVault API", version="0.5.0")
+app.include_router(fetch_router)
+app.include_router(library_router)
+app.add_middleware(GZipMiddleware, minimum_size=2048)
 
 app.add_middleware(
     CORSMiddleware,

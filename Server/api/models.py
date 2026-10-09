@@ -64,3 +64,23 @@ class ProjectItemRow(Base):
     required_quantity: Mapped[int] = mapped_column(Integer, default=1)
     notes: Mapped[str] = mapped_column(Text, default="")
     project: Mapped[ProjectRow] = relationship(back_populates="items")
+
+
+class FetchJobRow(Base):
+    """A request from an app to download components into the MIKILAB KiCad
+    library; executed by the worker on the Mac (scripts/fetch_worker.py)."""
+
+    __tablename__ = "fetch_jobs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    status: Mapped[str] = mapped_column(String(16), default="queued", index=True)  # queued/running/done/partial/failed
+    request: Mapped[dict] = mapped_column(JSONB, default=dict)
+    result: Mapped[dict] = mapped_column(JSONB, default=dict)
+    error: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+    claimed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
