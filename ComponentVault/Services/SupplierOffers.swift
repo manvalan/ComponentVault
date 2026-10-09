@@ -201,8 +201,9 @@ enum SupplierOfferService {
     static var isAnyConfigured: Bool { !configuredSuppliers.isEmpty }
 
     /// Offerte per un MPN esatto da tutti i fornitori configurati.
-    static func offers(forMPN mpn: String) async -> Outcome {
+    static func offers(forMPN mpn: String, only: String? = nil) async -> Outcome {
         await collect(
+            only: only,
             mouser: { try await $0.searchPartNumber(mpn) },
             digikey: { try await $0.searchCandidates(mpn: mpn, lcscCode: InternalComponentCode.catalogSearchPlaceholder) },
             nexar: { try await $0.searchMPN(mpn) }

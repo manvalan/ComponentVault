@@ -14,10 +14,11 @@ struct ProjectAddItemsView: View {
     @State private var query = ""
     @State private var quantity = 1
     @State private var designator = ""
-    @State private var provider = AppConfigIO.current().catalog.searchProvider
+    @State private var provider = SupplierCatalogSearchService.effective(AppConfigIO.current().catalog.searchProvider)
     @State private var catalogCards: [CatalogMatchCard] = []
     @State private var catalogMessage: String?
     @State private var isSearching = false
+    @State private var searchedAll = false
     @State private var isAdding = false
     @State private var added: [String] = []
     @State private var errorMessage: String?
@@ -61,6 +62,7 @@ struct ProjectAddItemsView: View {
                 // Ricerca nel catalogo mentre si scrive (dopo una breve pausa).
                 catalogCards = []
                 catalogMessage = nil
+                searchedAll = false
                 guard trimmedQuery.count >= 3 else { return }
                 try? await Task.sleep(for: .milliseconds(700))
                 guard !Task.isCancelled else { return }
@@ -106,7 +108,7 @@ struct ProjectAddItemsView: View {
     private var hintSection: some View {
         Section {
             Label("Cerca nel magazzino per valore, footprint, MPN o posizione.", systemImage: "shippingbox")
-            Label("Cerca anche nel catalogo: un MPN si cerca nell'archivio LCSC e su tutti i distributori configurati.", systemImage: "magnifyingglass")
+            Label("Cerca anche nel catalogo del fornitore predefinito (\(provider.label)); gli altri distributori a richiesta.", systemImage: "magnifyingglass")
             Label("Se non c'è, aggiungi l'MPN o il codice LCSC come componente nuovo: finisce in magazzino come «da ordinare».", systemImage: "plus.circle")
         }
         .font(.callout)
@@ -152,6 +154,15 @@ struct ProjectAddItemsView: View {
             if let catalogMessage {
                 Text(catalogMessage).font(.caption).foregroundStyle(.secondary)
             }
+            let others = SupplierCatalogSearchService.otherSuppliers(than: provider)
+            if !others.isEmpty, !searchedAll, !catalogCards.isEmpty || catalogMessage != nil {
+                Button {
+                    Task { await searchCatalog(allSuppliers: true) }
+                } label: {
+                    Label("Cerca anche su \(others.joined(separator: ", "))", systemImage: "plus.magnifyingglass")
+                }
+                .disabled(isSearching)
+            }
             ForEach(catalogCards) { card in
                 addRow(
                     title: card.mpn.isEmpty ? (card.lcscCode ?? card.value) : card.mpn,
@@ -177,6 +188,7 @@ struct ProjectAddItemsView: View {
                 .onChange(of: provider) { _, _ in
                     catalogCards = []
                     catalogMessage = nil
+                    searchedAll = false
                 }
             }
         }
@@ -266,13 +278,19 @@ struct ProjectAddItemsView: View {
         }
     }
 
-    private func searchCatalog() async {
+    private func searchCatalog(allSuppliers: Bool = false) async {
         guard !trimmedQuery.isEmpty else { return }
         isSearching = true
         defer { isSearching = false }
+        searchedAll = allSuppliers
         let searchQuery = CatalogSearchQuery(type: nil, valueAmount: trimmedQuery)
         do {
-            let outcome = try await SupplierCatalogSearchService.search(query: searchQuery, inventory: inventory, provider: provider)
+            let outcome = try await SupplierCatalogSearchService.search(
+                query: searchQuery,
+                inventory: inventory,
+                provider: provider,
+                allSuppliers: allSuppliers
+            )
             catalogCards = Array(outcome.cards.prefix(40))
             catalogMessage = outcome.cards.isEmpty ? String(localized: "Nessun risultato nel catalogo.") : outcome.statusMessage
         } catch {

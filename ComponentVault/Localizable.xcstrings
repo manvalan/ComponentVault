@@ -65,6 +65,22 @@
         }
       }
     },
+    "%@ Gli altri distributori configurati si interrogano a richiesta con «Cerca anche su…».": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Other configured distributors are searched on request with “Also search…”."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Gli altri distributori configurati si interrogano a richiesta con «Cerca anche su…»."
+          }
+        }
+      }
+    },
     "%@ non è presente nel catalogo LCSC": {
       "localizations": {
         "en": {
@@ -1460,18 +1476,34 @@
         }
       }
     },
-    "Cerca anche nel catalogo: un MPN si cerca nell'archivio LCSC e su tutti i distributori configurati.": {
+    "Cerca anche nel catalogo del fornitore predefinito (%@); gli altri distributori a richiesta.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Also searches the catalog: an MPN is looked up in the LCSC archive and on every configured distributor."
+            "value": "Also searches the default supplier's catalog (%@); other distributors on request."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cerca anche nel catalogo: un MPN si cerca nell'archivio LCSC e su tutti i distributori configurati."
+            "value": "Cerca anche nel catalogo del fornitore predefinito (%@); gli altri distributori a richiesta."
+          }
+        }
+      }
+    },
+    "Cerca anche su %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also search %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca anche su %@"
           }
         }
       }
@@ -3190,6 +3222,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Footprint"
+          }
+        }
+      }
+    },
+    "Fornitore predefinito": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default supplier"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fornitore predefinito"
           }
         }
       }

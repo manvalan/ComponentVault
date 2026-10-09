@@ -11,9 +11,10 @@ struct CatalogLookupView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var query = CatalogSearchQuery()
-    @State private var searchProvider = AppConfigIO.current().catalog.searchProvider
+    @State private var searchProvider = SupplierCatalogSearchService.effective(AppConfigIO.current().catalog.searchProvider)
     @State private var results: [CatalogMatchCard] = []
     @State private var isSearching = false
+    @State private var searchedAll = false
     @State private var errorMessage: String?
     @State private var statusMessage: String?
     @State private var store: ComponentStore?
@@ -35,7 +36,7 @@ struct CatalogLookupView: View {
         .onAppear {
             if store == nil { store = ComponentStore(modelContext: modelContext) }
             if projectStore == nil { projectStore = ProjectStore(modelContext: modelContext) }
-            searchProvider = AppConfigIO.current().catalog.searchProvider
+            searchProvider = SupplierCatalogSearchService.effective(AppConfigIO.current().catalog.searchProvider)
         }
         .sheet(isPresented: Binding(
             get: { projectPickerCard != nil },
@@ -75,6 +76,17 @@ struct CatalogLookupView: View {
                     .padding(.horizontal, 16)
                     .padding(.bottom, 4)
             }
+            let others = SupplierCatalogSearchService.otherSuppliers(than: searchProvider)
+            if !others.isEmpty, !searchedAll, statusMessage != nil || errorMessage != nil {
+                Button {
+                    Task { await runSearch(allSuppliers: true) }
+                } label: {
+                    Label("Cerca anche su \(others.joined(separator: ", "))", systemImage: "plus.magnifyingglass")
+                }
+                .font(.caption)
+                .disabled(isSearching)
+                .padding(.bottom, 6)
+            }
             if let errorMessage {
                 Text(errorMessage)
                     .font(.caption)
@@ -86,7 +98,7 @@ struct CatalogLookupView: View {
         .background(.bar)
         .onAppear {
             restoreCatalogSearchDefaults()
-            searchProvider = AppConfigIO.current().catalog.searchProvider
+            searchProvider = SupplierCatalogSearchService.effective(AppConfigIO.current().catalog.searchProvider)
         }
     }
 
@@ -195,20 +207,22 @@ struct CatalogLookupView: View {
         """
     }
 
-    private func runSearch() async {
+    private func runSearch(allSuppliers: Bool = false) async {
+        searchedAll = allSuppliers
         isSearching = true
         errorMessage = nil
         statusMessage = nil
         defer { isSearching = false }
 
-        searchProvider = AppConfigIO.current().catalog.searchProvider
+        searchProvider = SupplierCatalogSearchService.effective(AppConfigIO.current().catalog.searchProvider)
 
         do {
             persistCatalogSearchDefaults()
             let outcome = try await SupplierCatalogSearchService.search(
                 query: query,
                 inventory: inventory,
-                provider: searchProvider
+                provider: searchProvider,
+                allSuppliers: allSuppliers
             )
             results = outcome.cards
             statusMessage = outcome.statusMessage

@@ -189,7 +189,7 @@ struct SettingsView: View {
 
     private var searchSection: some View {
         Section {
-            Picker("Catalogo", selection: $config.catalog.searchProvider) {
+            Picker("Fornitore predefinito", selection: $config.catalog.searchProvider) {
                 ForEach(CatalogSearchProvider.available) { provider in
                     Text(provider.label).tag(provider)
                 }
@@ -197,7 +197,7 @@ struct SettingsView: View {
         } header: {
             Text("Ricerca")
         } footer: {
-            Text(config.catalog.searchProvider.detail)
+            Text("\(config.catalog.searchProvider.detail) Gli altri distributori configurati si interrogano a richiesta con «Cerca anche su…».")
         }
     }
 

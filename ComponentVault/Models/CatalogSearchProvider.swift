@@ -69,17 +69,58 @@ enum SupplierCatalogSearchService {
         let statusMessage: String?
     }
 
+    /// Distributori configurati diversi dal fornitore predefinito: si interrogano a richiesta.
+    static func otherSuppliers(than provider: CatalogSearchProvider) -> [String] {
+        SupplierOfferService.configuredSuppliers.filter { $0 != effective(provider).label }
+    }
+
+    /// Il fornitore predefinito sta nella configurazione condivisa: se su questo
+    /// dispositivo mancano le sue chiavi si usa l'archivio LCSC.
+    static func effective(_ provider: CatalogSearchProvider) -> CatalogSearchProvider {
+        CatalogSearchProvider.available.contains(provider) ? provider : .lcsc
+    }
+
+    /// Cerca sul fornitore predefinito; con `allSuppliers` anche su tutti gli altri configurati.
     static func search(
         query: CatalogSearchQuery,
         inventory: [Component],
-        provider: CatalogSearchProvider = AppConfigIO.current().catalog.searchProvider
+        provider requested: CatalogSearchProvider = AppConfigIO.current().catalog.searchProvider,
+        allSuppliers: Bool = false
     ) async throws -> SearchOutcome {
+        let provider = effective(requested)
         let trimmedValue = query.value.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedFootprint = query.footprint.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if trimmedFootprint.isEmpty, CatalogSearchQuery.looksLikeMPN(trimmedValue) {
-            return try await searchByMPN(trimmedValue, inventory: inventory, provider: provider)
+            return try await searchByMPN(trimmedValue, inventory: inventory, provider: provider, allSuppliers: allSuppliers)
         }
+
+        guard allSuppliers else {
+            return try await searchDefault(query: query, inventory: inventory, provider: provider)
+        }
+        let base = try? await searchDefault(query: query, inventory: inventory, provider: provider)
+        let others = otherSuppliers(than: provider)
+        let keyword = query.lcscSearchKeywordText().trimmingCharacters(in: .whitespacesAndNewlines)
+        var extra = SupplierOfferService.Outcome()
+        for name in others {
+            let outcome = await SupplierOfferService.search(keyword: keyword, only: name)
+            extra.offers += outcome.offers
+            extra.errors += outcome.errors
+        }
+        let cards = (base?.cards ?? []) + offerCards(extra.offers, query: query, inventory: inventory)
+        let parts = [base?.statusMessage].compactMap { $0 }
+            + others.map { name in "\(extra.offers.filter { ($0.source ?? $0.supplier) == name }.count) \(name)" }
+            + extra.errors
+        return SearchOutcome(cards: cards, statusMessage: parts.joined(separator: " · "))
+    }
+
+    private static func searchDefault(
+        query: CatalogSearchQuery,
+        inventory: [Component],
+        provider: CatalogSearchProvider
+    ) async throws -> SearchOutcome {
+        let trimmedValue = query.value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedFootprint = query.footprint.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if provider == .mouser || provider == .digikey || provider == .nexar {
             return try await searchSupplier(provider, query: query, inventory: inventory)
@@ -131,13 +172,20 @@ enum SupplierCatalogSearchService {
         )
     }
 
-    /// Un MPN si cerca ovunque: archivio LCSC locale e tutti i distributori configurati.
+    /// Un MPN si cerca sempre nell'archivio LCSC locale, più sul fornitore predefinito
+    /// (o su tutti i distributori configurati con `allSuppliers`).
     private static func searchByMPN(
         _ mpn: String,
         inventory: [Component],
-        provider: CatalogSearchProvider
+        provider: CatalogSearchProvider,
+        allSuppliers: Bool
     ) async throws -> SearchOutcome {
-        async let supplierOutcome = SupplierOfferService.offers(forMPN: mpn)
+        let suppliersToAsk = allSuppliers
+            ? SupplierOfferService.configuredSuppliers
+            : SupplierOfferService.configuredSuppliers.filter { $0 == provider.label }
+        async let supplierOutcome: SupplierOfferService.Outcome = suppliersToAsk.isEmpty
+            ? SupplierOfferService.Outcome()
+            : SupplierOfferService.offers(forMPN: mpn, only: allSuppliers ? nil : provider.label)
         let (archiveCards, _) = try await MPNLookupService.search(mpn: mpn, inventory: inventory)
         let suppliers = await supplierOutcome
 
@@ -148,7 +196,7 @@ enum SupplierCatalogSearchService {
         if !archiveCards.isEmpty {
             parts.append(String(localized: "\(archiveCards.count) dall'archivio LCSC"))
         }
-        for name in SupplierOfferService.configuredSuppliers {
+        for name in suppliersToAsk {
             let count = suppliers.offers.filter { ($0.source ?? $0.supplier) == name }.count
             if count > 0 { parts.append("\(count) \(name)") }
         }
