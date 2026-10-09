@@ -225,7 +225,7 @@ enum SupplierOfferService {
         digikey digikeySearch: @escaping @Sendable (DigiKeyProvider) async throws -> [DigiKeyCandidate],
         nexar nexarSearch: @escaping @Sendable (NexarProvider) async throws -> [SupplierOffer]
     ) async -> Outcome {
-        func wanted(_ name: String) -> Bool { only == nil || only == name }
+        @Sendable func wanted(_ name: String) -> Bool { only == nil || only == name }
 
         async let mouserResult: Result<[SupplierOffer], Error>? = {
             guard wanted("Mouser"), let provider = MouserProvider.configured() else { return nil }

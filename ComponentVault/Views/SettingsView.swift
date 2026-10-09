@@ -23,6 +23,7 @@ struct SettingsView: View {
     @State private var mouserSaved = MouserKeychain.isConfigured
     @State private var nexar = NexarKeychain.load() ?? NexarCredentials()
     @State private var nexarSaved = NexarKeychain.isConfigured
+    @State private var shareKeys = SupplierKeychain.sharesAcrossDevices
 
     private var hasFolder: Bool { !folderPath.isEmpty }
 
@@ -39,6 +40,7 @@ struct SettingsView: View {
         .onAppear {
             config = AppConfigIO.reload()
             refreshFolderStatus()
+            refreshSupplierStatus()
         }
         .task { worker = await KiCadQueue.workerStatus() }
         .onReceive(NotificationCenter.default.publisher(for: .sharedFolderChanged)) { _ in
@@ -203,8 +205,13 @@ struct SettingsView: View {
 
     private var digiKeySection: some View {
         Section {
+            Toggle(isOn: Binding(get: { shareKeys }, set: { setShareKeys($0) })) {
+                Text("Condividi con i miei dispositivi")
+                Text("Portachiavi iCloud: le stesse chiavi su Mac e iPad")
+            }
             DisclosureGroup {
                 SecureField(mouserSaved ? String(localized: "Chiave salvata — inseriscine una nuova per sostituirla") : String(localized: "Search API key"), text: $mouserKey)
+                    .textContentType(.password)
                 HStack {
                     Button("Salva sul dispositivo") { saveMouser() }
                         .disabled(mouserKey.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -226,8 +233,10 @@ struct SettingsView: View {
             }
             DisclosureGroup {
                 TextField("Client ID", text: $nexar.clientID)
+                    .textContentType(.username)
                     .autocorrectionDisabled()
                 SecureField("Client Secret", text: $nexar.clientSecret)
+                    .textContentType(.password)
                 LabeledContent("Paese · valuta") {
                     HStack {
                         TextField("IT", text: $nexar.country).frame(maxWidth: 50)
@@ -257,8 +266,10 @@ struct SettingsView: View {
             }
             DisclosureGroup {
                 TextField("Client ID", text: $digiKey.clientID)
+                    .textContentType(.username)
                     .autocorrectionDisabled()
                 SecureField("Client Secret", text: $digiKey.clientSecret)
+                    .textContentType(.password)
                 SecureField("Access token", text: $digiKey.accessToken)
                 SecureField("Refresh token", text: $digiKey.refreshToken)
                 Picker("Ambiente", selection: $digiKey.environment) {
@@ -292,7 +303,12 @@ struct SettingsView: View {
         } header: {
             Text("Fornitori")
         } footer: {
-            Text("Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com, api.digikey.com e api.nexar.com.")
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu (anche scegliendoli dalle Password salvate); non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com, api.digikey.com e api.nexar.com.")
+                Text(shareKeys
+                     ? "Le chiavi sono nel Portachiavi iCloud, cifrato end-to-end: le vede solo ComponentVault sui dispositivi con il tuo Apple Account. Disattivando, restano solo qui e spariscono dagli altri dispositivi."
+                     : "Le chiavi restano nel Portachiavi di questo dispositivo: su ogni Mac o iPad vanno inserite una volta.")
+            }
         }
     }
 
@@ -300,7 +316,9 @@ struct SettingsView: View {
         do {
             try DigiKeyKeychain.save(digiKey)
             digiKeySaved = true
-            digiKeyMessage = String(localized: "Salvate nel Portachiavi di questo dispositivo.")
+            digiKeyMessage = shareKeys
+                ? String(localized: "Salvate nel Portachiavi iCloud.")
+                : String(localized: "Salvate nel Portachiavi di questo dispositivo.")
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -333,6 +351,24 @@ struct SettingsView: View {
         digiKey = DigiKeyCredentials()
         digiKeySaved = false
         digiKeyMessage = String(localized: "Credenziali DigiKey eliminate.")
+    }
+
+    private func setShareKeys(_ shared: Bool) {
+        do {
+            try SupplierKeychain.setSharesAcrossDevices(shared)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        refreshSupplierStatus()
+    }
+
+    private func refreshSupplierStatus() {
+        shareKeys = SupplierKeychain.sharesAcrossDevices
+        mouserSaved = MouserKeychain.isConfigured
+        nexarSaved = NexarKeychain.isConfigured
+        digiKeySaved = DigiKeyKeychain.isConfigured
+        if digiKeySaved, digiKey.clientID.isEmpty { digiKey = DigiKeyKeychain.load() ?? digiKey }
+        if nexarSaved, nexar.clientID.isEmpty { nexar = NexarKeychain.load() ?? nexar }
     }
 
     // MARK: Azioni

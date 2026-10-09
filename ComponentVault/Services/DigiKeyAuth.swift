@@ -2,8 +2,8 @@ import Foundation
 import Security
 
 /// Credenziali DigiKey inserite a mano dall'utente nella propria copia dell'app.
-/// Restano nel Portachiavi di questo dispositivo: non vanno nel file di
-/// configurazione, nella cartella condivisa, nel backup iCloud o altrove.
+/// Restano nel Portachiavi (di questo dispositivo, o iCloud se l'utente sceglie di
+/// condividerle): non vanno nel file di configurazione, nella cartella o altrove.
 /// Escono dall'app solo verso api.digikey.com, per le richieste DigiKey.
 struct DigiKeyCredentials: Codable, Sendable, Equatable {
     enum Environment: String, Codable, Sendable, CaseIterable, Identifiable {
@@ -42,42 +42,56 @@ private extension String {
     var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }
 }
 
-/// Portachiavi locale per le credenziali dei fornitori: elementi mai sincronizzati
-/// con iCloud, mai inclusi nei backup, leggibili solo su questo dispositivo.
+/// Portachiavi per le credenziali dei fornitori. Di norma gli elementi restano solo su
+/// questo dispositivo (niente iCloud, niente backup). Se l'utente lo chiede, passano nel
+/// Portachiavi iCloud (cifrato end-to-end da Apple) e li vedono solo le copie di
+/// ComponentVault sui suoi dispositivi (Mac e iPad hanno lo stesso identificativo app).
 enum SupplierKeychain {
     private static let service = "it.michelebigi.ComponentVault.suppliers"
+    private static let accounts = ["mouser", "digikey", "nexar"]
+    private static let shareDefaultsKey = "suppliers.shareViaICloudKeychain"
 
-    private static func query(_ account: String) -> [String: Any] {
+    private static func query(_ account: String, synchronizable: CFTypeRef) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
-            kSecAttrSynchronizable as String: kCFBooleanFalse!,
+            kSecAttrSynchronizable as String: synchronizable,
             kSecUseDataProtectionKeychain as String: true,
         ]
     }
 
-    static func load<T: Decodable>(_ type: T.Type, account: String) -> T? {
-        var q = query(account)
+    private static func data(account: String, synchronizable: CFTypeRef = kSecAttrSynchronizableAny) -> Data? {
+        var q = query(account, synchronizable: synchronizable)
         q[kSecReturnData as String] = true
         q[kSecMatchLimit as String] = kSecMatchLimitOne
         var item: CFTypeRef?
-        guard SecItemCopyMatching(q as CFDictionary, &item) == errSecSuccess,
-              let data = item as? Data else { return nil }
-        return try? JSONDecoder().decode(T.self, from: data)
+        guard SecItemCopyMatching(q as CFDictionary, &item) == errSecSuccess else { return nil }
+        return item as? Data
     }
 
+    private static func add(_ data: Data, account: String, shared: Bool) -> OSStatus {
+        var q = query(account, synchronizable: shared ? kCFBooleanTrue! : kCFBooleanFalse!)
+        q[kSecValueData as String] = data
+        q[kSecAttrAccessible as String] = shared
+            ? kSecAttrAccessibleAfterFirstUnlock
+            : kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        return SecItemAdd(q as CFDictionary, nil)
+    }
+
+    static func load<T: Decodable>(_ type: T.Type, account: String) -> T? {
+        data(account: account).flatMap { try? JSONDecoder().decode(T.self, from: $0) }
+    }
+
+    /// Aggiorna l'elemento dove si trova già (locale o iCloud); se manca lo crea
+    /// secondo la scelta "Condividi con i miei dispositivi".
     static func save<T: Encodable>(_ value: T, account: String) throws {
         let data = try JSONEncoder().encode(value)
-        let attributes: [String: Any] = [
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
-        ]
-        var status = SecItemUpdate(query(account) as CFDictionary, attributes as CFDictionary)
+        let attributes = [kSecValueData as String: data]
+        var status = SecItemUpdate(query(account, synchronizable: kSecAttrSynchronizableAny) as CFDictionary,
+                                   attributes as CFDictionary)
         if status == errSecItemNotFound {
-            var q = query(account)
-            q.merge(attributes) { _, new in new }
-            status = SecItemAdd(q as CFDictionary, nil)
+            status = add(data, account: account, shared: sharesAcrossDevices)
         }
         guard status == errSecSuccess else {
             throw ProviderError.networkFailure(String(localized: "Impossibile salvare nel Portachiavi (\(status))."))
@@ -85,7 +99,32 @@ enum SupplierKeychain {
     }
 
     static func delete(account: String) {
-        SecItemDelete(query(account) as CFDictionary)
+        SecItemDelete(query(account, synchronizable: kSecAttrSynchronizableAny) as CFDictionary)
+    }
+
+    /// Vero se le chiavi stanno (o andranno) nel Portachiavi iCloud.
+    static var sharesAcrossDevices: Bool {
+        UserDefaults.standard.bool(forKey: shareDefaultsKey)
+            || accounts.contains { data(account: $0, synchronizable: kCFBooleanTrue!) != nil }
+    }
+
+    /// Sposta le chiavi già salvate nel Portachiavi iCloud o di nuovo solo su questo
+    /// dispositivo. Togliendo la condivisione spariscono anche dagli altri dispositivi.
+    static func setSharesAcrossDevices(_ shared: Bool) throws {
+        UserDefaults.standard.set(shared, forKey: shareDefaultsKey)
+        let from: CFTypeRef = shared ? kCFBooleanFalse! : kCFBooleanTrue!
+        for account in accounts {
+            guard let value = data(account: account, synchronizable: from) else { continue }
+            SecItemDelete(query(account, synchronizable: from) as CFDictionary)
+            let status = add(value, account: account, shared: shared)
+            if status == errSecDuplicateItem {
+                continue  // c'era già una copia nella destinazione: si tiene quella
+            }
+            guard status == errSecSuccess else {
+                _ = add(value, account: account, shared: !shared)
+                throw ProviderError.networkFailure(String(localized: "Impossibile spostare le chiavi nel Portachiavi (\(status))."))
+            }
+        }
     }
 }
 

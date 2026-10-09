@@ -1925,6 +1925,22 @@
         }
       }
     },
+    "Condividi con i miei dispositivi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share with my devices"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condividi con i miei dispositivi"
+          }
+        }
+      }
+    },
     "Configurato": {
       "localizations": {
         "en": {
@@ -2969,6 +2985,22 @@
         }
       }
     },
+    "Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu (anche scegliendoli dalle Password salvate); non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com, api.digikey.com e api.nexar.com.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional: prices, availability and search from distributors with an official API. You enter the keys and tokens yourself (you can also pick them from your saved Passwords); they never go into the folder or anywhere else and are used only for requests to api.mouser.com, api.digikey.com and api.nexar.com."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu (anche scegliendoli dalle Password salvate); non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com, api.digikey.com e api.nexar.com."
+          }
+        }
+      }
+    },
     "Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com e api.digikey.com.": {
       "extractionState": "manual",
       "localizations": {
@@ -2982,22 +3014,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com e api.digikey.com."
-          }
-        }
-      }
-    },
-    "Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com, api.digikey.com e api.nexar.com.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Optional: prices, availability and search from distributors with an official API. You enter the keys and tokens yourself; they stay in this device's Keychain, never go to the folder or anywhere else, and are only used for requests to api.mouser.com, api.digikey.com and api.nexar.com."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com, api.digikey.com e api.nexar.com."
           }
         }
       }
@@ -3548,6 +3564,22 @@
         }
       }
     },
+    "Impossibile spostare le chiavi nel Portachiavi (%d).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not move the keys in the Keychain (%d)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile spostare le chiavi nel Portachiavi (%d)."
+          }
+        }
+      }
+    },
     "Imposta almeno valore o footprint, oppure un MPN nel campo Valore.": {
       "localizations": {
         "en": {
@@ -4093,6 +4125,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "La libreria KiCad si sceglie dall'app su Mac; l'iPad la legge dal file di configurazione nella cartella."
+          }
+        }
+      }
+    },
+    "Le chiavi restano nel Portachiavi di questo dispositivo: su ogni Mac o iPad vanno inserite una volta.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The keys stay in this device's Keychain: enter them once on each Mac or iPad."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le chiavi restano nel Portachiavi di questo dispositivo: su ogni Mac o iPad vanno inserite una volta."
+          }
+        }
+      }
+    },
+    "Le chiavi sono nel Portachiavi iCloud, cifrato end-to-end: le vede solo ComponentVault sui dispositivi con il tuo Apple Account. Disattivando, restano solo qui e spariscono dagli altri dispositivi.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The keys are in iCloud Keychain, end-to-end encrypted: only ComponentVault on devices signed in with your Apple Account can read them. Turning this off keeps them only here and removes them from your other devices."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le chiavi sono nel Portachiavi iCloud, cifrato end-to-end: le vede solo ComponentVault sui dispositivi con il tuo Apple Account. Disattivando, restano solo qui e spariscono dagli altri dispositivi."
           }
         }
       }
@@ -5156,6 +5220,22 @@
         }
       }
     },
+    "Portachiavi iCloud: le stesse chiavi su Mac e iPad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Keychain: the same keys on Mac and iPad"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portachiavi iCloud: le stesse chiavi su Mac e iPad"
+          }
+        }
+      }
+    },
     "Prezzi": {
       "localizations": {
         "en": {
@@ -6036,6 +6116,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Salvate nel Portachiavi di questo dispositivo."
+          }
+        }
+      }
+    },
+    "Salvate nel Portachiavi iCloud.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved in iCloud Keychain."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvate nel Portachiavi iCloud."
           }
         }
       }
