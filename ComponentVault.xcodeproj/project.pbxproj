@@ -79,6 +79,7 @@
 		A10000010000000000000061 /* SupplierOffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000061 /* SupplierOffers.swift */; };
 		A10000010000000000000062 /* SupplierOffersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000062 /* SupplierOffersView.swift */; };
 		A10000010000000000000063 /* NexarProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000063 /* NexarProvider.swift */; };
+		A10000010000000000000064 /* ProjectAddItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000064 /* ProjectAddItemsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -158,6 +159,7 @@
 		A20000010000000000000061 /* SupplierOffers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupplierOffers.swift; sourceTree = "<group>"; };
 		A20000010000000000000062 /* SupplierOffersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupplierOffersView.swift; sourceTree = "<group>"; };
 		A20000010000000000000063 /* NexarProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NexarProvider.swift; sourceTree = "<group>"; };
+		A20000010000000000000064 /* ProjectAddItemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectAddItemsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -279,6 +281,7 @@
 		A50000010000000000000007 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				A20000010000000000000064 /* ProjectAddItemsView.swift */,
 				A20000010000000000000062 /* SupplierOffersView.swift */,
 				A20000010000000000000060 /* DigiKeyCandidateSheet.swift */,
 				A20000010000000000000055 /* ScanImportView.swift */,
@@ -374,6 +377,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000010000000000000064 /* ProjectAddItemsView.swift in Sources */,
 				A10000010000000000000063 /* NexarProvider.swift in Sources */,
 				A10000010000000000000062 /* SupplierOffersView.swift in Sources */,
 				A10000010000000000000061 /* SupplierOffers.swift in Sources */,

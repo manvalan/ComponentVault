@@ -723,6 +723,22 @@
         }
       }
     },
+    "Aggiungi alla BOM": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to BOM"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi alla BOM"
+          }
+        }
+      }
+    },
     "Aggiungi alla libreria KiCad": {
       "localizations": {
         "en": {
@@ -739,18 +755,18 @@
         }
       }
     },
-    "Aggiungi componente al progetto": {
+    "Aggiungi componenti": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add part to project"
+            "value": "Add components"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aggiungi componente al progetto"
+            "value": "Aggiungi componenti"
           }
         }
       }
@@ -767,6 +783,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aggiungi footprint e valore per abilitare la ricerca equivalenti."
+          }
+        }
+      }
+    },
+    "Aggiungi «%@» come componente nuovo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add “%@” as a new component"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi «%@» come componente nuovo"
+          }
+        }
+      }
+    },
+    "Aggiunti: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiunti: %@"
           }
         }
       }
@@ -1396,6 +1444,22 @@
         }
       }
     },
+    "Cerca nel magazzino per valore, footprint, MPN o posizione.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search the inventory by value, footprint, MPN or location."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca nel magazzino per valore, footprint, MPN o posizione."
+          }
+        }
+      }
+    },
     "Cerca su %@": {
       "localizations": {
         "en": {
@@ -1472,6 +1536,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cerca valore, footprint, MPN…"
+          }
+        }
+      }
+    },
+    "Cerca «%@» nel catalogo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search the catalog for “%@”"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca «%@» nel catalogo"
           }
         }
       }
@@ -2389,6 +2469,22 @@
         }
       }
     },
+    "Designator (es. R1, R2, C5)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Designator (e.g. R1, R2, C5)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Designator (es. R1, R2, C5)"
+          }
+        }
+      }
+    },
     "DigiKey": {
       "localizations": {
         "en": {
@@ -3030,6 +3126,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fine"
+          }
+        }
+      }
+    },
+    "Fonte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonte"
           }
         }
       }
@@ -3708,6 +3820,22 @@
         }
       }
     },
+    "In magazzino": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In inventory"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In magazzino"
+          }
+        }
+      }
+    },
     "Indice del %@": {
       "localizations": {
         "en": {
@@ -3848,6 +3976,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Inserisci le credenziali DigiKey in Impostazioni."
+          }
+        }
+      }
+    },
+    "Inserisci un MPN o un codice LCSC.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an MPN or an LCSC code."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inserisci un MPN o un codice LCSC."
           }
         }
       }
@@ -4241,6 +4385,22 @@
         }
       }
     },
+    "MPN o codice LCSC (Cxxxx). Se è nell'archivio LCSC prende i dati da lì; in magazzino va a stock 0.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MPN or LCSC code (Cxxxx). If it's in the LCSC archive, the data comes from there; it's added to the inventory with stock 0."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MPN o codice LCSC (Cxxxx). Se è nell'archivio LCSC prende i dati da lì; in magazzino va a stock 0."
+          }
+        }
+      }
+    },
     "Mac con KiCad": {
       "localizations": {
         "en": {
@@ -4317,6 +4477,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Magazzino"
+          }
+        }
+      }
+    },
+    "Magazzino, valore, MPN o codice LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inventory, value, MPN or LCSC code"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Magazzino, valore, MPN o codice LCSC"
           }
         }
       }
@@ -4545,6 +4721,22 @@
         }
       }
     },
+    "Nessun componente in magazzino.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No components in inventory."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun componente in magazzino."
+          }
+        }
+      }
+    },
     "Nessun componente monitorato è sotto soglia o esaurito.": {
       "localizations": {
         "en": {
@@ -4702,6 +4894,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nessun risultato"
+          }
+        }
+      }
+    },
+    "Nessun risultato nel catalogo.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No results in the catalog."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun risultato nel catalogo."
           }
         }
       }
@@ -5232,6 +5440,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Portachiavi iCloud: le stesse chiavi su Mac e iPad"
+          }
+        }
+      }
+    },
+    "Premi Invio per cercare anche nel catalogo (%@).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press Return to also search the catalog (%@)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premi Invio per cercare anche nel catalogo (%@)."
           }
         }
       }
@@ -6489,6 +6713,22 @@
         }
       }
     },
+    "Se non c'è, aggiungi l'MPN o il codice LCSC come componente nuovo: finisce in magazzino come «da ordinare».": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If it isn't there, add the MPN or LCSC code as a new component: it goes into the inventory as “to order”."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se non c'è, aggiungi l'MPN o il codice LCSC come componente nuovo: finisce in magazzino come «da ordinare»."
+          }
+        }
+      }
+    },
     "Search API key": {
       "localizations": {
         "en": {
@@ -6742,6 +6982,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stock"
+          }
+        }
+      }
+    },
+    "Stock %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock %lld"
           }
         }
       }

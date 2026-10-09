@@ -22,9 +22,6 @@ struct ProjectDetailView: View {
     @State private var importError: String?
     @State private var isResolvingLCSC = false
     @State private var lcscResolveMessage: String?
-    @State private var selectedLCSC = ""
-    @State private var addQuantity = 1
-    @State private var addDesignator = ""
     @State private var showKiCadCheck = false
     @State private var showKiCadFetch = false
     @State private var focus: BOMFocus?
@@ -205,7 +202,7 @@ struct ProjectDetailView: View {
             if store == nil { store = ComponentStore(modelContext: modelContext) }
         }
         .sheet(isPresented: $showAddComponent) {
-            addComponentSheet
+            ProjectAddItemsView(project: project, projectStore: projectStore, store: store)
         }
         .sheet(isPresented: $showKiCadCheck) {
             ProjectKiCadCheckView(project: project)
@@ -341,6 +338,8 @@ struct ProjectDetailView: View {
             } description: {
                 Text("Importa un file BOM o aggiungi i componenti uno alla volta.")
             } actions: {
+                Button("Aggiungi componenti") { showAddComponent = true }
+                    .buttonStyle(.borderedProminent)
                 Button("Importa BOM…") { showImportBOM = true }
             }
         } else {
@@ -429,50 +428,6 @@ struct ProjectDetailView: View {
 
     private func isObsolete(_ item: ProjectItem) -> Bool {
         bomSummary.lines.first(where: { $0.item.persistentModelID == item.persistentModelID })?.isObsolete == true
-    }
-
-    private var addComponentSheet: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Aggiungi componente al progetto")
-                .font(.headline)
-
-            Picker("Componente", selection: $selectedLCSC) {
-                Text("Seleziona…").tag("")
-                ForEach(allComponents, id: \.lcscCode) { c in
-                    let lcsc = c.supplierLCSCCode ?? "—"
-                    Text("\(c.inventoryCode) · \(lcsc) — \(c.displayTitle)").tag(c.lcscCode)
-                }
-            }
-
-            HStack {
-                Text("Quantità")
-                Stepper("\(addQuantity)", value: $addQuantity, in: 1...999_999)
-            }
-
-            TextField("Designator (es. R1, C5)", text: $addDesignator)
-
-            HStack {
-                Spacer()
-                Button("Annulla") { showAddComponent = false }
-                Button("Aggiungi") {
-                    guard let component = allComponents.first(where: { $0.lcscCode == selectedLCSC }) else { return }
-                    try? projectStore?.addComponent(
-                        component,
-                        to: project,
-                        quantity: addQuantity,
-                        designator: addDesignator
-                    )
-                    showAddComponent = false
-                    addQuantity = 1
-                    addDesignator = ""
-                    selectedLCSC = ""
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(selectedLCSC.isEmpty)
-            }
-        }
-        .padding(24)
-        .frame(width: 420)
     }
 }
 
