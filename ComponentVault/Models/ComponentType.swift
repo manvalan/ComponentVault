@@ -17,8 +17,22 @@ enum ComponentType: String, CaseIterable, Identifiable, Sendable {
 
     var id: String { rawValue }
 
+    /// Etichetta mostrata nell'interfaccia, nella lingua dell'utente.
     var label: String {
-        englishLabel
+        switch self {
+        case .resistor: String(localized: "Resistori")
+        case .capacitor: String(localized: "Condensatori")
+        case .inductor: String(localized: "Induttori")
+        case .ic: String(localized: "Circuiti integrati")
+        case .connector: String(localized: "Connettori")
+        case .diode: String(localized: "Diodi")
+        case .led: String(localized: "LED")
+        case .switch_: String(localized: "Interruttori")
+        case .module: String(localized: "Moduli")
+        case .regulator: String(localized: "Alimentazione")
+        case .display: String(localized: "Display")
+        case .other: String(localized: "Altro")
+        }
     }
 
     /// Etichetta categoria in inglese (filtri e catalogo LCSC).

@@ -66,7 +66,7 @@ struct ProjectsView: View {
                 ProjectDetailView(project: selection, projectStore: projectStore)
             } else {
                 ContentUnavailableView(
-                    "Progetti BOM",
+                    String(localized: "Progetti BOM"),
                     systemImage: "folder",
                     description: Text("Crea un progetto per gestire la distinta base\ne verificare disponibilità componenti.")
                 )

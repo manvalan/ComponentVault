@@ -22,7 +22,7 @@ final class ProjectStore {
     func deleteProject(_ project: Project) throws {
         modelContext.delete(project)
         try modelContext.save()
-        statusMessage = "Progetto eliminato"
+        statusMessage = String(localized: "Progetto eliminato")
     }
 
     func addComponent(
@@ -75,12 +75,12 @@ final class ProjectStore {
                     component,
                     delta: -toDeduct,
                     reason: .project,
-                    note: "Riservato per \(project.name) (\(item.designator))"
+                    note: String(localized: "Riservato per \(project.name) (\(item.designator))")
                 )
                 reserved += 1
             }
         }
-        statusMessage = "Riservati componenti per \(project.name) (\(reserved) righe)"
+        statusMessage = String(localized: "Riservati componenti per \(project.name) (\(reserved) righe)")
     }
 
     func importBOM(
@@ -172,8 +172,8 @@ final class ProjectStore {
         try modelContext.save()
 
         let missingUnique = Array(Set(missingLCSC)).sorted()
-        statusMessage = "BOM importata: \(imported) righe" +
-            (skipped > 0 ? ", \(skipped) non trovate in inventario" : "")
+        statusMessage = String(localized: "BOM importata: \(imported) righe") +
+            (skipped > 0 ? String(localized: ", \(skipped) non trovate in inventario") : "")
 
         return BOMImportResult(
             imported: imported,
@@ -183,58 +183,32 @@ final class ProjectStore {
         )
     }
 
-    func pushToRemote(config: RemoteAPIConfig) async throws -> Int {
-        guard await RemoteAPIClient.projectsAPIAvailable(config: config) else {
-            statusMessage = "Server senza API progetti (serve deploy v0.4)"
-            return 0
-        }
-
-        let descriptor = FetchDescriptor<Project>(sortBy: [SortDescriptor(\.name)])
-        let projects = try modelContext.fetch(descriptor)
-        let records = projects.map { $0.toRecord() }
-        let upserted = try await RemoteAPIClient.pushProjects(records, config: config)
-        statusMessage = "Caricati \(upserted) progetti sul server"
-        return upserted
+    func allRecords() throws -> [ProjectRecord] {
+        try modelContext.fetch(FetchDescriptor<Project>(sortBy: [SortDescriptor(\.name)]))
+            .map { $0.toRecord() }
     }
 
-    func pullFromRemote(config: RemoteAPIConfig, components: [Component]) async throws -> Int {
-        guard await RemoteAPIClient.projectsAPIAvailable(config: config) else {
-            statusMessage = "Server senza API progetti (serve deploy v0.4)"
-            return 0
-        }
+    /// Fonde i progetti di un altro dispositivo: per nome, vince la modifica più recente.
+    func merge(remote remoteRecords: [ProjectRecord], components: [Component]) throws -> SyncBidirectionalResult {
+        var remoteByName: [String: ProjectRecord] = [:]
+        for record in remoteRecords { remoteByName[record.name] = record }
 
-        let records = try await RemoteAPIClient.fetchProjects(config: config)
-        try upsert(records: records, components: components)
-        statusMessage = "Scaricati \(records.count) progetti dal server"
-        return records.count
-    }
+        let localProjects = try modelContext.fetch(FetchDescriptor<Project>())
+        var localByName: [String: Project] = [:]
+        for project in localProjects { localByName[project.name] = project }
+        var componentsByCode: [String: Component] = [:]
+        for component in components { componentsByCode[component.lcscCode.uppercased()] = component }
 
-    func syncBidirectional(config: RemoteAPIConfig, components: [Component]) async throws -> SyncBidirectionalResult {
-        guard await RemoteAPIClient.projectsAPIAvailable(config: config) else {
-            let result = SyncBidirectionalResult(pushed: 0, pulled: 0, unchanged: 0)
-            statusMessage = "Progetti: server v0.3 (solo componenti sincronizzati)"
-            return result
-        }
-
-        let remoteRecords = try await RemoteAPIClient.fetchProjects(config: config)
-        let remoteByName = Dictionary(uniqueKeysWithValues: remoteRecords.map { ($0.name, $0) })
-
-        let descriptor = FetchDescriptor<Project>(sortBy: [SortDescriptor(\.name)])
-        let localProjects = try modelContext.fetch(descriptor)
-        let localByName = Dictionary(uniqueKeysWithValues: localProjects.map { ($0.name, $0) })
-        let componentsByCode = Dictionary(uniqueKeysWithValues: components.map { ($0.lcscCode.uppercased(), $0) })
-
-        var toPush: [ProjectRecord] = []
+        var pushed = 0
         var pulled = 0
         var unchanged = 0
 
         for (name, local) in localByName {
-            let localRecord = local.toRecord()
             if let remote = remoteByName[name] {
                 let localDate = local.updatedAt
                 let remoteDate = SyncDateParser.parse(remote.updatedAt)
                 if localDate > remoteDate.addingTimeInterval(1) {
-                    toPush.append(localRecord)
+                    pushed += 1
                 } else if remoteDate > localDate.addingTimeInterval(1) {
                     try applyRecord(remote, to: local, componentsByCode: componentsByCode)
                     pulled += 1
@@ -242,7 +216,7 @@ final class ProjectStore {
                     unchanged += 1
                 }
             } else {
-                toPush.append(localRecord)
+                pushed += 1
             }
         }
 
@@ -253,29 +227,11 @@ final class ProjectStore {
             pulled += 1
         }
 
-        let pushed = toPush.isEmpty ? 0 : try await RemoteAPIClient.pushProjects(toPush, config: config)
         try modelContext.save()
 
         let result = SyncBidirectionalResult(pushed: pushed, pulled: pulled, unchanged: unchanged)
         statusMessage = result.summary
         return result
-    }
-
-    private func upsert(records: [ProjectRecord], components: [Component]) throws {
-        let componentsByCode = Dictionary(uniqueKeysWithValues: components.map { ($0.lcscCode.uppercased(), $0) })
-        for record in records {
-            let descriptor = FetchDescriptor<Project>(
-                predicate: #Predicate { $0.name == record.name }
-            )
-            if let existing = try modelContext.fetch(descriptor).first {
-                try applyRecord(record, to: existing, componentsByCode: componentsByCode)
-            } else {
-                let project = Project(name: record.name, projectDescription: record.description)
-                modelContext.insert(project)
-                try applyRecord(record, to: project, componentsByCode: componentsByCode)
-            }
-        }
-        try modelContext.save()
     }
 
     private func applyRecord(
@@ -312,7 +268,7 @@ enum BOMImportError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .emptyProjectName: "Il nome del progetto non può essere vuoto."
+        case .emptyProjectName: String(localized: "Il nome del progetto non può essere vuoto.")
         }
     }
 }

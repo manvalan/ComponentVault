@@ -7,8 +7,6 @@ struct BOMLineCost: Identifiable {
     let unitPrice: Double?
     let lineTotal: Double?
     let currency: String?
-    let hasDigiKeyData: Bool
-    let digikeyURL: String?
     let isObsolete: Bool
 }
 
@@ -25,10 +23,11 @@ struct BOMCostSummary {
     }
 }
 
+/// Costo della BOM con i prezzi LCSC (scaglione in base alla quantità richiesta).
 enum BOMPricingService {
-    static func digikeyCostSummary(for project: Project) -> BOMCostSummary {
+    static func costSummary(for project: Project) -> BOMCostSummary {
         let lines = project.items.map { lineCost(for: $0) }
-        let priced = lines.filter(\.hasDigiKeyData)
+        let priced = lines.filter { $0.unitPrice != nil }
         let currency = priced.compactMap(\.currency).first
         let total = priced.compactMap(\.lineTotal).reduce(0, +)
 
@@ -43,51 +42,23 @@ enum BOMPricingService {
 
     static func lineCost(for item: ProjectItem) -> BOMLineCost {
         guard let component = item.component else {
-            return BOMLineCost(
-                item: item,
-                unitPrice: nil,
-                lineTotal: nil,
-                currency: nil,
-                hasDigiKeyData: false,
-                digikeyURL: nil,
-                isObsolete: false
-            )
+            return BOMLineCost(item: item, unitPrice: nil, lineTotal: nil, currency: nil, isObsolete: false)
         }
 
         component.migrateLegacySnapshotsIfNeeded()
         let qty = max(item.requiredQuantity, 1)
-        let snapshot = component.digikeySnapshot
-        let unitPrice = snapshot?.unitPrice(for: qty) ?? component.digikeyUnitPriceForInventory
+        let snapshot = component.lcscSnapshot
+        let unitPrice = snapshot?.unitPrice(for: qty) ?? component.price
         let currency = snapshot?.currency ?? component.currency
-        let lineTotal = unitPrice.map { $0 * Double(item.requiredQuantity) }
-        let status = snapshot?.productStatus ?? component.digikeyProductStatus ?? ""
+        let status = snapshot?.productStatus ?? ""
 
         return BOMLineCost(
             item: item,
             unitPrice: unitPrice,
-            lineTotal: lineTotal,
+            lineTotal: unitPrice.map { $0 * Double(item.requiredQuantity) },
             currency: currency,
-            hasDigiKeyData: unitPrice != nil,
-            digikeyURL: snapshot?.productURL ?? component.supplierProductURL,
             isObsolete: isObsoleteStatus(status)
         )
-    }
-
-    static func reorderSuggestion(for component: Component) -> String? {
-        component.migrateLegacySnapshotsIfNeeded()
-        guard component.isLowStock, let snapshot = component.digikeySnapshot else { return nil }
-        guard let stock = snapshot.supplierStock, stock > 0 else { return nil }
-
-        let targetQty = max(component.minQuantity, 1)
-        let price = snapshot.unitPrice(for: targetQty) ?? snapshot.price
-        let priceText: String
-        if let price, let currency = snapshot.currency {
-            priceText = String(format: "%.3f %@", price, currency)
-        } else {
-            priceText = "prezzo N/D"
-        }
-
-        return "DigiKey: \(stock) pz · \(priceText)"
     }
 
     static func isObsoleteStatus(_ status: String) -> Bool {

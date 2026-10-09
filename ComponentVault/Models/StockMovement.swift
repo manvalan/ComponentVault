@@ -9,10 +9,10 @@ enum StockMovementReason: String, Codable, CaseIterable {
 
     var label: String {
         switch self {
-        case .manual: "Manuale"
-        case .project: "Progetto"
-        case .importAction: "Import"
-        case .correction: "Correzione"
+        case .manual: String(localized: "Manuale")
+        case .project: String(localized: "Progetto")
+        case .importAction: String(localized: "Import")
+        case .correction: String(localized: "Correzione")
         }
     }
 }

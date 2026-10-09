@@ -11,7 +11,7 @@ enum DataSource: String, Codable, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .manual: "Manuale"
+        case .manual: String(localized: "Manuale")
         case .lcsc: "LCSC"
         case .digikey: "DigiKey"
         case .dual: "LCSC + DigiKey"
@@ -50,6 +50,9 @@ final class Component {
     var digikeyLastFetched: Date?
     var lcscSnapshotJSON: String
     var digikeySnapshotJSON: String
+    /// Dove sta in magazzino: dispensario/cassettiera e numero del cassetto (schema v4).
+    var storageLocation: String? = nil
+    var storageSlot: String? = nil
 
     @Relationship(deleteRule: .cascade, inverse: \ComponentParameter.component)
     var parameters: [ComponentParameter]
@@ -128,6 +131,14 @@ final class Component {
 
     var source: DataSource {
         DataSource(rawValue: dataSource) ?? .manual
+    }
+
+    /// "A · 12", "A", "12" oppure nil se la posizione non è indicata.
+    var storageLabel: String? {
+        let parts = [storageLocation, storageSlot]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     var displayTitle: String {
@@ -209,15 +220,6 @@ final class Component {
             || (!priceBreaksJSON.isEmpty && priceBreaksJSON != "[]")
     }
 
-    var supplierComparison: SupplierComparison? {
-        guard hasLCSCSnapshot, hasDigiKeySnapshot else { return nil }
-        return SupplierComparisonBuilder.compare(
-            quantity: quantity,
-            lcsc: lcscSnapshot,
-            digikey: digikeySnapshot
-        )
-    }
-
     var categoryRoot: String {
         CategoryNormalizer.englishRoot(from: category)
     }
@@ -267,6 +269,8 @@ final class Component {
     }
 
     func apply(_ record: ComponentRecord, preserveQuantity: Bool = true) {
+        if let location = record.storageLocation { storageLocation = location }
+        if let slot = record.storageSlot { storageSlot = slot }
         switch record.dataSource {
         case .lcsc:
             applyLCSC(record, preserveQuantity: preserveQuantity)
@@ -366,22 +370,7 @@ final class Component {
             dataSource = DataSource.lcsc.rawValue
         }
 
-        if let comparison = supplierComparison {
-            switch comparison.cheaper {
-            case .lcsc:
-                price = comparison.lcscUnitPrice
-                currency = comparison.lcscCurrency
-                supplierStock = lcscSnapshot?.supplierStock
-            case .digikey:
-                price = comparison.digikeyUnitPrice
-                currency = comparison.digikeyCurrency
-                supplierStock = digikeySnapshot?.supplierStock
-            case nil:
-                price = comparison.lcscUnitPrice ?? comparison.digikeyUnitPrice
-                currency = comparison.lcscCurrency ?? comparison.digikeyCurrency
-                supplierStock = lcscSnapshot?.supplierStock ?? digikeySnapshot?.supplierStock
-            }
-        } else if let lcsc = lcscSnapshot {
+        if let lcsc = lcscSnapshot {
             price = lcsc.unitPrice(for: max(quantity, 1)) ?? lcsc.price
             currency = lcsc.currency
             supplierStock = lcsc.supplierStock
@@ -476,7 +465,9 @@ final class Component {
             digikeyProductStatus: digikeyProductStatus,
             digikeyLastFetched: digikeyLastFetched.map { ISO8601DateFormatter().string(from: $0) },
             lcscSnapshot: lcscSnapshot,
-            digikeySnapshot: digikeySnapshot
+            digikeySnapshot: digikeySnapshot,
+            storageLocation: storageLocation,
+            storageSlot: storageSlot
         )
     }
 }

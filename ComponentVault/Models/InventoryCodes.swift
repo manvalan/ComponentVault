@@ -1,30 +1,5 @@
 import Foundation
 
-struct DigiKeyCrossReference: Identifiable, Sendable {
-    var id: String { digikeyPartNumber.isEmpty ? mpn : digikeyPartNumber }
-
-    let digikeyPartNumber: String
-    let mpn: String
-    let description: String
-    let manufacturer: String
-    let productURL: String?
-    let unitPrice: Double?
-    let currency: String?
-    let stock: Int?
-    let record: ComponentRecord?
-}
-
-struct DigiKeyAlternatePackage: Identifiable, Sendable {
-    var id: String { digikeyPartNumber }
-
-    let digikeyPartNumber: String
-    let mpn: String
-    let description: String
-    let packaging: String
-    let unitPrice: Double?
-    let stock: Int?
-}
-
 /// Codice inventario interno ComponentVault quando non esiste un codice LCSC (Cxxxxx).
 /// Prefisso `CV-` — chiaramente distinto dai codici LCSC.
 enum InternalComponentCode {
@@ -66,18 +41,8 @@ enum InternalComponentCode {
         return prefix + String(body.prefix(40))
     }
 
-    /// Placeholder per ricerche catalogo DigiKey (non va in inventario).
+    /// Placeholder per ricerche catalogo (non va in inventario).
     static let catalogSearchPlaceholder = "CV-CATALOG-SEARCH"
-}
-
-enum DigiKeySyntheticCode {
-    static func make(from digikeyPartNumber: String) -> String {
-        InternalComponentCode.make(from: digikeyPartNumber)
-    }
-
-    static func isDigiKeyOnly(_ code: String) -> Bool {
-        InternalComponentCode.isInternal(code) && !LCSCCode.isValid(code)
-    }
 }
 
 enum LCSCCode {

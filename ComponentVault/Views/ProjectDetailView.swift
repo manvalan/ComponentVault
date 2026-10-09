@@ -13,11 +13,9 @@ struct ProjectDetailView: View {
     @State private var showAddComponent = false
     @State private var showImportBOM = false
     @State private var showExport = false
-    @State private var showDigiKeyExport = false
     @State private var showEasyEDAExport = false
     @State private var showEasyEDAMissingExport = false
     @State private var exportDocument = CSVDocument()
-    @State private var digikeyExportDocument = CSVDocument()
     @State private var easyEDAExportDocument = CSVDocument()
     @State private var easyEDAMissingExportDocument = CSVDocument()
     @State private var importResult: BOMImportResult?
@@ -27,17 +25,13 @@ struct ProjectDetailView: View {
     @State private var selectedLCSC = ""
     @State private var addQuantity = 1
     @State private var addDesignator = ""
-    @State private var substituteItem: ProjectItem?
-    @State private var substitutes: [DigiKeyCrossReference] = []
-    @State private var isLoadingSubstitutes = false
-    @State private var substituteError: String?
     @State private var showKiCadCheck = false
     @State private var showKiCadFetch = false
     @State private var focus: BOMFocus?
     @State private var library = KiCadLibraryStore.shared
 
     private var bomSummary: BOMCostSummary {
-        BOMPricingService.digikeyCostSummary(for: project)
+        BOMPricingService.costSummary(for: project)
     }
 
     private var obsoleteCount: Int {
@@ -126,14 +120,6 @@ struct ProjectDetailView: View {
                             } label: {
                                 Label("Elimina", systemImage: "trash")
                             }
-                            if isObsolete(item) {
-                                Button {
-                                    Task { await loadSubstitutes(for: item) }
-                                } label: {
-                                    Label("Sostituti", systemImage: "arrow.triangle.swap")
-                                }
-                                .tint(.indigo)
-                            }
                         }
                         #endif
                 }
@@ -186,10 +172,6 @@ struct ProjectDetailView: View {
                         }
                         .disabled(easyEDAReadyCount == 0)
                         Button("Da ordinare (mancanti stock)") { exportMissingStock() }
-                        Button("BOM DigiKey (costi)") {
-                            digikeyExportDocument = CSVDocument(text: ExportService.projectBOMDigiKeyCSV(project: project))
-                            showDigiKeyExport = true
-                        }
                     } label: {
                         Label("Esporta", systemImage: "square.and.arrow.up")
                     }
@@ -229,10 +211,7 @@ struct ProjectDetailView: View {
             ProjectKiCadCheckView(project: project)
         }
         .sheet(isPresented: $showKiCadFetch) {
-            KiCadFetchView(items: kicadMissingItems, title: "Scarica in KiCad")
-        }
-        .sheet(item: $substituteItem) { item in
-            substituteSheet(for: item)
+            KiCadFetchView(items: kicadMissingItems, title: String(localized: "Scarica in KiCad"))
         }
         .fileImporter(
             isPresented: $showImportBOM,
@@ -246,12 +225,6 @@ struct ProjectDetailView: View {
             document: exportDocument,
             contentType: .commaSeparatedText,
             defaultFilename: "\(project.name)-BOM.csv"
-        ) { _ in }
-        .fileExporter(
-            isPresented: $showDigiKeyExport,
-            document: digikeyExportDocument,
-            contentType: .commaSeparatedText,
-            defaultFilename: "\(project.name)-BOM-DigiKey.csv"
         ) { _ in }
         .fileExporter(
             isPresented: $showEasyEDAExport,
@@ -288,94 +261,13 @@ struct ProjectDetailView: View {
         }
     }
 
-    private func loadSubstitutes(for item: ProjectItem) async {
-        guard let provider = DigiKeyProvider.configured() else {
-            substituteError = "DigiKey non configurato."
-            substituteItem = item
-            return
-        }
-
-        let partNumber = item.component?.digikeyPartNumber
-            ?? item.component?.digikeySnapshot?.digikeyPartNumber
-            ?? item.component?.mpn
-            ?? ""
-
-        guard !partNumber.isEmpty else {
-            substituteError = "Nessun MPN o codice DigiKey per cercare sostituti."
-            substituteItem = item
-            return
-        }
-
-        isLoadingSubstitutes = true
-        substituteItem = item
-        substituteError = nil
-        defer { isLoadingSubstitutes = false }
-
-        do {
-            substitutes = try await provider.fetchSubstitutions(
-                partNumber: partNumber,
-                referenceMPN: item.component?.mpn ?? partNumber
-            )
-        } catch {
-            substituteError = error.localizedDescription
-            substitutes = []
-        }
-    }
-
-    private func substituteSheet(for item: ProjectItem) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Sostituti DigiKey — \(item.designator)")
-                .font(.headline)
-
-            if let component = item.component {
-                Text("\(component.mpn) · \(component.lcscCode)")
-                    .font(.caption.monospaced())
-                    .foregroundStyle(.secondary)
-            }
-
-            if isLoadingSubstitutes {
-                ProgressView("Ricerca sostituti…")
-            } else if let substituteError {
-                Text(substituteError)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-            } else if substitutes.isEmpty {
-                ContentUnavailableView("Nessun sostituto", systemImage: "arrow.triangle.swap")
-            } else {
-                List(substitutes) { sub in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(sub.digikeyPartNumber.isEmpty ? sub.mpn : sub.digikeyPartNumber)
-                            .font(.headline.monospaced())
-                        Text(sub.description)
-                            .font(.caption)
-                            .lineLimit(2)
-                        if let stock = sub.stock {
-                            Text("Stock \(stock)")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 2)
-                }
-                .frame(minHeight: 200)
-            }
-
-            HStack {
-                Spacer()
-                Button("Chiudi") { substituteItem = nil }
-            }
-        }
-        .padding(20)
-        .frame(width: 480, height: 420)
-    }
-
     private func resolveLCSCForEasyEDA() async {
         guard let store else { return }
         isResolvingLCSC = true
         defer { isResolvingLCSC = false }
         do {
             let result = try await store.resolveLCSCForProject(project)
-            lcscResolveMessage = "Trovati \(result.resolved) codici LCSC.\nAncora senza C: \(result.stillMissing)."
+            lcscResolveMessage = String(localized: "Trovati \(result.resolved) codici LCSC.\nAncora senza C: \(result.stillMissing).")
         } catch {
             lcscResolveMessage = error.localizedDescription
         }
@@ -467,23 +359,27 @@ struct ProjectDetailView: View {
         let stockMissing = project.items.filter { !$0.isAvailable && $0.component != nil }.count
         if project.items.isEmpty {
             EmptyView()
-        } else if kicadMissing > 0 && SyncSettings.isConfigured {
+        } else if kicadMissing > 0 && KiCadQueue.isAvailable {
             PrimaryActionBar(
-                title: "Scarica \(kicadMissing) \(kicadMissing == 1 ? "componente" : "componenti") in KiCad",
+                title: kicadMissing == 1
+                    ? String(localized: "Scarica 1 componente in KiCad")
+                    : String(localized: "Scarica \(kicadMissing) componenti in KiCad"),
                 systemImage: "square.and.arrow.down.on.square",
-                subtitle: library.index == nil ? "Indice libreria non ancora disponibile" : nil
+                subtitle: library.index == nil ? String(localized: "Indice libreria non ancora disponibile") : nil
             ) { showKiCadFetch = true }
         } else if stockMissing > 0 {
             PrimaryActionBar(
-                title: "Ordina \(stockMissing) \(stockMissing == 1 ? "componente" : "componenti")",
+                title: stockMissing == 1
+                    ? String(localized: "Ordina 1 componente")
+                    : String(localized: "Ordina \(stockMissing) componenti"),
                 systemImage: "cart",
-                subtitle: "Esporta la lista per JLC / LCSC"
+                subtitle: String(localized: "Esporta la lista per JLC / LCSC")
             ) { exportMissingStock() }
         } else {
             PrimaryActionBar(
-                title: "Riserva stock",
+                title: String(localized: "Riserva stock"),
                 systemImage: "checkmark.circle",
-                subtitle: "Tutto disponibile: scala le quantità dal magazzino"
+                subtitle: String(localized: "Tutto disponibile: scala le quantità dal magazzino")
             ) { reserveStock() }
         }
     }
@@ -502,13 +398,6 @@ struct ProjectDetailView: View {
                 PlatformPasteboard.copy(mpn)
             } label: {
                 Label("Copia MPN", systemImage: "doc.on.doc")
-            }
-        }
-        if isObsolete(item) {
-            Button {
-                Task { await loadSubstitutes(for: item) }
-            } label: {
-                Label("Cerca sostituti", systemImage: "arrow.triangle.swap")
             }
         }
         Divider()
@@ -629,8 +518,8 @@ struct StatusBadge: View {
 
     private var label: String {
         if item.isAvailable { return "OK" }
-        if item.isLowStock { return "Bassa" }
-        return "Manca"
+        if item.isLowStock { return String(localized: "Bassa") }
+        return String(localized: "Manca")
     }
 
     private var color: Color {

@@ -1,130 +1,107 @@
 # ComponentVault
 
-App macOS per gestire l'archivio personale di componenti elettronici, con schede complete arricchite da LCSC e architettura pronta per DigiKey, iPad e API su michelebigi.it.
+App per iPad e Mac per l'archivio personale di componenti elettronici:
+- schede arricchite da LCSC;
+- magazzino con dispensari e cassetti;
+- progetti BOM;
+- carico da etichetta con la fotocamera;
+- integrazione con la tua libreria KiCad.
 
-## Funzionalità (v0.2)
+Nessun server e nessun account. Ogni dispositivo ha il proprio database locale (SwiftData/SQLite); i dispositivi condividono **una sola cartella**, a scelta (ad esempio in iCloud Drive).
 
-- Import CSV + JSON LCSC con bootstrap automatico
-- Schede componente complete (immagini, datasheet, parametri)
-- **Gestione stock** con storico movimenti e soglia minima
-- **Tag e note** personali per componente
-- **Filtri avanzati** per categoria, footprint, brand, tag, scorte
-- **Progetti BOM** con verifica disponibilità e riserva stock
-- **Alert scorte** (esauriti / sotto soglia)
-- **Import BOM CSV** in progetti (designator + LCSC + quantità)
+## Funzionalità (v1.0)
+
+- **Inventario** con stock, storico movimenti, soglie, tag e note
+- **Posizione in magazzino**: dispensario e numero del cassetto, entrambi ricercabili
+- **Carico da etichetta**: fotocamera (iPad) oppure lettore USB o codice digitato (Mac). Riconosce:
+  - il QR delle buste LCSC/JLCPCB (`{pc:C25804,pm:…,qty:100}`);
+  - il DataMatrix delle etichette dei distributori (ANSI MH10.8.2: `1P` MPN, `Q` quantità, `1V` produttore);
+  - i codici LCSC `Cxxxxx`.
+- **Progetti BOM** a checklist (magazzino, KiCad, prezzi LCSC), con import BOM EasyEDA/JLC
+- **Libreria KiCad**: verifica la BOM sulla tua libreria e chiede i componenti mancanti al Mac che ha KiCad
+- **Ricerca** nei cataloghi LCSC ed EasyEDA, con ricerca di equivalenti
+- **Italiano e inglese** (String Catalog `Localizable.xcstrings`); le altre lingue usano l'inglese
 
 ## Requisiti
 
-- macOS 14.0+
-- Xcode 15+
+- iPadOS 17 / macOS 14 o successivi
+- Xcode 16 o successivo
+
+## La cartella
+
+In Impostazioni → **Cartella** scegli la stessa cartella su tutti i dispositivi. Senza cartella tutto resta sul dispositivo. L'app ricorda la cartella con un bookmark, quindi funziona anche nella sandbox dell'App Store.
+
+```
+<cartella>/componentvault_config.yml      configurazione, compreso il percorso della libreria KiCad
+<cartella>/sync/components.json           inventario da scambiare
+<cartella>/sync/projects.json             progetti
+<cartella>/kicad/jobs/<uuid>/request.json richiesta di componenti KiCad (scritta dall'app)
+<cartella>/kicad/jobs/<uuid>/status.json  esito (scritto dal worker sul Mac)
+<cartella>/kicad/jobs/<uuid>/*.zip|*.png  file KiCad e render 3D
+<cartella>/kicad/library_index.json       indice della libreria KiCad
+<cartella>/kicad/worker.json              "Mac con KiCad attivo"
+<cartella>/json_full_data/, *.csv         archivio LCSC per il primo avvio (opzionale)
+```
+
+- **Configurazione**: un solo file nella cartella, uguale per tutti i dispositivi. Ogni modifica nelle Impostazioni si salva da sola.
+- **Libreria KiCad**: il percorso si imposta **dal Mac** (Impostazioni → KiCad → Libreria); l'iPad lo legge dal file di configurazione.
+- **Scambio dati**: "Sincronizza ora", all'avvio o a intervalli. Inventario e progetti si fondono e vince la modifica più recente.
+- **Worker KiCad**: sul Mac che ha la libreria, `scripts/fetch_worker.py` legge le richieste dalla stessa cartella:
+
+  ```bash
+  # credentials.json della libreria: "componentvault": {"shared_dir": "~/Library/Mobile Documents/com~apple~CloudDocs/ComponentVault"}
+  python3 ~/Development/mikylab_kikad_library/scripts/fetch_worker.py
+  ```
+
+  Le credenziali SnapEDA e UltraLibrarian restano nel `credentials.json` del Mac e non entrano mai nella cartella.
 
 ## Avvio rapido
 
-1. Apri il progetto in Xcode:
+```bash
+open ComponentVault.xcodeproj   # Build & Run (⌘R)
+```
 
-   ```bash
-   open ~/Documents/Develop/ComponentVault/ComponentVault.xcodeproj
-   ```
+Al primo avvio l'app procede così:
+1. Se la cartella contiene già `sync/components.json`, importa l'inventario degli altri dispositivi.
+2. Altrimenti crea il database da `json_full_data/`, `bom_riepilogo.csv` o `Componenti Elettronici.csv` nella cartella dati.
+3. In alternativa puoi importare un CSV dal menu.
 
-2. Build & Run (`⌘R`)
-
-3. **All'avvio l'app crea automaticamente il database** importando da:
-   ```
-   /Users/michelebigi/LCSC/json_full_data/   ← schede complete LCSC (priorità)
-   /Users/michelebigi/LCSC/bom_riepilogo.csv
-   /Users/michelebigi/LCSC/Componenti Elettronici.csv
-   ```
-
-   Se la cartella `json_full_data` non esiste, generala con:
-
-   ```bash
-   python3 ~/Documents/Develop/ComponentVault/Tools/lcsc_enrich.py \
-     --csv "/Users/michelebigi/LCSC/Componenti Elettronici.csv"
-   ```
-
-4. Dovresti vedere **63 componenti** con schede complete (immagini, datasheet, parametri)
-
-## Arricchimento batch (Python)
-
-Per pre-generare JSON e CSV offline (utile prima del deploy server):
+Per generare l'archivio LCSC offline:
 
 ```bash
 pip3 install beautifulsoup4 requests
-python3 ~/Documents/Develop/ComponentVault/Tools/lcsc_enrich.py \
-  --csv "/Users/michelebigi/LCSC/Componenti Elettronici.csv"
+python3 Tools/lcsc_enrich.py --csv "<cartella>/Componenti Elettronici.csv"
 ```
-
-Output:
-- `/Users/michelebigi/LCSC/json_full_data/{LCSC}.json`
-- `/Users/michelebigi/LCSC/bom_riepilogo.csv`
 
 ## Architettura
 
 ```
 ComponentVault/
-├── Models/
-│   ├── Component.swift          # SwiftData (persistenza locale)
-│   ├── ComponentRecord.swift    # DTO condiviso (app ↔ API ↔ script Python)
-│   └── ComponentParameter.swift
+├── App/            avvio, percorsi (AppPaths: locale / cartella)
+├── Models/         SwiftData (Component, Project, StockMovement…) e DTO (ComponentRecord)
 ├── Services/
-│   ├── ComponentDataProvider.swift  # Protocollo provider
-│   ├── LCSCProvider.swift           # Fetch live da lcsc.com
-│   ├── LCSCParser.swift             # Parser HTML (JSON-LD + __NEXT_DATA__)
-│   ├── CSVImporter.swift
-│   └── ComponentStore.swift
-└── Views/
-    ├── ContentView.swift            # Lista + ricerca
-    ├── ComponentDetailView.swift    # Scheda completa
-    └── SettingsView.swift
+│   ├── SharedFolder.swift      bookmark della cartella, file coordinati (iCloud)
+│   ├── AppConfig.swift         configurazione YAML (nella cartella)
+│   ├── FolderSync.swift        scambio di inventario e progetti tramite la cartella
+│   ├── KiCadQueue.swift        richieste al worker KiCad sul Mac (file)
+│   ├── KiCadLibraryIndex.swift indice della libreria KiCad, verifica della BOM offline
+│   ├── LabelParser.swift       etichette LCSC e dei distributori
+│   ├── ComponentStore.swift    inventario, carico, arricchimento LCSC
+│   └── LCSC*, EasyEDA*         fornitori
+├── Views/          SwiftUI (iPad + Mac)
+├── Localizable.xcstrings      italiano (sorgente) e inglese
+└── PrivacyInfo.xcprivacy      manifest privacy App Store
+Web/                pagine statiche: privacy, supporto
+AppStore/           testi e checklist per la pubblicazione
 ```
 
-### Schema `ComponentRecord` (JSON)
-
-```json
-{
-  "lcscCode": "C12345",
-  "mpn": "STM32F407VGT6",
-  "name": "ST STM32F407VGT6",
-  "description": "...",
-  "footprint": "LQFP-100(14x14)",
-  "quantity": 2,
-  "category": "Embedded Processors & Controllers/Microcontrollers",
-  "value": "168MHz",
-  "brand": "ST",
-  "datasheetURL": "https://datasheet.lcsc.com/...",
-  "imageURLs": ["https://assets.lcsc.com/..."],
-  "price": 5.357,
-  "currency": "USD",
-  "supplierStock": 67,
-  "dataSource": "lcsc",
-  "parameters": { "Package": "LQFP-100(14x14)", "CPU Core": "ARM Cortex-M4" }
-}
-```
-
-## Codici inventario vs LCSC
+## Codici inventario e LCSC
 
 | Codice | Uso |
 |--------|-----|
 | **CV-*** | Codice inventario ComponentVault (chiave univoca) |
-| **Cxxxxx** (LCSC) | Codice fornitore LCSC — visibile accanto al CV, usato in EasyEDA |
-| **DigiKey P/N** | Part number DigiKey — sempre visibile quando disponibile |
+| **Cxxxxx** (LCSC) | Codice fornitore LCSC, mostrato accanto al CV e usato in EasyEDA |
 
-Quando importi un componente con LCSC, l'app salva **CV-*** come ID inventario e **Cxxxxx** in un campo separato. I tre codici compaiono in lista e scheda dettaglio.
+## Pubblicazione
 
-## Roadmap
-
-| Fase | Obiettivo |
-|------|-----------|
-| **v0.1** | App macOS, import CSV, LCSC live ✓ |
-| **v0.2** | Stock, progetti BOM, filtri, export, alert ✓ |
-| **v0.3** | API REST + sync componenti ✓ (deploy server) |
-| **v0.4** | DigiKey OAuth2 + sync progetti ✓ (deploy server v0.4) |
-| **v1.0** | App iPad ✓ (validazione device) |
-
-## Note LCSC
-
-I dati sono estratti da due blocchi HTML:
-- `<script type="application/ld+json">` → MPN, parametri, immagini, datasheet, prezzo
-- `<script id="__NEXT_DATA__">` → footprint (`webData.encapStandard`), catalogo
-
-Il parser Swift replica la logica già validata nei tuoi script Python in `/Users/michelebigi/LCSC/`.
+Vedi [`AppStore/README.md`](AppStore/README.md): testi in italiano e inglese, privacy, note per la revisione e checklist.

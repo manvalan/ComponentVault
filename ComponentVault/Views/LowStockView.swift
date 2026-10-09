@@ -8,9 +8,7 @@ struct LowStockView: View {
     @State private var store: ComponentStore?
     @State private var selection: Component?
     @State private var showExport = false
-    @State private var showDigiKeyExport = false
     @State private var exportDocument = CSVDocument()
-    @State private var digikeyExportDocument = CSVDocument()
 
     @Environment(\.modelContext) private var modelContext
 
@@ -28,13 +26,13 @@ struct LowStockView: View {
             VStack(spacing: 0) {
                 if monitoredCount == 0 {
                     ContentUnavailableView(
-                        "Avvisi non attivi",
+                        String(localized: "Avvisi non attivi"),
                         systemImage: "bell.slash",
                         description: Text("Abilita «Avviso scorte basse» nella scheda di ogni componente e imposta una soglia minima.")
                     )
                 } else if lowStock.isEmpty {
                     ContentUnavailableView(
-                        "Tutto OK",
+                        String(localized: "Tutto OK"),
                         systemImage: "checkmark.circle",
                         description: Text("Nessun componente monitorato è sotto soglia o esaurito.")
                     )
@@ -53,12 +51,6 @@ struct LowStockView: View {
                     }
                     .disabled(lowStock.isEmpty)
 
-                    Button("Esporta DigiKey") {
-                        digikeyExportDocument = CSVDocument(text: ExportService.lowStockDigiKeyCSV(components: components))
-                        showDigiKeyExport = true
-                    }
-                    .disabled(lowStock.isEmpty)
-                    .platformHelp("CSV con stock, prezzo e suggerimento riordino DigiKey")
                     #endif
 
                     Spacer()
@@ -78,7 +70,7 @@ struct LowStockView: View {
                 ComponentDetailView(component: selection, store: store)
             } else {
                 ContentUnavailableView(
-                    "Alert scorte",
+                    String(localized: "Alert scorte"),
                     systemImage: "exclamationmark.triangle",
                     description: Text("Componenti con avviso attivo sotto la soglia minima.")
                 )
@@ -94,11 +86,6 @@ struct LowStockView: View {
                     Button("Esporta alert") {
                         exportDocument = CSVDocument(text: ExportService.lowStockCSV(components: components))
                         showExport = true
-                    }
-                    .disabled(lowStock.isEmpty)
-                    Button("Esporta DigiKey") {
-                        digikeyExportDocument = CSVDocument(text: ExportService.lowStockDigiKeyCSV(components: components))
-                        showDigiKeyExport = true
                     }
                     .disabled(lowStock.isEmpty)
                 } label: {
@@ -117,21 +104,11 @@ struct LowStockView: View {
             contentType: .commaSeparatedText,
             defaultFilename: "scorte-basse.csv"
         ) { _ in }
-        .fileExporter(
-            isPresented: $showDigiKeyExport,
-            document: digikeyExportDocument,
-            contentType: .commaSeparatedText,
-            defaultFilename: "scorte-basse-digikey.csv"
-        ) { _ in }
     }
 }
 
 struct LowStockRow: View {
     let component: Component
-
-    private var reorderHint: String? {
-        BOMPricingService.reorderSuggestion(for: component)
-    }
 
     var body: some View {
         HStack {
@@ -145,12 +122,6 @@ struct LowStockRow: View {
                     Text(component.displayCommonName)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                }
-                if let reorderHint {
-                    Text(reorderHint)
-                        .font(.caption2)
-                        .foregroundStyle(.purple)
                         .lineLimit(2)
                 }
             }

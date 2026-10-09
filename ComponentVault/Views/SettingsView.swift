@@ -1,51 +1,51 @@
 import SwiftUI
 import SwiftData
 
+/// Impostazioni: una cartella per tutto, la libreria KiCad (dal Mac), scambio dati e ricerca.
+/// Ogni modifica si salva da sola nel file di configurazione.
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Component.lcscCode) private var components: [Component]
+    @Query private var components: [Component]
 
     @State private var config = AppConfigIO.current()
-    @State private var configStatusMessage: String?
-
-    @State private var store: ComponentStore?
-    @State private var isBusy = false
-    @State private var statusMessage: String?
+    @State private var folderPath = SharedFolder.displayPath
+    @State private var folderReachable = SharedFolder.isReachable
+    @State private var worker: KiCadWorkerStatus?
+    @State private var showFolderPicker = false
+    @State private var showKiCadPicker = false
+    @State private var isSyncing = false
+    @State private var syncMessage: String?
     @State private var errorMessage: String?
-    @State private var showPullConfirm = false
-    @State private var digiKeyRedirectURL = ""
-    @State private var digiKeyStatusMessage: String?
-    @State private var isDigiKeyBusy = false
-    @State private var digiKeyLoginTask: Task<Void, Never>?
-    @State private var digiKeyTokenExists = FileManager.default.fileExists(
-        atPath: AppPaths.digiKeyTokenCachePath
-    )
-    @State private var digiKeyConfigNonce = 0
-    @State private var digiKeyConfigExpanded = !AppConfigIO.current().isDigiKeyConfigured
+    @State private var digiKey = DigiKeyKeychain.load() ?? DigiKeyCredentials()
+    @State private var digiKeySaved = DigiKeyKeychain.isConfigured
+    @State private var digiKeyMessage: String?
 
-    private var digiKeyConfigured: Bool {
-        _ = digiKeyConfigNonce
-        return config.isDigiKeyConfigured
-    }
-
-    private var serverConfigured: Bool {
-        config.isServerConfigured
-    }
+    private var hasFolder: Bool { !folderPath.isEmpty }
 
     var body: some View {
-        settingsScrollContent
-            .onAppear {
-                if store == nil { store = ComponentStore(modelContext: modelContext) }
-                config = AppConfigIO.reload()
-                refreshDigiKeyTokenStatus()
+        Form {
+            folderSection
+            kicadSection
+            syncSection
+            searchSection
+            digiKeySection
+        }
+        .formStyle(.grouped)
+        .navigationTitle("Impostazioni")
+        .onAppear {
+            config = AppConfigIO.reload()
+            refreshFolderStatus()
+        }
+        .task { worker = await KiCadQueue.workerStatus() }
+        .onReceive(NotificationCenter.default.publisher(for: .sharedFolderChanged)) { _ in
+            refreshFolderStatus()
+        }
+        .onChange(of: config) { _, newValue in
+            do {
+                try AppConfigIO.save(newValue)
+            } catch {
+                errorMessage = error.localizedDescription
             }
-        .alert("Scaricare dal server?", isPresented: $showPullConfirm) {
-            Button("Annulla", role: .cancel) {}
-            Button("Scarica", role: .destructive) {
-                Task { await pullFromServer() }
-            }
-        } message: {
-            Text("I dati locali verranno sovrascritti con l'inventario sul server remoto.")
         }
         .alert("Errore", isPresented: .constant(errorMessage != nil)) {
             Button("OK") { errorMessage = nil }
@@ -54,622 +54,258 @@ struct SettingsView: View {
         }
     }
 
-    private var settingsScrollContent: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.vertical, showsIndicators: true) {
-                VStack(alignment: .leading, spacing: 20) {
-                    configFileSection
-                    serverSection
-                    catalogSearchSection
-                    digiKeySection
-                        .id("digikey-settings")
-                    syncSection
-                    autoSyncSection
-                    pathsSection
-                    lcscSection
-                }
-                .padding(24)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .onAppear {
-                if !digiKeyConfigured {
-                    scrollToDigiKey(proxy)
+    // MARK: Cartella
+
+    private var folderSection: some View {
+        Section {
+            if hasFolder {
+                LabeledContent {
+                    Text(folderReachable ? "Raggiungibile" : "Non raggiungibile")
+                        .foregroundStyle(folderReachable ? .green : .orange)
+                } label: {
+                    Label {
+                        Text(folderPath)
+                            .font(.callout.monospaced())
+                            .lineLimit(2)
+                            .textSelection(.enabled)
+                    } icon: {
+                        Image(systemName: folderReachable ? "folder.fill" : "folder.badge.questionmark")
+                    }
                 }
             }
-            #if os(iOS)
-            .onReceive(NotificationCenter.default.publisher(for: .openSettings)) { _ in
-                scrollToDigiKey(proxy)
+            HStack {
+                Button(hasFolder ? "Cambia cartella…" : "Scegli cartella…") {
+                    showFolderPicker = true
+                }
+                .fileImporter(isPresented: $showFolderPicker, allowedContentTypes: [.folder]) { result in
+                    chooseFolder(result)
+                }
+                if hasFolder {
+                    Spacer()
+                    Button("Scollega", role: .destructive) { disconnectFolder() }
+                }
+            }
+        } header: {
+            Text("Cartella")
+        } footer: {
+            Text(hasFolder
+                 ? "Qui stanno la configurazione, i dati da scambiare e le richieste per KiCad. Scegli la stessa cartella su tutti i tuoi dispositivi."
+                 : "Scegli una cartella che vedono tutti i tuoi dispositivi, ad esempio in iCloud Drive. Senza cartella tutto resta su questo dispositivo.")
+        }
+    }
+
+    // MARK: KiCad
+
+    private var kicadSection: some View {
+        Section {
+            #if os(macOS)
+            LabeledContent("Libreria") {
+                HStack {
+                    Text(config.kicad.libraryPath.isEmpty ? String(localized: "Non impostata") : config.kicad.libraryPath)
+                        .font(.callout.monospaced())
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .textSelection(.enabled)
+                    Button("Scegli…") { showKiCadPicker = true }
+                        .fileImporter(isPresented: $showKiCadPicker, allowedContentTypes: [.folder]) { result in
+                            if let url = try? result.get() { config.kicad.libraryPath = url.path }
+                        }
+                }
+            }
+            #else
+            LabeledContent("Libreria") {
+                Text(config.kicad.libraryPath.isEmpty
+                     ? String(localized: "Si imposta dal Mac")
+                     : config.kicad.libraryName)
+                    .foregroundStyle(.secondary)
             }
             #endif
-        }
-        .navigationTitle("Impostazioni")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
-        #endif
-    }
-
-    private func scrollToDigiKey(_ proxy: ScrollViewProxy) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            withAnimation {
-                proxy.scrollTo("digikey-settings", anchor: .top)
+            LabeledContent("Mac con KiCad") {
+                if let worker {
+                    Text(worker.isActive
+                         ? String(localized: "Attivo (\(worker.host))")
+                         : String(localized: "Non attivo (\(worker.host))"))
+                        .foregroundStyle(worker.isActive ? .green : .secondary)
+                } else {
+                    Text("Mai visto").foregroundStyle(.secondary)
+                }
             }
+        } header: {
+            Text("KiCad")
+        } footer: {
+            #if os(macOS)
+            Text("La cartella della tua libreria KiCad. Il percorso va nel file di configurazione, così gli altri dispositivi sanno quale libreria usa questo Mac.")
+            #else
+            Text("La libreria KiCad si sceglie dall'app su Mac; l'iPad la legge dal file di configurazione nella cartella.")
+            #endif
         }
     }
 
-    private var configFileSection: some View {
-        GroupBox("Configurazione") {
-            VStack(alignment: .leading, spacing: 10) {
-                Text(AppConfigIO.configFile.path)
-                    .font(.caption.monospaced())
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
-                HStack(spacing: 10) {
-                    Button("Salva tutto") {
-                        saveFullConfig()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    Button("Ricarica") {
-                        config = AppConfigIO.reload()
-                        configStatusMessage = "Ricaricato da \(AppConfig.fileName)"
-                    }
-                    .buttonStyle(.bordered)
-                }
-                if let configStatusMessage {
-                    Text(configStatusMessage)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Text("Server, sync, percorsi, LCSC e DigiKey sono in un unico \(AppConfig.fileName). Il vecchio digikey_config.yml viene migrato automaticamente.")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    private func saveFullConfig() {
-        do {
-            _ = try AppConfigIO.save(config)
-            digiKeyConfigNonce += 1
-            configStatusMessage = "Salvato \(AppConfig.fileName)"
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    private var serverSection: some View {
-        GroupBox("Server remoto") {
-            VStack(alignment: .leading, spacing: 12) {
-                LabeledContent("URL API") {
-                    TextField("https://cvault.michelebigi.it", text: $config.server.apiBaseURL)
-                        .textFieldStyle(.roundedBorder)
-                }
-                LabeledContent("API key") {
-                    SecureField("Chiave segreta", text: $config.server.apiKey)
-                        .textFieldStyle(.roundedBorder)
-                }
-                HStack(spacing: 8) {
-                    statusPill(
-                        label: serverConfigured ? "Configurato" : "Incompleto",
-                        ok: serverConfigured
-                    )
-                    if config.sync.lastRemoteCount >= 0 {
-                        Text("Server: \(config.sync.lastRemoteCount) componenti")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Text("Locale: \(components.count)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Text("Solo chi ha la API key può leggere o modificare l'inventario.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
+    // MARK: Scambio dati
 
     private var syncSection: some View {
-        GroupBox("Sincronizzazione") {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 10) {
-                    Button("Verifica connessione") {
-                        Task { await testConnection() }
-                    }
-                    .disabled(isBusy || !serverConfigured)
-
-                    Button("Sincronizza") {
-                        Task { await syncBidirectional() }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(isBusy || !serverConfigured)
+        Section {
+            HStack {
+                Button("Sincronizza ora") {
+                    Task { await syncNow() }
                 }
-
-                HStack(spacing: 10) {
-                    Button("Carica su server") {
-                        Task { await pushToServer() }
-                    }
-                    .disabled(isBusy || !serverConfigured || components.isEmpty)
-
-                    Button("Scarica dal server") {
-                        showPullConfirm = true
-                    }
-                    .disabled(isBusy || !serverConfigured)
+                .disabled(isSyncing || !hasFolder)
+                if isSyncing {
+                    Spacer()
+                    ProgressView().controlSize(.small)
                 }
-
-                if isBusy {
-                    ProgressView("Sincronizzazione…")
-                }
-
-                if let statusMessage {
-                    Text(statusMessage)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                if !config.sync.lastSyncAt.isEmpty {
-                    Text("Ultima sync: \(config.sync.lastSyncAt)")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-
-                Text("Sincronizza = merge bidirezionale (ultima modifica vince). Carica/Scarica = sovrascrittura unidirezionale.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    private var autoSyncSection: some View {
-        GroupBox("Sync automatica") {
-            VStack(alignment: .leading, spacing: 12) {
-                Toggle("All'avvio dell'app", isOn: $config.sync.autoOnLaunch)
-                    .disabled(!serverConfigured)
-
-                LabeledContent("Intervallo in background") {
-                    Picker("Intervallo", selection: $config.sync.intervalMinutes) {
-                        Text("Disattivato").tag(0)
-                        Text("15 minuti").tag(15)
-                        Text("30 minuti").tag(30)
-                        Text("60 minuti").tag(60)
-                    }
-                    .labelsHidden()
-                    .disabled(!serverConfigured)
-                }
-
-                Text("La sync automatica aggiorna componenti e progetti con merge bidirezionale.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            Toggle("All'avvio dell'app", isOn: $config.sync.autoOnLaunch)
+                .disabled(!hasFolder)
+            Picker("Ogni", selection: $config.sync.intervalMinutes) {
+                Text("Disattivato").tag(0)
+                Text("15 minuti").tag(15)
+                Text("30 minuti").tag(30)
+                Text("60 minuti").tag(60)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    private var pathsSection: some View {
-        GroupBox("Percorsi") {
-            VStack(alignment: .leading, spacing: 10) {
-                LabeledContent("Cartella LCSC") {
-                    Text(AppPaths.lcscDataRoot.path)
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                }
-                LabeledContent("CSV inventario") {
-                    TextField("Percorso", text: $config.paths.csv)
-                        .textFieldStyle(.roundedBorder)
-                }
-                LabeledContent("Libreria KiCad") {
-                    TextField("~/Documents/KiCad/9.0/symbols/ComponentVault.kicad_sym", text: Binding(
-                        get: { KiCadExportService.personalLibraryPath },
-                        set: { KiCadExportService.personalLibraryPath = $0 }
-                    ))
-                    .textFieldStyle(.roundedBorder)
-                }
-                Text("Il simbolo viene aggiunto a questa libreria con LCSC, MPN e produttore.")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                #if os(iOS)
-                Text("Su iPad i dati arrivano principalmente dal sync remoto o da import CSV.")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                #endif
+            .disabled(!hasFolder)
+            if let syncMessage {
+                Text(syncMessage).font(.caption).foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("Scambio dati")
+        } footer: {
+            if config.sync.lastSyncAt.isEmpty {
+                Text("Inventario e progetti si fondono con quelli degli altri dispositivi: vince la modifica più recente. Locale: \(components.count) componenti.")
+            } else {
+                Text("Ultimo scambio: \(SyncDateParser.parse(config.sync.lastSyncAt).formatted(date: .abbreviated, time: .shortened)) · Locale: \(components.count) componenti.")
             }
         }
     }
 
-    private var catalogSearchSection: some View {
-        GroupBox("Ricerca catalogo fornitori") {
-            VStack(alignment: .leading, spacing: 12) {
-                Picker("Provider", selection: $config.catalog.searchProvider) {
-                    ForEach(CatalogSearchProvider.allCases) { provider in
-                        Text(provider.label).tag(provider)
-                    }
-                }
-                .pickerStyle(.segmented)
+    // MARK: Ricerca
 
-                Text(config.catalog.searchProvider.detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                if config.catalog.searchProvider == .digikey, !digiKeyConfigured {
-                    Label(
-                        "Configura e autentica DigiKey qui sotto per usare questo provider.",
-                        systemImage: "exclamationmark.triangle"
-                    )
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-                }
-
-                HStack(spacing: 10) {
-                    Button("Salva provider") {
-                        saveFullConfig()
-                    }
-                    .buttonStyle(.borderedProminent)
+    private var searchSection: some View {
+        Section {
+            Picker("Catalogo", selection: $config.catalog.searchProvider) {
+                ForEach(CatalogSearchProvider.allCases) { provider in
+                    Text(provider.label).tag(provider)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            LabeledContent("Pausa tra richieste LCSC") {
+                Stepper(value: $config.lcsc.requestDelayMs, in: 200...3000, step: 100) {
+                    Text("\(config.lcsc.requestDelayMs) ms").monospacedDigit()
+                }
+            }
+        } header: {
+            Text("Ricerca")
+        } footer: {
+            Text(config.catalog.searchProvider.detail)
         }
     }
 
-    private var lcscSection: some View {
-        GroupBox("LCSC") {
-            LabeledContent("Ritardo tra richieste (ms)") {
-                HStack {
-                    Slider(
-                        value: Binding(
-                            get: { Double(config.lcsc.requestDelayMs) },
-                            set: { config.lcsc.requestDelayMs = Int($0) }
-                        ),
-                        in: 200...3000,
-                        step: 100
-                    )
-                    Text("\(config.lcsc.requestDelayMs)")
-                        .monospacedDigit()
-                        .frame(width: 50)
-                }
-            }
-        }
-    }
+    // MARK: DigiKey (facoltativo)
 
     private var digiKeySection: some View {
-        GroupBox("DigiKey") {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 8) {
-                    statusPill(label: digiKeyConfigured ? "Config ✓" : "Config mancante", ok: digiKeyConfigured)
-                    statusPill(label: digiKeyTokenExists ? "Token ✓" : "Non autenticato", ok: digiKeyTokenExists)
+        Section {
+            DisclosureGroup {
+                TextField("Client ID", text: $digiKey.clientID)
+                    .autocorrectionDisabled()
+                SecureField("Client Secret", text: $digiKey.clientSecret)
+                SecureField("Access token", text: $digiKey.accessToken)
+                SecureField("Refresh token", text: $digiKey.refreshToken)
+                Picker("Ambiente", selection: $digiKey.environment) {
+                    Text("Production").tag(DigiKeyCredentials.Environment.production)
+                    Text("Sandbox").tag(DigiKeyCredentials.Environment.sandbox)
                 }
-
-                DisclosureGroup(
-                    isExpanded: $digiKeyConfigExpanded,
-                    content: {
-                        DigiKeyConfigEditorView(digikey: $config.digikey) {
-                            digiKeyConfigNonce += 1
-                            config = AppConfigIO.current()
-                        }
-                    },
-                    label: {
-                        Label(
-                            digiKeyConfigured ? "Modifica DigiKey" : "Configura DigiKey",
-                            systemImage: digiKeyConfigured ? "pencil" : "exclamationmark.triangle"
-                        )
-                    }
-                )
-
-                if !digiKeyConfigured {
-                    Text("Compila client_id e client_secret, poi Salva tutto o Salva nella sezione DigiKey.")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                }
-
-                if digiKeyConfigured, let dk = DigiKeyConfig.load() {
-                    Text("Ambiente: \(dk.environment.label) · \(dk.apiBaseURL)")
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                    Text("Redirect Mac: \(dk.callbackURL)")
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                    #if os(iOS)
-                    Text("Redirect iPad (portale DigiKey): \(dk.iosOAuthRedirectURI)")
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                    #endif
-                }
-
-                if digiKeyConfigured {
-                    #if os(macOS)
-                    HStack(spacing: 10) {
-                        Button("Apri login DigiKey") {
-                            digiKeyLoginTask?.cancel()
-                            digiKeyLoginTask = Task { await startDigiKeyLogin() }
-                        }
-                        .disabled(isDigiKeyBusy)
-
-                        if isDigiKeyBusy {
-                            Button("Annulla") {
-                                digiKeyLoginTask?.cancel()
-                                isDigiKeyBusy = false
-                                digiKeyStatusMessage = "Annullato."
-                            }
-                        }
-
-                        Button("Rinnova token") {
-                            Task { await refreshDigiKeyToken() }
-                        }
-                        .disabled(isDigiKeyBusy || !digiKeyTokenExists)
-                    }
-                    #else
-                    HStack(spacing: 10) {
-                        Button("Apri login DigiKey") {
-                            Task { await startDigiKeyLoginIOS() }
-                        }
-                        .disabled(isDigiKeyBusy)
-
-                        Button("Rinnova token") {
-                            Task { await refreshDigiKeyToken() }
-                        }
-                        .disabled(isDigiKeyBusy || !digiKeyTokenExists)
-                    }
-                    Text("DigiKey accetta solo redirect HTTPS. Registra nel portale l'URI sopra (es. cvault.michelebigi.it/…), non componentvault://.")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                    #endif
-
-                    DisclosureGroup("Connessione manuale (fallback)") {
-                        TextField("Incolla URL o solo il code dalla barra indirizzi", text: $digiKeyRedirectURL)
-                            .textFieldStyle(.roundedBorder)
-
-                        Button("Connetti manualmente") {
-                            Task { await connectDigiKey() }
-                        }
-                        .disabled(digiKeyRedirectURL.trimmingCharacters(in: .whitespaces).isEmpty)
-                    }
-                }
-
-                if isDigiKeyBusy {
-                    ProgressView("Autenticazione DigiKey…")
-                }
-
-                if let digiKeyStatusMessage {
-                    Text(digiKeyStatusMessage)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                #if os(macOS)
-                Text("Un clic: server HTTPS locale → login DigiKey → token salvato. Il rinnovo è automatico finché il refresh token è valido.")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                #endif
-
-                LabeledContent("Ritardo tra richieste bulk (ms)") {
+                LabeledContent("Mercato · valuta") {
                     HStack {
-                        Slider(
-                            value: Binding(
-                                get: { Double(config.digikey.requestDelayMs) },
-                                set: { config.digikey.requestDelayMs = Int($0) }
-                            ),
-                            in: 200...3000,
-                            step: 100
-                        )
-                        Text("\(config.digikey.requestDelayMs)")
-                            .monospacedDigit()
-                            .frame(width: 50)
+                        TextField("IT", text: $digiKey.market).frame(maxWidth: 50)
+                        TextField("EUR", text: $digiKey.currency).frame(maxWidth: 60)
+                    }
+                    .multilineTextAlignment(.trailing)
+                }
+                HStack {
+                    Button("Salva sul dispositivo") { saveDigiKey() }
+                        .disabled(!digiKey.isComplete)
+                    if digiKeySaved {
+                        Spacer()
+                        Button("Elimina", role: .destructive) { deleteDigiKey() }
                     }
                 }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    private func refreshDigiKeyTokenStatus() {
-        digiKeyTokenExists = FileManager.default.fileExists(atPath: AppPaths.digiKeyTokenCachePath)
-    }
-
-    #if os(macOS)
-    private func startDigiKeyLogin() async {
-        guard !Task.isCancelled else { return }
-        guard let config = DigiKeyConfig.load() else { return }
-
-        let auth = DigiKeyAuthService(config: config)
-        let loginURL = await auth.authorizationURL
-
-        guard config.supportsLocalCallbackServer else {
-            errorMessage = "callback_url senza porta. Usa es. https://localhost:8443/digikey/callback"
-            return
-        }
-
-        isDigiKeyBusy = true
-        digiKeyStatusMessage = "Avvio server OAuth su \(config.callbackURL)…"
-
-        do {
-            let code = try await DigiKeyOAuthCallbackServer.captureAuthorizationCode(
-                callbackURL: config.callbackURL
-            ) {
-                if let warmupURL = URL(string: config.callbackURL) {
-                    ExternalURLService.open(warmupURL)
-                    digiKeyStatusMessage = "Se il browser avvisa sul certificato, clicca Continua/Avanzate."
+                if let digiKeyMessage {
+                    Text(digiKeyMessage).font(.caption).foregroundStyle(.secondary)
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    guard !Task.isCancelled else { return }
-                    ExternalURLService.open(loginURL)
-                    digiKeyStatusMessage = "Login DigiKey aperto — clicca Allow."
+            } label: {
+                LabeledContent("DigiKey") {
+                    Text(digiKeySaved ? "Configurato" : "Non usato")
+                        .foregroundStyle(digiKeySaved ? .green : .secondary)
                 }
             }
-
-            guard !Task.isCancelled else { return }
-
-            digiKeyStatusMessage = "Codice ricevuto, scambio token…"
-            try await auth.exchangeAuthorizationCode(code)
-            refreshDigiKeyTokenStatus()
-            if let expiry = await auth.tokenExpiryDescription {
-                digiKeyStatusMessage = "Autenticato. Scadenza token: \(expiry)"
-            } else {
-                digiKeyStatusMessage = "Autenticato con successo."
-            }
-        } catch {
-            if !Task.isCancelled {
-                errorMessage = error.localizedDescription
-                digiKeyStatusMessage = "Auto-login fallito. Apri «Connessione manuale» e incolla l'URL dal browser."
-            }
+        } header: {
+            Text("Fornitori")
+        } footer: {
+            Text("Facoltativo. Le credenziali e i token DigiKey li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.digikey.com.")
         }
-
-        isDigiKeyBusy = false
-        digiKeyLoginTask = nil
     }
-    #endif
 
-    #if os(iOS)
-    private func startDigiKeyLoginIOS() async {
-        guard let config = DigiKeyConfig.load() else { return }
-        isDigiKeyBusy = true
-        digiKeyStatusMessage = "Apertura login DigiKey…"
-        defer { isDigiKeyBusy = false }
-
-        let auth = DigiKeyAuthService(config: config)
+    private func saveDigiKey() {
         do {
-            let code = try await DigiKeyOAuthFlow.authorize(config: config)
-            try await auth.exchangeAuthorizationCode(code, redirectURI: config.iosOAuthRedirectURI)
-            refreshDigiKeyTokenStatus()
-            if let expiry = await auth.tokenExpiryDescription {
-                digiKeyStatusMessage = "Autenticato. Scadenza token: \(expiry)"
-            } else {
-                digiKeyStatusMessage = "Autenticato con successo."
-            }
+            try DigiKeyKeychain.save(digiKey)
+            digiKeySaved = true
+            digiKeyMessage = String(localized: "Salvate nel Portachiavi di questo dispositivo.")
         } catch {
             errorMessage = error.localizedDescription
-            digiKeyStatusMessage = "Login fallito. Prova la connessione manuale."
         }
     }
-    #endif
 
-    private func connectDigiKey() async {
-        guard let config = DigiKeyConfig.load() else { return }
-        isDigiKeyBusy = true
-        defer { isDigiKeyBusy = false }
-        let auth = DigiKeyAuthService(config: config)
+    private func deleteDigiKey() {
+        DigiKeyKeychain.delete()
+        digiKey = DigiKeyCredentials()
+        digiKeySaved = false
+        digiKeyMessage = String(localized: "Credenziali DigiKey eliminate.")
+    }
+
+    // MARK: Azioni
+
+    private func refreshFolderStatus() {
+        folderPath = SharedFolder.displayPath
+        folderReachable = SharedFolder.isReachable
+    }
+
+    private func chooseFolder(_ result: Result<URL, Error>) {
         do {
-            try await auth.authenticate(withRedirectURL: digiKeyRedirectURL)
-            refreshDigiKeyTokenStatus()
-            digiKeyRedirectURL = ""
-            if let expiry = await auth.tokenExpiryDescription {
-                digiKeyStatusMessage = "Autenticato. Scadenza token: \(expiry)"
-            } else {
-                digiKeyStatusMessage = "Autenticato con successo."
+            let previous = AppConfigIO.current()
+            try SharedFolder.set(result.get())
+            // Se un altro dispositivo ha già una configurazione nella cartella, si usa quella.
+            try AppConfigIO.adoptFolder(carrying: previous)
+            config = AppConfigIO.current()
+            refreshFolderStatus()
+            Task {
+                worker = await KiCadQueue.workerStatus()
+                await KiCadLibraryStore.shared.refresh()
             }
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
-    private func refreshDigiKeyToken() async {
-        guard let config = DigiKeyConfig.load() else { return }
-        isDigiKeyBusy = true
-        defer { isDigiKeyBusy = false }
-        let auth = DigiKeyAuthService(config: config)
+    private func disconnectFolder() {
+        // La configurazione in uso resta su questo dispositivo.
+        let previous = AppConfigIO.current()
+        SharedFolder.clear()
         do {
-            try await auth.forceRefresh()
-            refreshDigiKeyTokenStatus()
-            if let expiry = await auth.tokenExpiryDescription {
-                digiKeyStatusMessage = "Token rinnovato. Scadenza: \(expiry)"
-            } else {
-                digiKeyStatusMessage = "Token rinnovato."
-            }
+            try AppConfigIO.save(previous)
         } catch {
             errorMessage = error.localizedDescription
         }
-    }
-
-    private func statusPill(label: String, ok: Bool) -> some View {
-        Text(label)
-            .font(.caption.weight(.medium))
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(ok ? Color.green.opacity(0.15) : Color.orange.opacity(0.15))
-            .clipShape(Capsule())
-    }
-
-    private func remoteConfig() throws -> RemoteAPIConfig {
-        try RemoteAPIConfig.from(
-            baseURLString: config.server.apiBaseURL,
-            apiKey: config.server.apiKey
-        )
-    }
-
-    private func markSyncSuccess(remoteCount: Int? = nil, message: String) {
-        var updated = AppConfigIO.current()
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .short
-        updated.sync.lastSyncAt = formatter.string(from: Date())
-        if let remoteCount { updated.sync.lastRemoteCount = remoteCount }
-        try? AppConfigIO.save(updated)
         config = AppConfigIO.current()
-        statusMessage = message
+        worker = nil
+        refreshFolderStatus()
     }
 
-    private func testConnection() async {
-        try? AppConfigIO.save(config)
-        isBusy = true
-        defer { isBusy = false }
+    private func syncNow() async {
+        isSyncing = true
+        defer { isSyncing = false }
         do {
-            let health = try await RemoteAPIClient.checkConnection(config: try remoteConfig())
-            markSyncSuccess(remoteCount: health.components, message: "Connessione OK")
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    private func syncBidirectional() async {
-        try? AppConfigIO.save(config)
-        isBusy = true
-        defer { isBusy = false }
-        do {
-            let message = try await SyncRunner.runFullSync(modelContext: modelContext)
-            markSyncSuccess(message: message)
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    private func pushToServer() async {
-        guard let store else { return }
-        try? AppConfigIO.save(config)
-        isBusy = true
-        defer { isBusy = false }
-        do {
-            let config = try remoteConfig()
-            let count = try await store.pushToRemote(config: config)
-            let projectStore = ProjectStore(modelContext: modelContext)
-            let projectCount = try await projectStore.pushToRemote(config: config)
-            markSyncSuccess(
-                remoteCount: count,
-                message: "Caricati \(count) componenti e \(projectCount) progetti"
-            )
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    private func pullFromServer() async {
-        guard let store else { return }
-        try? AppConfigIO.save(config)
-        isBusy = true
-        defer { isBusy = false }
-        do {
-            let config = try remoteConfig()
-            let count = try await store.pullFromRemote(config: config)
-            let projectStore = ProjectStore(modelContext: modelContext)
-            let projectCount = try await projectStore.pullFromRemote(config: config, components: components)
-            markSyncSuccess(
-                remoteCount: count,
-                message: "Scaricati \(count) componenti e \(projectCount) progetti"
-            )
+            syncMessage = try await FolderSync.run(modelContext: modelContext)
+            config.sync.lastSyncAt = AppConfigIO.current().sync.lastSyncAt
         } catch {
             errorMessage = error.localizedDescription
         }

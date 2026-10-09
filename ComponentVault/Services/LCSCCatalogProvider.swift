@@ -297,15 +297,15 @@ enum LCSCCatalogProvider {
 
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse else {
-            throw ProviderError.networkFailure("Risposta LCSC non valida")
+            throw ProviderError.networkFailure(String(localized: "Risposta LCSC non valida"))
         }
         guard http.statusCode == 200 else {
-            throw ProviderError.networkFailure("LCSC search HTTP \(http.statusCode)")
+            throw ProviderError.networkFailure(String(localized: "LCSC search HTTP \(http.statusCode)"))
         }
 
         let decoded = try JSONDecoder().decode(SearchResponse.self, from: data)
         if decoded.code != 200 {
-            throw ProviderError.networkFailure(decoded.msg ?? "LCSC search fallita")
+            throw ProviderError.networkFailure(decoded.msg ?? String(localized: "LCSC search fallita"))
         }
 
         return decoded.result ?? SearchResult(
@@ -349,15 +349,15 @@ enum LCSCCatalogProvider {
 
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse else {
-            throw ProviderError.networkFailure("Risposta LCSC non valida")
+            throw ProviderError.networkFailure(String(localized: "Risposta LCSC non valida"))
         }
         guard http.statusCode == 200 else {
-            throw ProviderError.networkFailure("LCSC product list HTTP \(http.statusCode)")
+            throw ProviderError.networkFailure(String(localized: "LCSC product list HTTP \(http.statusCode)"))
         }
 
         let decoded = try JSONDecoder().decode(ProductListResponse.self, from: data)
         if decoded.code != 200 {
-            throw ProviderError.networkFailure(decoded.msg ?? "LCSC product list fallita")
+            throw ProviderError.networkFailure(decoded.msg ?? String(localized: "LCSC product list fallita"))
         }
 
         return decoded.result?.dataList ?? []
@@ -418,14 +418,14 @@ enum LCSCCatalogProvider {
 
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-            throw ProviderError.networkFailure("Impossibile caricare homepage LCSC")
+            throw ProviderError.networkFailure(String(localized: "Impossibile caricare homepage LCSC"))
         }
         guard let html = String(data: data, encoding: .utf8) else {
             throw ProviderError.parseFailure
         }
 
         guard let key = parseEncryptPublicKey(from: html) else {
-            throw ProviderError.networkFailure("Chiave pubblica LCSC non trovata — il sito potrebbe essere cambiato")
+            throw ProviderError.networkFailure(String(localized: "Chiave pubblica LCSC non trovata — il sito potrebbe essere cambiato"))
         }
         return key
     }
@@ -586,14 +586,8 @@ enum LCSCCatalogSearchService {
             lcscStock: record.supplierStock,
             lcscURL: record.supplierProductURL
                 ?? "https://www.lcsc.com/product-detail/\(record.lcscCode).html",
-            digikeyPartNumber: nil,
-            digikeyPrice: nil,
-            digikeyCurrency: nil,
-            digikeyStock: nil,
-            digikeyURL: nil,
             inInventory: inventoryItem != nil,
             inventoryQuantity: inventoryItem?.quantity,
-            digikeyRecord: nil,
             lcscRecord: record,
             lcscSource: source
         )

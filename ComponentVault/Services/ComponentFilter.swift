@@ -8,8 +8,6 @@ struct ComponentFilter {
     var tag = "Tutti"
     var showLowStockOnly = false
     var showOutOfStockOnly = false
-    var requireDigiKeyData = false
-    var digikeyOutOfStockOnly = false
 
     func apply(to components: [Component]) -> [Component] {
         components.filter { component in
@@ -18,8 +16,7 @@ struct ComponentFilter {
             matchesFootprint(component) &&
             matchesBrand(component) &&
             matchesTag(component) &&
-            matchesStock(component) &&
-            matchesDigiKey(component)
+            matchesStock(component)
         }
     }
 
@@ -59,7 +56,8 @@ struct ComponentFilter {
             component.value,
             component.brand,
             component.category,
-            component.notes
+            component.notes,
+            component.storageLabel ?? ""
         ]
         + [component.lcscSupplierCode, component.supplierLCSCCode, component.digikeyPartNumber].compactMap { $0 }
         + component.tags
@@ -90,17 +88,4 @@ struct ComponentFilter {
         return true
     }
 
-    private func matchesDigiKey(_ component: Component) -> Bool {
-        if requireDigiKeyData && !component.hasDigiKeyEnrichment { return false }
-        if digikeyOutOfStockOnly {
-            if let stock = component.digikeySnapshot?.supplierStock {
-                return stock == 0
-            }
-            if component.source == .digikey || component.digikeyPartNumber != nil {
-                return component.supplierStock == 0
-            }
-            return false
-        }
-        return true
-    }
 }

@@ -16,6 +16,7 @@ final class AppContainer {
     }
 
     func reload() {
+        AppConfigIO.removeLegacySecrets()
         do {
             modelContainer = try Persistence.makeContainer()
             startupError = nil
@@ -71,7 +72,7 @@ struct ComponentVaultApp: App {
                     RootView()
                 } else {
                     DatabaseStartupErrorView(
-                        message: appContainer.startupError ?? "Database locale non disponibile.",
+                        message: appContainer.startupError ?? String(localized: "Database locale non disponibile."),
                         onReset: { appContainer.resetStoreAndReload() }
                     )
                 }
@@ -110,7 +111,7 @@ struct ComponentVaultApp: App {
                     .frame(minWidth: 560, idealWidth: 680, minHeight: 520, idealHeight: 760)
             } else {
                 DatabaseStartupErrorView(
-                    message: appContainer.startupError ?? "Database locale non disponibile.",
+                    message: appContainer.startupError ?? String(localized: "Database locale non disponibile."),
                     onReset: { appContainer.resetStoreAndReload() }
                 )
                 .frame(minWidth: 560, minHeight: 400)

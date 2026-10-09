@@ -38,7 +38,7 @@ struct LCSCProvider: ComponentDataProvider {
 
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse else {
-            throw ProviderError.networkFailure("Risposta non valida")
+            throw ProviderError.networkFailure(String(localized: "Risposta non valida"))
         }
         guard http.statusCode == 200 else {
             if let local = Self.loadLocalArchive(lcscCode: lcscCode) {

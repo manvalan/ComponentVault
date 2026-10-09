@@ -62,83 +62,8 @@ enum ExportService {
         EasyEDAService.projectBOMWithoutLCSC(project)
     }
 
-    static func projectBOMDigiKeyCSV(project: Project) -> String {
-        let summary = BOMPricingService.digikeyCostSummary(for: project)
-        var lines = [
-            "Designator;LCSC;MPN;DigiKey PN;Richiesti;Prezzo unit. DigiKey;Totale riga;Valuta;Link ordine;Stato;Obsoleto"
-        ]
-
-        for line in summary.lines.sorted(by: { $0.item.designator < $1.item.designator }) {
-            let item = line.item
-            let component = item.component
-            let status: String
-            if item.isAvailable {
-                status = "OK"
-            } else if item.isLowStock {
-                status = "Scorta bassa"
-            } else {
-                status = "Mancante"
-            }
-
-            let unit = line.unitPrice.map { String(format: "%.4f", $0) } ?? ""
-            let total = line.lineTotal.map { String(format: "%.2f", $0) } ?? ""
-            let digikeyPN = component?.digikeyPartNumber
-                ?? component?.digikeySnapshot?.digikeyPartNumber
-                ?? ""
-
-            lines.append(csvRow(
-                item.designator,
-                component?.supplierLCSCCode ?? component?.inventoryCode ?? "",
-                component?.mpn ?? "",
-                digikeyPN,
-                "\(item.requiredQuantity)",
-                unit,
-                total,
-                line.currency ?? "",
-                line.digikeyURL ?? "",
-                status,
-                line.isObsolete ? "Sì" : "No"
-            ))
-        }
-
-        if let total = summary.total, let currency = summary.currency {
-            lines.append("")
-            lines.append("TOTALE DigiKey;;;;\(String(format: "%.2f", total));\(currency);;;")
-        }
-
-        return lines.joined(separator: "\n")
-    }
-
     static func lowStockCSV(components: [Component]) -> String {
         inventoryCSV(components: components.filter(\.isLowStock))
-    }
-
-    static func lowStockDigiKeyCSV(components: [Component]) -> String {
-        var lines = ["LCSC;MPN;Qty;Soglia;DigiKey PN;Stock DigiKey;Prezzo DigiKey;Valuta;Suggerimento riordino"]
-        for component in components.filter(\.isLowStock).sorted(by: { $0.lcscCode < $1.lcscCode }) {
-            component.migrateLegacySnapshotsIfNeeded()
-            let snapshot = component.digikeySnapshot
-            let price = snapshot?.unitPrice(for: max(component.minQuantity, 1)) ?? snapshot?.price
-            let priceText = price.map { String(format: "%.4f", $0) } ?? ""
-            let stockText = snapshot?.supplierStock.map(String.init) ?? ""
-            let digikeyPN = snapshot?.digikeyPartNumber ?? component.digikeyPartNumber ?? ""
-            let currency = snapshot?.currency ?? component.currency ?? ""
-            let suggestion = BOMPricingService.reorderSuggestion(for: component) ?? ""
-
-            lines.append(csvRow(
-                component.inventoryCode,
-                component.supplierLCSCCode ?? "",
-                component.mpn,
-                "\(component.quantity)",
-                "\(component.minQuantity)",
-                digikeyPN,
-                stockText,
-                priceText,
-                currency,
-                suggestion
-            ))
-        }
-        return lines.joined(separator: "\n")
     }
 
     private static func csvRow(_ fields: String...) -> String {
@@ -155,30 +80,8 @@ enum ExportService {
 
 // MARK: - KiCad symbol export
 
-enum KiCadExportError: LocalizedError {
-    case duplicateSymbol(String)
-    case invalidLibraryFormat
-    case libraryPathNotConfigured
-
-    var errorDescription: String? {
-        switch self {
-        case .duplicateSymbol(let name):
-            "Il simbolo «\(name)» esiste già nella libreria KiCad."
-        case .invalidLibraryFormat:
-            "Formato libreria KiCad non riconosciuto."
-        case .libraryPathNotConfigured:
-            "Imposta il percorso della libreria KiCad personale in Impostazioni → Percorsi."
-        }
-    }
-}
-
-/// Genera simboli `.kicad_sym` e li aggiunge a una libreria personale.
+/// Genera un simbolo `.kicad_sym` generico da esportare.
 enum KiCadExportService {
-    static var personalLibraryPath: String {
-        get { UserDefaults.standard.string(forKey: "kicadPersonalLibraryPath") ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: "kicadPersonalLibraryPath") }
-    }
-
     static func symbolName(for component: Component) -> String {
         symbolName(mpn: component.mpn, lcscCode: component.supplierLCSCCode ?? component.lcscCode)
     }
@@ -252,45 +155,6 @@ enum KiCadExportService {
             lcscCode: record.lcscCode,
             datasheetURL: record.datasheetURL
         )
-    }
-
-    @discardableResult
-    static func appendToPersonalLibrary(component: Component) throws -> URL {
-        let path = personalLibraryPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !path.isEmpty else { throw KiCadExportError.libraryPathNotConfigured }
-        let url = URL(fileURLWithPath: path)
-        try appendSymbol(symbolEntry(for: component), name: symbolName(for: component), to: url)
-        return url
-    }
-
-    @discardableResult
-    static func appendToPersonalLibrary(record: ComponentRecord) throws -> URL {
-        let path = personalLibraryPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !path.isEmpty else { throw KiCadExportError.libraryPathNotConfigured }
-        let url = URL(fileURLWithPath: path)
-        try appendSymbol(symbolEntry(for: record), name: symbolName(for: record), to: url)
-        return url
-    }
-
-    static func appendSymbol(_ entry: String, name: String, to libraryURL: URL) throws {
-        if FileManager.default.fileExists(atPath: libraryURL.path) {
-            var content = try String(contentsOf: libraryURL, encoding: .utf8)
-            guard content.contains("kicad_symbol_lib") else {
-                throw KiCadExportError.invalidLibraryFormat
-            }
-            if content.contains("(symbol \"\(name)\"") {
-                throw KiCadExportError.duplicateSymbol(name)
-            }
-            guard let insertAt = content.range(of: "\n)", options: .backwards)?.lowerBound else {
-                throw KiCadExportError.invalidLibraryFormat
-            }
-            content.insert(contentsOf: "\n" + entry, at: insertAt)
-            try content.write(to: libraryURL, atomically: true, encoding: .utf8)
-        } else {
-            let parent = libraryURL.deletingLastPathComponent()
-            try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
-            try libraryFileContent(entry).write(to: libraryURL, atomically: true, encoding: .utf8)
-        }
     }
 
     private static func symbolEntry(

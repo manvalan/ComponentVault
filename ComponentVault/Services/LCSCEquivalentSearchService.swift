@@ -98,14 +98,8 @@ enum LCSCEquivalentSearchService {
             lcscCurrency: record.currency,
             lcscStock: record.supplierStock,
             lcscURL: record.supplierProductURL,
-            digikeyPartNumber: component.digikeyPartNumber,
-            digikeyPrice: component.digikeyUnitPriceForInventory,
-            digikeyCurrency: component.currency,
-            digikeyStock: component.supplierStock,
-            digikeyURL: component.digikeySnapshot?.productURL ?? component.supplierProductURL,
             inInventory: inventoryItem != nil,
             inventoryQuantity: inventoryItem?.quantity,
-            digikeyRecord: nil,
             lcscRecord: record,
             lcscSource: .live
         )

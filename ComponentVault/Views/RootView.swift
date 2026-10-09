@@ -5,8 +5,8 @@ struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Component.lcscCode) private var components: [Component]
 
-    private var autoSyncOnLaunch: Bool { SyncSettings.autoSyncOnLaunch }
-    private var autoSyncIntervalMinutes: Int { SyncSettings.autoSyncIntervalMinutes }
+    private var autoSyncOnLaunch: Bool { FolderSync.autoSyncOnLaunch }
+    private var autoSyncIntervalMinutes: Int { FolderSync.autoSyncIntervalMinutes }
 
     @State private var isBootstrapping = false
     @State private var bootstrapError: String?
@@ -30,11 +30,11 @@ struct RootView: View {
                 await runAutoSyncIfNeeded()
             }
             .task(id: autoSyncIntervalMinutes) {
-                guard autoSyncIntervalMinutes > 0, SyncSettings.isConfigured else { return }
+                guard autoSyncIntervalMinutes > 0, FolderSync.isAvailable else { return }
                 while !Task.isCancelled {
                     _ = try? await Task.sleep(for: .seconds(autoSyncIntervalMinutes * 60))
                     guard !Task.isCancelled else { return }
-                    _ = try? await SyncRunner.runFullSync(modelContext: modelContext)
+                    _ = try? await FolderSync.run(modelContext: modelContext)
                 }
             }
             .onChange(of: components.count) { _, count in
@@ -117,27 +117,19 @@ struct RootView: View {
     private func loadInventoryIfNeeded() async {
         guard components.isEmpty else { return }
 
-        #if os(iOS)
-        if !DatabaseBootstrap.isDatabaseAvailable(), SyncSettings.isConfigured {
+        // Un altro dispositivo ha già condiviso l'inventario nella cartella comune.
+        if FolderSync.isAvailable, SharedFolder.isReachable {
             isBootstrapping = true
             defer { isBootstrapping = false }
-            do {
-                _ = try await SyncRunner.runFullSync(modelContext: modelContext)
+            if (try? await FolderSync.run(modelContext: modelContext)) != nil,
+               ((try? modelContext.fetchCount(FetchDescriptor<Component>())) ?? 0) > 0 {
                 bootstrapError = nil
-                return
-            } catch {
-                bootstrapError = error.localizedDescription
                 return
             }
         }
-        #endif
 
         guard DatabaseBootstrap.isDatabaseAvailable() else {
-            #if os(iOS)
-            bootstrapError = "Nessun dato locale. Configura server e API key in Impostazioni e sincronizza, oppure importa un CSV dall'inventario."
-            #else
-            bootstrapError = "Database non trovato in \(AppPaths.lcscDataRoot.path)"
-            #endif
+            bootstrapError = String(localized: "Nessun dato locale. Scegli una cartella condivisa in Impostazioni oppure importa un CSV dell'inventario.")
             return
         }
 
@@ -154,7 +146,7 @@ struct RootView: View {
     }
 
     private func runAutoSyncIfNeeded() async {
-        guard autoSyncOnLaunch, SyncSettings.isConfigured else { return }
-        _ = try? await SyncRunner.runFullSync(modelContext: modelContext)
+        guard autoSyncOnLaunch, FolderSync.isAvailable else { return }
+        _ = try? await FolderSync.run(modelContext: modelContext)
     }
 }

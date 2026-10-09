@@ -10,8 +10,8 @@ struct ComponentDetailView: View {
 
     @State private var selectedImageIndex = 0
     @State private var isEnriching = false
+    @State private var digiKeyCandidates: [DigiKeyCandidate]?
     @State private var errorMessage: String?
-    @State private var digiKeyPicker: DigiKeyCandidatePicker?
     @State private var mpnLookupResults: [CatalogMatchCard] = []
     @State private var showMPNLookup = false
     @State private var mpnLookupTitle = ""
@@ -37,8 +37,6 @@ struct ComponentDetailView: View {
                     inventoryCard
                 }
                 descriptionSection
-                supplierComparisonSection
-                digikeyCommercialSection
                 tagsSection
                 parametersSection
                 stockHistorySection
@@ -66,13 +64,6 @@ struct ComponentDetailView: View {
         .toolbar {
             ToolbarItemGroup {
                 Button {
-                    Task { await enrichBoth() }
-                } label: {
-                    Label("Entrambi", systemImage: "arrow.triangle.2.circlepath")
-                }
-                .disabled(isEnriching || store == nil)
-
-                Button {
                     Task { await enrich(source: .lcsc) }
                 } label: {
                     if isEnriching {
@@ -83,13 +74,15 @@ struct ComponentDetailView: View {
                 }
                 .disabled(isEnriching || store == nil)
 
-                Button {
-                    Task { await enrich(source: .digikey) }
-                } label: {
-                    Label("DigiKey", systemImage: "dollarsign.circle")
+                // Solo se l'utente ha inserito le proprie credenziali DigiKey su questo dispositivo.
+                if DigiKeyKeychain.isConfigured {
+                    Button {
+                        Task { await enrichFromDigiKey() }
+                    } label: {
+                        Label("DigiKey", systemImage: "dollarsign.circle")
+                    }
+                    .disabled(isEnriching || store == nil || component.mpn.isEmpty)
                 }
-                .disabled(isEnriching || store == nil || component.mpn.isEmpty)
-                .platformHelp(component.mpn.isEmpty ? "Serve un MPN" : "Arricchisci da DigiKey (richiede token in Impostazioni)")
 
                 if !component.mpn.isEmpty {
                     Button {
@@ -120,12 +113,6 @@ struct ComponentDetailView: View {
                     }
                 }
 
-                if let digiKeyURL = component.digikeyProductURL {
-                    Link(destination: digiKeyURL) {
-                        Label("Apri su DigiKey", systemImage: "cart")
-                    }
-                }
-
                 Menu {
                     Button {
                         kicadExportDocument = CSVDocument(
@@ -137,22 +124,11 @@ struct ComponentDetailView: View {
                     }
 
                     Button {
-                        do {
-                            let url = try KiCadExportService.appendToPersonalLibrary(component: component)
-                            infoMessage = "Simbolo aggiunto a \(url.lastPathComponent)"
-                        } catch {
-                            errorMessage = error.localizedDescription
-                        }
-                    } label: {
-                        Label("Aggiungi a libreria personale", systemImage: "books.vertical")
-                    }
-
-                    Button {
                         showKiCadFetch = true
                     } label: {
-                        Label("Scarica nella libreria MIKILAB…", systemImage: "square.and.arrow.down.on.square")
+                        Label("Scarica in \(KiCadLibraryStore.shared.displayName)…", systemImage: "square.and.arrow.down.on.square")
                     }
-                    .disabled(component.mpn.isEmpty || !SyncSettings.isConfigured)
+                    .disabled(component.mpn.isEmpty || !KiCadQueue.isAvailable)
                 } label: {
                     Label("KiCad", systemImage: "books.vertical")
                 }
@@ -165,14 +141,17 @@ struct ComponentDetailView: View {
             contentType: .plainText,
             defaultFilename: "\(KiCadExportService.symbolName(for: component)).kicad_sym"
         ) { _ in }
-        .sheet(item: $digiKeyPicker) { picker in
+        .sheet(isPresented: Binding(
+            get: { digiKeyCandidates != nil },
+            set: { if !$0 { digiKeyCandidates = nil } }
+        )) {
             DigiKeyCandidateSheet(
-                candidates: picker.candidates,
+                candidates: digiKeyCandidates ?? [],
                 onSelect: { candidate in
-                    digiKeyPicker = nil
+                    digiKeyCandidates = nil
                     Task { await applyDigiKeyCandidate(candidate) }
                 },
-                onCancel: { digiKeyPicker = nil }
+                onCancel: { digiKeyCandidates = nil }
             )
         }
         .sheet(isPresented: $showMPNLookup) {
@@ -196,10 +175,10 @@ struct ComponentDetailView: View {
     private func handleReplacement(_ updated: Component, originalID: PersistentIdentifier) {
         if updated.persistentModelID != originalID {
             onReplaced?(updated)
-            infoMessage = "Codice LCSC assegnato: \(updated.supplierLCSCCode ?? updated.lcscCode)"
+            infoMessage = String(localized: "Codice LCSC assegnato: \(updated.supplierLCSCCode ?? updated.lcscCode)")
         } else if updated.supplierLCSCCode != component.supplierLCSCCode {
             onReplaced?(updated)
-            infoMessage = "Codice LCSC assegnato: \(updated.supplierLCSCCode ?? updated.lcscCode)"
+            infoMessage = String(localized: "Codice LCSC assegnato: \(updated.supplierLCSCCode ?? updated.lcscCode)")
         }
     }
 
@@ -211,7 +190,7 @@ struct ComponentDetailView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Da ordinare")
                     .font(.headline)
-                Text("Non presente in magazzino. La scheda è salvata per riferimento; lo stock DigiKey/LCSC è del fornitore, non del tuo inventario.")
+                Text("Non presente in magazzino. La scheda è salvata per riferimento; lo stock LCSC è del fornitore, non del tuo inventario.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -314,7 +293,7 @@ struct ComponentDetailView: View {
                     }
                 }
                 if LCSCEquivalentSearchService.keyword(for: component) == nil {
-                    Text("Aggiungi footprint e valore (o arricchisci da DigiKey) per abilitare la ricerca equivalenti.")
+                    Text("Aggiungi footprint e valore per abilitare la ricerca equivalenti.")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
@@ -359,6 +338,17 @@ struct ComponentDetailView: View {
         }
     }
 
+    private func storageBinding(_ keyPath: ReferenceWritableKeyPath<Component, String?>) -> Binding<String> {
+        Binding(
+            get: { component[keyPath: keyPath] ?? "" },
+            set: { newValue in
+                let trimmed = newValue.trimmingCharacters(in: .whitespaces)
+                component[keyPath: keyPath] = trimmed.isEmpty ? nil : newValue
+                component.lastUpdated = Date()
+            }
+        )
+    }
+
     private var inventoryCard: some View {
         GroupBox("Inventario") {
             VStack(alignment: .leading, spacing: 12) {
@@ -387,6 +377,18 @@ struct ComponentDetailView: View {
                     }
                 }
 
+                LabeledContent("Dispensario") {
+                    TextField("es. A", text: storageBinding(\.storageLocation))
+                        .multilineTextAlignment(.trailing)
+                        .frame(maxWidth: 180)
+                }
+
+                LabeledContent("Numero cassetto") {
+                    TextField("es. 12", text: storageBinding(\.storageSlot))
+                        .multilineTextAlignment(.trailing)
+                        .frame(maxWidth: 180)
+                }
+
                 LabeledContent("Avviso scorte basse") {
                     Toggle("", isOn: Binding(
                         get: { component.hasLowStockAlertEnabled },
@@ -412,7 +414,7 @@ struct ComponentDetailView: View {
 
                 if component.isLowStock {
                     Label(
-                        component.quantity == 0 ? "Esaurito" : "Sotto soglia",
+                        component.quantity == 0 ? String(localized: "Esaurito") : String(localized: "Sotto soglia"),
                         systemImage: "exclamationmark.triangle.fill"
                     )
                     .font(.caption)
@@ -445,33 +447,13 @@ struct ComponentDetailView: View {
                         .font(.body.monospaced())
                         .foregroundStyle(component.supplierLCSCCode == nil ? .tertiary : .primary)
                 }
-                if let dkpn = component.digikeyPartNumber, !dkpn.isEmpty {
-                    LabeledContent("DigiKey P/N", value: dkpn)
-                } else {
-                    LabeledContent("DigiKey P/N") {
-                        Text("—").foregroundStyle(.tertiary)
-                    }
-                }
                 if let price = component.price, let currency = component.currency {
-                    LabeledContent(component.source == .digikey ? "Prezzo DigiKey" : "Prezzo LCSC") {
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text(String(format: "%.4f %@", price, currency))
-                            if component.source == .digikey,
-                               let qtyPrice = component.digikeyUnitPriceForInventory,
-                               component.quantity > 0,
-                               abs(qtyPrice - price) > 0.0001 {
-                                Text("a qty \(component.quantity): \(String(format: "%.4f", qtyPrice)) \(currency)")
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
+                    LabeledContent("Prezzo LCSC") {
+                        Text(String(format: "%.4f %@", price, currency))
                     }
                 }
                 if let stock = component.supplierStock {
-                    LabeledContent(
-                        component.source == .digikey ? "Stock DigiKey" : "Stock LCSC",
-                        value: "\(stock)"
-                    )
+                    LabeledContent("Stock LCSC", value: "\(stock)")
                 }
                 LabeledContent("Ultimo aggiornamento") {
                     Text(component.lastUpdated.formatted(date: .abbreviated, time: .shortened))
@@ -531,72 +513,6 @@ struct ComponentDetailView: View {
         try? store?.adjustStock(component, delta: delta, reason: .manual)
     }
 
-    private var supplierComparisonSection: some View {
-        Group {
-            if component.hasLCSCSnapshot || component.hasDigiKeySnapshot {
-                SupplierComparisonView(component: component)
-            }
-        }
-    }
-
-    private var digikeyCommercialSection: some View {
-        Group {
-            if component.hasDigiKeySnapshot, let snapshot = component.digikeySnapshot, !snapshot.priceBreaks.isEmpty {
-                GroupBox("DigiKey — dati commerciali") {
-                    VStack(alignment: .leading, spacing: 12) {
-                        if let moq = component.minimumOrderQuantity, moq > 1 {
-                            LabeledContent("MOQ", value: "\(moq)")
-                        }
-                        if let weeks = component.leadTimeWeeks {
-                            LabeledContent("Lead time", value: "\(weeks) settimane")
-                        }
-                        if let status = component.digikeyProductStatus, !status.isEmpty {
-                            LabeledContent("Stato prodotto", value: status)
-                        }
-                        if let fetched = component.digikeyLastFetched {
-                            LabeledContent("Prezzi aggiornati") {
-                                Text(fetched.formatted(date: .abbreviated, time: .shortened))
-                            }
-                        }
-
-                        if !component.priceBreaks.isEmpty {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("Scaglioni prezzo")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
-
-                                Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 4) {
-                                    GridRow {
-                                        Text("Qty").font(.caption.weight(.semibold))
-                                        Text("Unitario").font(.caption.weight(.semibold))
-                                        Text("Totale").font(.caption.weight(.semibold))
-                                    }
-                                    ForEach(component.priceBreaks) { tier in
-                                        let highlight = component.quantity >= tier.quantity
-                                        GridRow {
-                                            Text("\(tier.quantity)+")
-                                                .font(.caption.monospacedDigit())
-                                                .foregroundStyle(highlight ? .primary : .secondary)
-                                            Text(String(format: "%.4f", tier.unitPrice))
-                                                .font(.caption.monospacedDigit())
-                                                .foregroundStyle(highlight ? .green : .secondary)
-                                            Text(tier.totalPrice.map { String(format: "%.2f", $0) } ?? "—")
-                                                .font(.caption.monospacedDigit())
-                                                .foregroundStyle(.secondary)
-                                        }
-                                        .padding(.vertical, 2)
-                                        .background(highlight ? Color.green.opacity(0.08) : Color.clear)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-        }
-    }
-
     private var descriptionSection: some View {
         Group {
             if !component.componentDescription.isEmpty {
@@ -646,12 +562,6 @@ struct ComponentDetailView: View {
                 }
                 .buttonStyle(.bordered)
             }
-            if let digiKeyURL = component.digikeyProductURL {
-                Link(destination: digiKeyURL) {
-                    Label("Pagina DigiKey", systemImage: "cart")
-                }
-                .buttonStyle(.bordered)
-            }
         }
     }
 
@@ -676,7 +586,7 @@ struct ComponentDetailView: View {
                     }
                 }
             }
-            .navigationTitle(mpnLookupTitle.isEmpty ? "Risultati LCSC" : mpnLookupTitle)
+            .navigationTitle(mpnLookupTitle.isEmpty ? String(localized: "Risultati LCSC") : mpnLookupTitle)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Chiudi") { showMPNLookup = false }
@@ -695,10 +605,10 @@ struct ComponentDetailView: View {
                 inventory: inventory
             )
             mpnLookupResults = cards
-            mpnLookupTitle = "LCSC da \(component.mpn)"
+            mpnLookupTitle = String(localized: "LCSC da \(component.mpn)")
             showMPNLookup = true
             if cards.isEmpty {
-                infoMessage = "\(component.mpn) non è presente nel catalogo LCSC — prova «Equivalente cinese» per alternative con le stesse specifiche."
+                infoMessage = String(localized: "\(component.mpn) non è presente nel catalogo LCSC — prova «Equivalente cinese» per alternative con le stesse specifiche.")
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -714,10 +624,10 @@ struct ComponentDetailView: View {
                 inventory: inventory
             )
             mpnLookupResults = result.cards
-            mpnLookupTitle = "Equivalenti LCSC · \(result.keyword)"
+            mpnLookupTitle = String(localized: "Equivalenti LCSC · \(result.keyword)")
             showMPNLookup = true
             if result.cards.isEmpty {
-                infoMessage = "Nessun equivalente LCSC trovato per «\(result.keyword)». Verifica footprint e valore, o ordina solo da DigiKey."
+                infoMessage = String(localized: "Nessun equivalente LCSC trovato per «\(result.keyword)». Verifica footprint e valore.")
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -736,58 +646,13 @@ struct ComponentDetailView: View {
         }
     }
 
-    private func enrichBoth() async {
+    private func enrichFromDigiKey() async {
         guard let store else { return }
         isEnriching = true
         defer { isEnriching = false }
-        let originalID = component.persistentModelID
         do {
-            switch try await store.enrichFromBoth(component) {
-            case .applied:
-                if let focus = store.focusComponent {
-                    handleReplacement(focus, originalID: originalID)
-                    store.focusComponent = nil
-                }
-            case .chooseCandidate(let candidates):
-                digiKeyPicker = DigiKeyCandidatePicker(candidates: candidates)
-            }
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    private func enrich(source: DataSource) async {
-        guard let store else { return }
-        isEnriching = true
-        defer { isEnriching = false }
-        let originalID = component.persistentModelID
-        do {
-            switch source {
-            case .lcsc:
-                let updated = try await store.enrichFromLCSC(component)
-                handleReplacement(updated, originalID: originalID)
-            case .digikey:
-                switch try await store.enrichFromDigiKey(component) {
-                case .applied:
-                    if let focus = store.focusComponent {
-                        handleReplacement(focus, originalID: originalID)
-                        store.focusComponent = nil
-                    }
-                case .chooseCandidate(let candidates):
-                    digiKeyPicker = DigiKeyCandidatePicker(candidates: candidates)
-                }
-            case .dual:
-                switch try await store.enrichFromBoth(component) {
-                case .applied:
-                    if let focus = store.focusComponent {
-                        handleReplacement(focus, originalID: originalID)
-                        store.focusComponent = nil
-                    }
-                case .chooseCandidate(let candidates):
-                    digiKeyPicker = DigiKeyCandidatePicker(candidates: candidates)
-                }
-            case .manual:
-                break
+            if case .chooseCandidate(let candidates) = try await store.enrichFromDigiKey(component) {
+                digiKeyCandidates = candidates
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -804,23 +669,24 @@ struct ComponentDetailView: View {
             errorMessage = error.localizedDescription
         }
     }
-}
 
-struct DigiKeyCandidatePicker: Identifiable {
-    let id = UUID()
-    let candidates: [DigiKeyCandidate]
+    private func enrich(source: DataSource) async {
+        guard let store else { return }
+        isEnriching = true
+        defer { isEnriching = false }
+        let originalID = component.persistentModelID
+        do {
+            if source == .lcsc {
+                let updated = try await store.enrichFromLCSC(component)
+                handleReplacement(updated, originalID: originalID)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
 }
 
 extension Component {
-    var digikeyProductURL: URL? {
-        guard let urlString = digikeySnapshot?.productURL ?? supplierProductURL,
-              !urlString.isEmpty,
-              let url = URL(string: urlString) else {
-            return nil
-        }
-        return url
-    }
-
     var lcscProductURL: URL? {
         guard let code = supplierLCSCCode else { return nil }
         return URL(string: "https://www.lcsc.com/product-detail/\(code).html")

@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 enum Persistence {
-    static let schemaVersion = 3
+    static let schemaVersion = 4
     private static let versionKey = "ComponentVault.schemaVersion"
 
     enum BootstrapError: LocalizedError {
@@ -11,7 +11,7 @@ enum Persistence {
         var errorDescription: String? {
             switch self {
             case .containerUnavailable(let detail):
-                "Impossibile aprire il database locale: \(detail)"
+                String(localized: "Impossibile aprire il database locale: \(detail)")
             }
         }
     }
@@ -19,7 +19,6 @@ enum Persistence {
     static let schema = Schema([
         Component.self,
         ComponentParameter.self,
-        StockMovement.self,
         StockMovement.self,
         Project.self,
         ProjectItem.self
@@ -59,9 +58,10 @@ enum Persistence {
 
         let hasStore = storeExists()
 
-        // v2 → v3: aggiunto lcscSupplierCode (opzionale) — SwiftData migra senza wipe.
-        if stored == 2 && schemaVersion == 3 {
-            if hasStore { backupStoreFiles(tag: "v2-v3") }
+        // v2 → v3: aggiunto lcscSupplierCode; v3 → v4: posizione in magazzino
+        // (storageLocation/storageSlot). Solo attributi opzionali: SwiftData migra senza wipe.
+        if stored >= 2 && stored < schemaVersion {
+            if hasStore { backupStoreFiles(tag: "v\(stored)-v\(schemaVersion)") }
             UserDefaults.standard.set(schemaVersion, forKey: versionKey)
             return
         }

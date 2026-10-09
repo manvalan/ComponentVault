@@ -1,0 +1,6786 @@
+{
+  "sourceLanguage": "it",
+  "strings": {
+    "": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        }
+      }
+    },
+    " · nessun risultato": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " · no results"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " · nessun risultato"
+          }
+        }
+      }
+    },
+    "%@ %lld/%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %lld/%lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ %2$lld/%3$lld"
+          }
+        }
+      }
+    },
+    "%@ non è presente nel catalogo LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is not in the LCSC catalog"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ non è presente nel catalogo LCSC"
+          }
+        }
+      }
+    },
+    "%@ non è presente nel catalogo LCSC — prova «Equivalente cinese» per alternative con le stesse specifiche.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is not in the LCSC catalog — try “Chinese equivalent” for alternatives with the same specs."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ non è presente nel catalogo LCSC — prova «Equivalente cinese» per alternative con le stesse specifiche."
+          }
+        }
+      }
+    },
+    "%@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@ — %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@ — %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$@ — %3$@"
+          }
+        }
+      }
+    },
+    "%@: %lld di %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$lld of %3$lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@: %2$lld di %3$lld"
+          }
+        }
+      }
+    },
+    "%@: da completare": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: to complete"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: da completare"
+          }
+        }
+      }
+    },
+    "%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld"
+          }
+        }
+      }
+    },
+    "%lld alert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld alert"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld alert"
+          }
+        }
+      }
+    },
+    "%lld componenti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld parts"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld componenti"
+          }
+        }
+      }
+    },
+    "%lld con codice LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld with LCSC code"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld con codice LCSC"
+          }
+        }
+      }
+    },
+    "%lld da LCSC live": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld from LCSC live"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld da LCSC live"
+          }
+        }
+      }
+    },
+    "%lld da fare": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld to do"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld da fare"
+          }
+        }
+      }
+    },
+    "%lld gruppi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld groups"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld gruppi"
+          }
+        }
+      }
+    },
+    "%lld gruppi · %lld componenti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld groups · %2$lld parts"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld gruppi · %2$lld componenti"
+          }
+        }
+      }
+    },
+    "%lld in inventario": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld in inventory"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld in inventario"
+          }
+        }
+      }
+    },
+    "%lld mancanti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld missing"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld mancanti"
+          }
+        }
+      }
+    },
+    "%lld ms": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ms"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ms"
+          }
+        }
+      }
+    },
+    "%lld parti %@ · %lld con stock": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld %2$@ parts · %3$lld in stock"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld parti %2$@ · %3$lld con stock"
+          }
+        }
+      }
+    },
+    "%lld progetti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld projects"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld progetti"
+          }
+        }
+      }
+    },
+    "%lld righe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld lines"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld righe"
+          }
+        }
+      }
+    },
+    "%lld simboli": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld symbols"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld simboli"
+          }
+        }
+      }
+    },
+    "%lld simboli · %lld componenti di %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld symbols · %2$lld %3$@ parts"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld simboli · %2$lld componenti di %3$@"
+          }
+        }
+      }
+    },
+    "%lld var.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld var."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld var."
+          }
+        }
+      }
+    },
+    "%lld×": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld×"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld×"
+          }
+        }
+      }
+    },
+    "+%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld"
+          }
+        }
+      }
+    },
+    ", %lld non trovate in inventario": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ", %lld not found in inventory"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ", %lld non trovate in inventario"
+          }
+        }
+      }
+    },
+    "15 minuti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 minutes"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 minuti"
+          }
+        }
+      }
+    },
+    "30 minuti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 minutes"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 minuti"
+          }
+        }
+      }
+    },
+    "60 minuti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "60 minutes"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "60 minuti"
+          }
+        }
+      }
+    },
+    "Abilita «Avviso scorte basse» nella scheda di ogni componente e imposta una soglia minima.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on “Low stock alert” in each part's page and set a minimum quantity."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abilita «Avviso scorte basse» nella scheda di ogni componente e imposta una soglia minima."
+          }
+        }
+      }
+    },
+    "Access token": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access token"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access token"
+          }
+        }
+      }
+    },
+    "Aggiorna": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiorna"
+          }
+        }
+      }
+    },
+    "Aggiorna indice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh index"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiorna indice"
+          }
+        }
+      }
+    },
+    "Aggiorna «%@» da %@.\n%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update “%1$@” from %2$@.\n%3$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Aggiorna «%1$@» da %2$@.\n%3$@"
+          }
+        }
+      }
+    },
+    "Aggiornamento manuale": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual update"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiornamento manuale"
+          }
+        }
+      }
+    },
+    "Aggiornato %@ da DigiKey": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated %@ from DigiKey"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiornato %@ da DigiKey"
+          }
+        }
+      }
+    },
+    "Aggiornato %@ da LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated %@ from LCSC"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiornato %@ da LCSC"
+          }
+        }
+      }
+    },
+    "Aggiungi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi"
+          }
+        }
+      }
+    },
+    "Aggiungi al progetto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to project"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi al progetto"
+          }
+        }
+      }
+    },
+    "Aggiungi all'inventario": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to inventory"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi all'inventario"
+          }
+        }
+      }
+    },
+    "Aggiungi alla libreria KiCad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to KiCad library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi alla libreria KiCad"
+          }
+        }
+      }
+    },
+    "Aggiungi componente al progetto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add part to project"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi componente al progetto"
+          }
+        }
+      }
+    },
+    "Aggiungi footprint e valore per abilitare la ricerca equivalenti.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add footprint and value to enable the equivalents search."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi footprint e valore per abilitare la ricerca equivalenti."
+          }
+        }
+      }
+    },
+    "Alert scorte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock alerts"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alert scorte"
+          }
+        }
+      }
+    },
+    "Alimentazione": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power Management"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentazione"
+          }
+        }
+      }
+    },
+    "All'avvio dell'app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When the app starts"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All'avvio dell'app"
+          }
+        }
+      }
+    },
+    "Altro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altro"
+          }
+        }
+      }
+    },
+    "Ambiente": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Environment"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ambiente"
+          }
+        }
+      }
+    },
+    "Annulla": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annulla"
+          }
+        }
+      }
+    },
+    "Apri su LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open on LCSC"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri su LCSC"
+          }
+        }
+      }
+    },
+    "Archivio LCSC locale": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local LCSC archive"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivio LCSC locale"
+          }
+        }
+      }
+    },
+    "Arricchimento LCSC completato (%lld componenti)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC enrichment finished (%lld parts)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arricchimento LCSC completato (%lld componenti)"
+          }
+        }
+      }
+    },
+    "Arricchisci LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enrich from LCSC"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arricchisci LCSC"
+          }
+        }
+      }
+    },
+    "Attivo (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active (%@)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attivo (%@)"
+          }
+        }
+      }
+    },
+    "Avvisi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvisi"
+          }
+        }
+      }
+    },
+    "Avvisi attivi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts on"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvisi attivi"
+          }
+        }
+      }
+    },
+    "Avvisi non attivi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No alerts on"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvisi non attivi"
+          }
+        }
+      }
+    },
+    "Avviso scorte basse": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Low stock alert"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avviso scorte basse"
+          }
+        }
+      }
+    },
+    "Azzera": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Azzera"
+          }
+        }
+      }
+    },
+    "BOM EasyEDA / JLC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EasyEDA / JLC BOM"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BOM EasyEDA / JLC"
+          }
+        }
+      }
+    },
+    "BOM importata: %lld righe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BOM imported: %lld lines"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BOM importata: %lld righe"
+          }
+        }
+      }
+    },
+    "BOM inventario": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inventory BOM"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BOM inventario"
+          }
+        }
+      }
+    },
+    "BOM vuota": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty BOM"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BOM vuota"
+          }
+        }
+      }
+    },
+    "Bassa": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Low"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bassa"
+          }
+        }
+      }
+    },
+    "Brand": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brand"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brand"
+          }
+        }
+      }
+    },
+    "C": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "C"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "C"
+          }
+        }
+      }
+    },
+    "CV interno": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Internal CV"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CV interno"
+          }
+        }
+      }
+    },
+    "Cambia cartella…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Folder…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambia cartella…"
+          }
+        }
+      }
+    },
+    "Carica da etichetta": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load from Label"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carica da etichetta"
+          }
+        }
+      }
+    },
+    "Carica da etichetta (lettore USB o codice)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load from a label (USB scanner or code)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carica da etichetta (lettore USB o codice)"
+          }
+        }
+      }
+    },
+    "Carica in magazzino": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Stock"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carica in magazzino"
+          }
+        }
+      }
+    },
+    "Caricati in questa sessione": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loaded in this session"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caricati in questa sessione"
+          }
+        }
+      }
+    },
+    "Carico da etichetta": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loaded from label"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carico da etichetta"
+          }
+        }
+      }
+    },
+    "Cartella": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cartella"
+          }
+        }
+      }
+    },
+    "Cartella condivisa non raggiungibile.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared folder not reachable."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cartella condivisa non raggiungibile."
+          }
+        }
+      }
+    },
+    "Catalogo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalog"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalogo"
+          }
+        }
+      }
+    },
+    "Catalogo & Progetti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalog & Projects"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalogo & Progetti"
+          }
+        }
+      }
+    },
+    "Catalogo fornitori": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supplier catalog"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalogo fornitori"
+          }
+        }
+      }
+    },
+    "Categoria": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categoria"
+          }
+        }
+      }
+    },
+    "Cerca EasyEDA": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search EasyEDA"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca EasyEDA"
+          }
+        }
+      }
+    },
+    "Cerca LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search LCSC"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca LCSC"
+          }
+        }
+      }
+    },
+    "Cerca valore, footprint, MPN…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search value, footprint, MPN…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca valore, footprint, MPN…"
+          }
+        }
+      }
+    },
+    "Cerca…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca…"
+          }
+        }
+      }
+    },
+    "Chiave pubblica LCSC non trovata — il sito potrebbe essere cambiato": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC public key not found — the site may have changed"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chiave pubblica LCSC non trovata — il sito potrebbe essere cambiato"
+          }
+        }
+      }
+    },
+    "Chiudi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chiudi"
+          }
+        }
+      }
+    },
+    "Circuiti integrati": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Integrated Circuits"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Circuiti integrati"
+          }
+        }
+      }
+    },
+    "Clicca Ricarica o importa il CSV manualmente.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click Reload or import the CSV manually."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clicca Ricarica o importa il CSV manualmente."
+          }
+        }
+      }
+    },
+    "Client ID": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client ID"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client ID"
+          }
+        }
+      }
+    },
+    "Client Secret": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client Secret"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client Secret"
+          }
+        }
+      }
+    },
+    "Codice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice"
+          }
+        }
+      }
+    },
+    "Codice CV": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CV code"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice CV"
+          }
+        }
+      }
+    },
+    "Codice LCSC assegnato: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC code assigned: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice LCSC assegnato: %@"
+          }
+        }
+      }
+    },
+    "Codice LCSC non assegnato — verifica connessione o MPN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC code not assigned — check the connection or the MPN"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice LCSC non assegnato — verifica connessione o MPN"
+          }
+        }
+      }
+    },
+    "Codice LCSC non valido.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid LCSC code."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice LCSC non valido."
+          }
+        }
+      }
+    },
+    "Codice LCSC per EasyEDA": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC code for EasyEDA"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice LCSC per EasyEDA"
+          }
+        }
+      }
+    },
+    "Codice LCSC, MPN o lettura del lettore USB": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC code, MPN or USB scanner input"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice LCSC, MPN o lettura del lettore USB"
+          }
+        }
+      }
+    },
+    "Completata": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completata"
+          }
+        }
+      }
+    },
+    "Completata in parte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partly done"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completata in parte"
+          }
+        }
+      }
+    },
+    "ComponentVault": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ComponentVault"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ComponentVault"
+          }
+        }
+      }
+    },
+    "Componente": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Part"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Componente"
+          }
+        }
+      }
+    },
+    "Componente %@ non trovato.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Part %@ not found."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Componente %@ non trovato."
+          }
+        }
+      }
+    },
+    "Componente non in inventario": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Part not in inventory"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Componente non in inventario"
+          }
+        }
+      }
+    },
+    "Componenti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parts"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Componenti"
+          }
+        }
+      }
+    },
+    "Componenti %@ · Progetti %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parts %1$@ · Projects %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Componenti %1$@ · Progetti %2$@"
+          }
+        }
+      }
+    },
+    "Componenti (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parts (%lld)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Componenti (%lld)"
+          }
+        }
+      }
+    },
+    "Componenti con avviso attivo sotto la soglia minima.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parts with an alert below their minimum quantity."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Componenti con avviso attivo sotto la soglia minima."
+          }
+        }
+      }
+    },
+    "Componenti di %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ parts"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Componenti di %@"
+          }
+        }
+      }
+    },
+    "Condensatori": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capacitors"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condensatori"
+          }
+        }
+      }
+    },
+    "Condividi %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condividi %@"
+          }
+        }
+      }
+    },
+    "Configurato": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configurato"
+          }
+        }
+      }
+    },
+    "Connettori": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectors"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connettori"
+          }
+        }
+      }
+    },
+    "Controlla il pin 1 nel render.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check pin 1 in the render."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controlla il pin 1 nel render."
+          }
+        }
+      }
+    },
+    "Copia %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia %@"
+          }
+        }
+      }
+    },
+    "Copia LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy LCSC"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia LCSC"
+          }
+        }
+      }
+    },
+    "Copia MPN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy MPN"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia MPN"
+          }
+        }
+      }
+    },
+    "Correzione": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correction"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correzione"
+          }
+        }
+      }
+    },
+    "Crea": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea"
+          }
+        }
+      }
+    },
+    "Crea un progetto per gestire la distinta base\ne verificare disponibilità componenti.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a project to manage the bill of materials\nand check part availability."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea un progetto per gestire la distinta base\ne verificare disponibilità componenti."
+          }
+        }
+      }
+    },
+    "Crea «%@» da %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create “%1$@” from %2$@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Crea «%1$@» da %2$@."
+          }
+        }
+      }
+    },
+    "Creazione database…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creating database…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creazione database…"
+          }
+        }
+      }
+    },
+    "Credenziali DigiKey eliminate.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DigiKey credentials deleted."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credenziali DigiKey eliminate."
+          }
+        }
+      }
+    },
+    "DA ORDINARE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TO ORDER"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DA ORDINARE"
+          }
+        }
+      }
+    },
+    "Da ordinare": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To order"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da ordinare"
+          }
+        }
+      }
+    },
+    "Da ordinare (mancanti stock)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To order (missing stock)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da ordinare (mancanti stock)"
+          }
+        }
+      }
+    },
+    "Da ordinare — qty 0 in magazzino": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To order — qty 0 in stock"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da ordinare — qty 0 in magazzino"
+          }
+        }
+      }
+    },
+    "Da ordinare: mancano %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To order: %lld missing"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da ordinare: mancano %lld"
+          }
+        }
+      }
+    },
+    "Da scaricare": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To download"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da scaricare"
+          }
+        }
+      }
+    },
+    "Da verificare": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To check"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da verificare"
+          }
+        }
+      }
+    },
+    "Dal tuo inventario": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From your inventory"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dal tuo inventario"
+          }
+        }
+      }
+    },
+    "Database creato: %lld componenti da %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Database created: %1$lld parts from %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Database creato: %1$lld componenti da %2$@"
+          }
+        }
+      }
+    },
+    "Database locale non disponibile.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local database not available."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Database locale non disponibile."
+          }
+        }
+      }
+    },
+    "Database non disponibile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Database not available"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Database non disponibile"
+          }
+        }
+      }
+    },
+    "Database non trovato in %@. Esegui prima:\npython3 Tools/lcsc_enrich.py": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Database not found in %@. First run:\npython3 Tools/lcsc_enrich.py"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Database non trovato in %@. Esegui prima:\npython3 Tools/lcsc_enrich.py"
+          }
+        }
+      }
+    },
+    "Datasheet PDF": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datasheet PDF"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datasheet PDF"
+          }
+        }
+      }
+    },
+    "Descrizione": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Description"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descrizione"
+          }
+        }
+      }
+    },
+    "Designator (es. R1, C5)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Designator (e.g. R1, C5)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Designator (es. R1, C5)"
+          }
+        }
+      }
+    },
+    "DigiKey": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DigiKey"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DigiKey"
+          }
+        }
+      }
+    },
+    "DigiKey cerca per MPN, non per codice LCSC.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DigiKey searches by MPN, not by LCSC code."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DigiKey cerca per MPN, non per codice LCSC."
+          }
+        }
+      }
+    },
+    "DigiKey non ha rinnovato il token. Inserisci un nuovo token in Impostazioni → DigiKey.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DigiKey did not renew the token. Enter a new token in Settings → DigiKey."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DigiKey non ha rinnovato il token. Inserisci un nuovo token in Impostazioni → DigiKey."
+          }
+        }
+      }
+    },
+    "DigiKey: errore HTTP %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DigiKey: HTTP error %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DigiKey: errore HTTP %lld"
+          }
+        }
+      }
+    },
+    "Diodi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diodes"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diodi"
+          }
+        }
+      }
+    },
+    "Disattivato": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disattivato"
+          }
+        }
+      }
+    },
+    "Dispensari già usati": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage units already used"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispensari già usati"
+          }
+        }
+      }
+    },
+    "Dispensario": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage unit"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispensario"
+          }
+        }
+      }
+    },
+    "Display": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Displays"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Display"
+          }
+        }
+      }
+    },
+    "Disponibile in magazzino": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available in stock"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disponibile in magazzino"
+          }
+        }
+      }
+    },
+    "EUR": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EUR"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EUR"
+          }
+        }
+      }
+    },
+    "EasyEDA: %lld LCSC trovati, %lld ancora senza C": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EasyEDA: %1$lld LCSC codes found, %2$lld still without C"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "EasyEDA: %1$lld LCSC trovati, %2$lld ancora senza C"
+          }
+        }
+      }
+    },
+    "Elimina": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina"
+          }
+        }
+      }
+    },
+    "Elimina riga": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete line"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina riga"
+          }
+        }
+      }
+    },
+    "Equivalente cinese": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chinese equivalent"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Equivalente cinese"
+          }
+        }
+      }
+    },
+    "Equivalenti LCSC · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC equivalents · %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Equivalenti LCSC · %@"
+          }
+        }
+      }
+    },
+    "Errore": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Errore"
+          }
+        }
+      }
+    },
+    "Errore di rete: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Network error: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Errore di rete: %@"
+          }
+        }
+      }
+    },
+    "Errore import": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import error"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Errore import"
+          }
+        }
+      }
+    },
+    "Errore import BOM": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BOM import error"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Errore import BOM"
+          }
+        }
+      }
+    },
+    "Errore lettura JSON: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JSON read error: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Errore lettura JSON: %@"
+          }
+        }
+      }
+    },
+    "Errore su %@: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error on %1$@: %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Errore su %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "Es. DigiRadio, Amplificatore, PSU": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E.g. DigiRadio, Amplifier, PSU"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es. DigiRadio, Amplificatore, PSU"
+          }
+        }
+      }
+    },
+    "Esauriti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Out of stock"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esauriti"
+          }
+        }
+      }
+    },
+    "Esaurito": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Out of stock"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esaurito"
+          }
+        }
+      }
+    },
+    "Esci": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esci"
+          }
+        }
+      }
+    },
+    "Esito": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Result"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esito"
+          }
+        }
+      }
+    },
+    "Esporta": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esporta"
+          }
+        }
+      }
+    },
+    "Esporta CSV": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export CSV"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esporta CSV"
+          }
+        }
+      }
+    },
+    "Esporta alert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export alerts"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esporta alert"
+          }
+        }
+      }
+    },
+    "Esporta file .kicad_sym": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export .kicad_sym file"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esporta file .kicad_sym"
+          }
+        }
+      }
+    },
+    "Esporta inventario…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export Inventory…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esporta inventario…"
+          }
+        }
+      }
+    },
+    "Esporta la lista per JLC / LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export the list for JLC / LCSC"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esporta la lista per JLC / LCSC"
+          }
+        }
+      }
+    },
+    "Etichetta": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Label"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etichetta"
+          }
+        }
+      }
+    },
+    "Etichetta LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC label"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etichetta LCSC"
+          }
+        }
+      }
+    },
+    "Etichetta distributore": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distributor label"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etichetta distributore"
+          }
+        }
+      }
+    },
+    "Facoltativo. Le credenziali e i token DigiKey li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.digikey.com.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional. You enter the DigiKey credentials and tokens yourself; they stay in this device's Keychain, never go to the folder or anywhere else, and are only used for requests to api.digikey.com."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facoltativo. Le credenziali e i token DigiKey li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.digikey.com."
+          }
+        }
+      }
+    },
+    "Fine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fine"
+          }
+        }
+      }
+    },
+    "Footprint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Footprint"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Footprint"
+          }
+        }
+      }
+    },
+    "Fornitori": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suppliers"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fornitori"
+          }
+        }
+      }
+    },
+    "Fotocamera non disponibile su questo dispositivo: usa il campo qui sotto.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera not available on this device: use the field below."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotocamera non disponibile su questo dispositivo: usa il campo qui sotto."
+          }
+        }
+      }
+    },
+    "Fotocamera: inquadra l'etichetta": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera: point at the label"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotocamera: inquadra l'etichetta"
+          }
+        }
+      }
+    },
+    "Già in inventario · qty %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already in inventory · qty %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Già in inventario · qty %lld"
+          }
+        }
+      }
+    },
+    "Già in inventario: %lld pz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already in inventory: %lld pcs"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Già in inventario: %lld pz"
+          }
+        }
+      }
+    },
+    "Già in inventario: %lld pz · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already in inventory: %1$lld pcs · %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Già in inventario: %1$lld pz · %2$@"
+          }
+        }
+      }
+    },
+    "Già in libreria": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already in library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Già in libreria"
+          }
+        }
+      }
+    },
+    "IT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IT"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IT"
+          }
+        }
+      }
+    },
+    "Il componente non ha ancora un codice LCSC Cxxxxx. Cercalo dal MPN per usarlo in EasyEDA.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The part has no LCSC Cxxxxx code yet. Look it up from the MPN to use it in EasyEDA."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il componente non ha ancora un codice LCSC Cxxxxx. Cercalo dal MPN per usarlo in EasyEDA."
+          }
+        }
+      }
+    },
+    "Il download da SnapEDA, Ultra Librarian o JLCPCB/EasyEDA viene eseguito dal Mac con la libreria: le credenziali dei fornitori non passano mai da questo dispositivo.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads from SnapEDA, Ultra Librarian or JLCPCB/EasyEDA run on the Mac with the library: supplier credentials never pass through this device."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il download da SnapEDA, Ultra Librarian o JLCPCB/EasyEDA viene eseguito dal Mac con la libreria: le credenziali dei fornitori non passano mai da questo dispositivo."
+          }
+        }
+      }
+    },
+    "Il nome del progetto non può essere vuoto.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The project name can't be empty."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il nome del progetto non può essere vuoto."
+          }
+        }
+      }
+    },
+    "Import": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import"
+          }
+        }
+      }
+    },
+    "Import BOM completato": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BOM import finished"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import BOM completato"
+          }
+        }
+      }
+    },
+    "Import fallito per %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import failed for %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import fallito per %@"
+          }
+        }
+      }
+    },
+    "Importa": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importa"
+          }
+        }
+      }
+    },
+    "Importa (aggiungi)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import (add)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importa (aggiungi)"
+          }
+        }
+      }
+    },
+    "Importa (sostituisci)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import (replace)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importa (sostituisci)"
+          }
+        }
+      }
+    },
+    "Importa BOM EasyEDA": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import EasyEDA BOM"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importa BOM EasyEDA"
+          }
+        }
+      }
+    },
+    "Importa BOM…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import BOM…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importa BOM…"
+          }
+        }
+      }
+    },
+    "Importa CSV": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import CSV"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importa CSV"
+          }
+        }
+      }
+    },
+    "Importa CSV…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import CSV…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importa CSV…"
+          }
+        }
+      }
+    },
+    "Importa un file BOM o aggiungi i componenti uno alla volta.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import a BOM file or add parts one at a time."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importa un file BOM o aggiungi i componenti uno alla volta."
+          }
+        }
+      }
+    },
+    "Importate %lld righe nel progetto.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imported %lld lines into the project."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importate %lld righe nel progetto."
+          }
+        }
+      }
+    },
+    "Importate %lld righe.\n\nNon in inventario (%lld):\n%@%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imported %1$lld lines.\n\nNot in inventory (%2$lld):\n%3$@%4$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Importate %1$lld righe.\n\nNon in inventario (%2$lld):\n%3$@%4$@"
+          }
+        }
+      }
+    },
+    "Importati %lld componenti da %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imported %1$lld parts from %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Importati %1$lld componenti da %2$@"
+          }
+        }
+      }
+    },
+    "Importato": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imported"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importato"
+          }
+        }
+      }
+    },
+    "Importazione da json_full_data…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importing from json_full_data…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importazione da json_full_data…"
+          }
+        }
+      }
+    },
+    "Importazione inventario…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importing inventory…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importazione inventario…"
+          }
+        }
+      }
+    },
+    "Impossibile aprire il database locale: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't open the local database: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile aprire il database locale: %@"
+          }
+        }
+      }
+    },
+    "Impossibile caricare homepage LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't load the LCSC home page"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile caricare homepage LCSC"
+          }
+        }
+      }
+    },
+    "Impossibile interpretare la risposta del fornitore.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't read the supplier's response."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile interpretare la risposta del fornitore."
+          }
+        }
+      }
+    },
+    "Impossibile salvare nel Portachiavi (%d).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't save to the Keychain (%d)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare nel Portachiavi (%d)."
+          }
+        }
+      }
+    },
+    "Imposta almeno valore o footprint, oppure un MPN nel campo Valore.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set at least a value or footprint, or an MPN in the Value field."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imposta almeno valore o footprint, oppure un MPN nel campo Valore."
+          }
+        }
+      }
+    },
+    "Imposta valore e footprint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set value and footprint"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imposta valore e footprint"
+          }
+        }
+      }
+    },
+    "Impostazioni": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impostazioni"
+          }
+        }
+      }
+    },
+    "In attesa del Mac con KiCad…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for the Mac with KiCad…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In attesa del Mac con KiCad…"
+          }
+        }
+      }
+    },
+    "In coda": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queued"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In coda"
+          }
+        }
+      }
+    },
+    "In lavorazione": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In progress"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In lavorazione"
+          }
+        }
+      }
+    },
+    "In libreria": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In libreria"
+          }
+        }
+      }
+    },
+    "In libreria KiCad: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In KiCad library: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In libreria KiCad: %@"
+          }
+        }
+      }
+    },
+    "Indice del %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Index of %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indice del %@"
+          }
+        }
+      }
+    },
+    "Indice del %@ · copia locale disponibile offline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Index of %@ · local copy available offline"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indice del %@ · copia locale disponibile offline"
+          }
+        }
+      }
+    },
+    "Indice libreria KiCad non ancora disponibile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KiCad library index not available yet"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indice libreria KiCad non ancora disponibile"
+          }
+        }
+      }
+    },
+    "Indice libreria non ancora disponibile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library index not available yet"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indice libreria non ancora disponibile"
+          }
+        }
+      }
+    },
+    "Indice libreria non disponibile: serve la cartella condivisa con il Mac che ha KiCad.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library index not available: it needs the folder shared with the Mac that has KiCad."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indice libreria non disponibile: serve la cartella condivisa con il Mac che ha KiCad."
+          }
+        }
+      }
+    },
+    "Indice libreria non interpretabile.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library index can't be read."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indice libreria non interpretabile."
+          }
+        }
+      }
+    },
+    "Indice non disponibile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Index not available"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indice non disponibile"
+          }
+        }
+      }
+    },
+    "Induttori": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inductors"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Induttori"
+          }
+        }
+      }
+    },
+    "Inserisci le credenziali DigiKey in Impostazioni.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your DigiKey credentials in Settings."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inserisci le credenziali DigiKey in Impostazioni."
+          }
+        }
+      }
+    },
+    "Interruttori": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switches"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interruttori"
+          }
+        }
+      }
+    },
+    "Inventario": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inventory"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inventario"
+          }
+        }
+      }
+    },
+    "Inventario e progetti si fondono con quelli degli altri dispositivi: vince la modifica più recente. Locale: %lld componenti.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inventory and projects are merged with those of your other devices: the most recent change wins. Local: %lld parts."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inventario e progetti si fondono con quelli degli altri dispositivi: vince la modifica più recente. Locale: %lld componenti."
+          }
+        }
+      }
+    },
+    "Inventario: %@. Per EasyEDA cerca il codice LCSC Cxxxxx — dal MPN o equivalente cinese.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inventory: %@. For EasyEDA, look up the LCSC Cxxxxx code — from the MPN or a Chinese equivalent."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inventario: %@. Per EasyEDA cerca il codice LCSC Cxxxxx — dal MPN o equivalente cinese."
+          }
+        }
+      }
+    },
+    "KiCad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KiCad"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KiCad"
+          }
+        }
+      }
+    },
+    "LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC"
+          }
+        }
+      }
+    },
+    "LCSC %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC %lld"
+          }
+        }
+      }
+    },
+    "LCSC da %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC from %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC da %@"
+          }
+        }
+      }
+    },
+    "LCSC live": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC live"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC live"
+          }
+        }
+      }
+    },
+    "LCSC per EasyEDA": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC for EasyEDA"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC per EasyEDA"
+          }
+        }
+      }
+    },
+    "LCSC product list HTTP %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC product list HTTP %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC product list HTTP %lld"
+          }
+        }
+      }
+    },
+    "LCSC product list fallita": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC product list failed"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC product list fallita"
+          }
+        }
+      }
+    },
+    "LCSC search HTTP %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC search HTTP %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC search HTTP %lld"
+          }
+        }
+      }
+    },
+    "LCSC search fallita": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC search failed"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC search fallita"
+          }
+        }
+      }
+    },
+    "LED": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LEDs"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LED"
+          }
+        }
+      }
+    },
+    "La cartella della tua libreria KiCad. Il percorso va nel file di configurazione, così gli altri dispositivi sanno quale libreria usa questo Mac.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your KiCad library folder. The path goes in the configuration file, so your other devices know which library this Mac uses."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cartella della tua libreria KiCad. Il percorso va nel file di configurazione, così gli altri dispositivi sanno quale libreria usa questo Mac."
+          }
+        }
+      }
+    },
+    "La libreria KiCad si sceglie dall'app su Mac; l'iPad la legge dal file di configurazione nella cartella.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The KiCad library is chosen in the Mac app; the iPad reads it from the configuration file in the folder."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La libreria KiCad si sceglie dall'app su Mac; l'iPad la legge dal file di configurazione nella cartella."
+          }
+        }
+      }
+    },
+    "Libreria": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libreria"
+          }
+        }
+      }
+    },
+    "Libreria KiCad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KiCad Library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libreria KiCad"
+          }
+        }
+      }
+    },
+    "Libreria KiCad · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KiCad Library · %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libreria KiCad · %@"
+          }
+        }
+      }
+    },
+    "Libreria KiCad…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KiCad Library…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libreria KiCad…"
+          }
+        }
+      }
+    },
+    "MPN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MPN"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MPN"
+          }
+        }
+      }
+    },
+    "Mac con KiCad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac with KiCad"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac con KiCad"
+          }
+        }
+      }
+    },
+    "Mac con KiCad attivo: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac with KiCad active: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac con KiCad attivo: %@"
+          }
+        }
+      }
+    },
+    "Mac con KiCad non attivo (%@, visto %@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac with KiCad not active (%1$@, seen %2$@)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Mac con KiCad non attivo (%1$@, visto %2$@)"
+          }
+        }
+      }
+    },
+    "Mac con KiCad non attivo: la richiesta resta in coda finché non si avvia il worker.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac with KiCad not active: the request stays queued until the worker starts."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac con KiCad non attivo: la richiesta resta in coda finché non si avvia il worker."
+          }
+        }
+      }
+    },
+    "Magazzino": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Magazzino"
+          }
+        }
+      }
+    },
+    "Mai visto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never seen"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mai visto"
+          }
+        }
+      }
+    },
+    "Manca": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manca"
+          }
+        }
+      }
+    },
+    "Mancante": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mancante"
+          }
+        }
+      }
+    },
+    "Manuale": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manuale"
+          }
+        }
+      }
+    },
+    "Mercato · valuta": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Market · currency"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mercato · valuta"
+          }
+        }
+      }
+    },
+    "Modello 3D da verificare": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3D model to check"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modello 3D da verificare"
+          }
+        }
+      }
+    },
+    "Modello 3D: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3D model: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modello 3D: %@"
+          }
+        }
+      }
+    },
+    "Moduli": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modules"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moduli"
+          }
+        }
+      }
+    },
+    "Mostra": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra"
+          }
+        }
+      }
+    },
+    "Mostra solo le righe da completare": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows only the lines left to complete"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra solo le righe da completare"
+          }
+        }
+      }
+    },
+    "Mostra tutto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show All"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra tutto"
+          }
+        }
+      }
+    },
+    "Nel progetto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In project"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nel progetto"
+          }
+        }
+      }
+    },
+    "Nessun componente monitorato è sotto soglia o esaurito.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No monitored part is below its minimum or out of stock."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun componente monitorato è sotto soglia o esaurito."
+          }
+        }
+      }
+    },
+    "Nessun componente valido trovato in %@/json_full_data": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No valid part found in %@/json_full_data"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun componente valido trovato in %@/json_full_data"
+          }
+        }
+      }
+    },
+    "Nessun dato locale. Scegli una cartella condivisa in Impostazioni oppure importa un CSV dell'inventario.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No local data. Choose a shared folder in Settings or import an inventory CSV."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun dato locale. Scegli una cartella condivisa in Impostazioni oppure importa un CSV dell'inventario."
+          }
+        }
+      }
+    },
+    "Nessun equivalente LCSC trovato per «%@». Verifica footprint e valore.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No LCSC equivalent found for “%@”. Check footprint and value."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun equivalente LCSC trovato per «%@». Verifica footprint e valore."
+          }
+        }
+      }
+    },
+    "Nessun file JSON valido trovato nell'archivio.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No valid JSON file found in the archive."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun file JSON valido trovato nell'archivio."
+          }
+        }
+      }
+    },
+    "Nessun footprint in inventario per questo tipo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No footprint in inventory for this type"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun footprint in inventario per questo tipo"
+          }
+        }
+      }
+    },
+    "Nessun produttore in inventario per questa combinazione": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No manufacturer in inventory for this combination"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun produttore in inventario per questa combinazione"
+          }
+        }
+      }
+    },
+    "Nessun risultato": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No results"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun risultato"
+          }
+        }
+      }
+    },
+    "Nessun tipo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No type"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun tipo"
+          }
+        }
+      }
+    },
+    "Nessuna richiesta": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No requests"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessuna richiesta"
+          }
+        }
+      }
+    },
+    "Nessuna riga da completare per %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No lines left to complete for %@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessuna riga da completare per %@."
+          }
+        }
+      }
+    },
+    "Nessuno": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessuno"
+          }
+        }
+      }
+    },
+    "Nome progetto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project name"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome progetto"
+          }
+        }
+      }
+    },
+    "Nome, MPN, LCSC o footprint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name, MPN, LCSC or footprint"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome, MPN, LCSC o footprint"
+          }
+        }
+      }
+    },
+    "Non attivo (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not active (%@)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non attivo (%@)"
+          }
+        }
+      }
+    },
+    "Non impostata": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not set"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non impostata"
+          }
+        }
+      }
+    },
+    "Non in libreria KiCad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not in the KiCad library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non in libreria KiCad"
+          }
+        }
+      }
+    },
+    "Non presente in magazzino. La scheda è salvata per riferimento; lo stock LCSC è del fornitore, non del tuo inventario.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not in stock. The page is saved for reference; the LCSC stock is the supplier's, not your inventory."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non presente in magazzino. La scheda è salvata per riferimento; lo stock LCSC è del fornitore, non del tuo inventario."
+          }
+        }
+      }
+    },
+    "Non raggiungibile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not reachable"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non raggiungibile"
+          }
+        }
+      }
+    },
+    "Non riuscita": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non riuscita"
+          }
+        }
+      }
+    },
+    "Non usato": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not used"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non usato"
+          }
+        }
+      }
+    },
+    "Note personali…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal notes…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note personali…"
+          }
+        }
+      }
+    },
+    "Numero cassetto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drawer number"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numero cassetto"
+          }
+        }
+      }
+    },
+    "Nuovo componente: i dati vengono presi da LCSC se disponibili.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New part: details are taken from LCSC when available."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuovo componente: i dati vengono presi da LCSC se disponibili."
+          }
+        }
+      }
+    },
+    "Nuovo progetto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Project"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuovo progetto"
+          }
+        }
+      }
+    },
+    "Nuovo tag…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New tag…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuovo tag…"
+          }
+        }
+      }
+    },
+    "OBS": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OBS"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OBS"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "Ogni": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ogni"
+          }
+        }
+      }
+    },
+    "Ordina %lld componenti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Order %lld Parts"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordina %lld componenti"
+          }
+        }
+      }
+    },
+    "Ordina 1 componente": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Order 1 Part"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordina 1 componente"
+          }
+        }
+      }
+    },
+    "Pagina LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC page"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pagina LCSC"
+          }
+        }
+      }
+    },
+    "Parametri tecnici": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Technical parameters"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parametri tecnici"
+          }
+        }
+      }
+    },
+    "Pausa tra richieste LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause between LCSC requests"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausa tra richieste LCSC"
+          }
+        }
+      }
+    },
+    "Più risultati DigiKey": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More DigiKey results"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Più risultati DigiKey"
+          }
+        }
+      }
+    },
+    "Prezzi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prices"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prezzi"
+          }
+        }
+      }
+    },
+    "Prezzo LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC price"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prezzo LCSC"
+          }
+        }
+      }
+    },
+    "Primi 500 risultati": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First 500 results"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primi 500 risultati"
+          }
+        }
+      }
+    },
+    "Production": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Production"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Production"
+          }
+        }
+      }
+    },
+    "Produttore": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manufacturer"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Produttore"
+          }
+        }
+      }
+    },
+    "Progetti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projects"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progetti"
+          }
+        }
+      }
+    },
+    "Progetti BOM": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BOM projects"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progetti BOM"
+          }
+        }
+      }
+    },
+    "Progetto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progetto"
+          }
+        }
+      }
+    },
+    "Progetto eliminato": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project deleted"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progetto eliminato"
+          }
+        }
+      }
+    },
+    "Qty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qty"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qty"
+          }
+        }
+      }
+    },
+    "Quantità": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantità"
+          }
+        }
+      }
+    },
+    "Quantità (es. 10)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity (e.g. 10)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantità (es. 10)"
+          }
+        }
+      }
+    },
+    "Quantità e posizione": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity and location"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantità e posizione"
+          }
+        }
+      }
+    },
+    "Quantità in magazzino": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity in stock"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantità in magazzino"
+          }
+        }
+      }
+    },
+    "Quantità: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity: %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantità: %lld"
+          }
+        }
+      }
+    },
+    "Qui stanno la configurazione, i dati da scambiare e le richieste per KiCad. Scegli la stessa cartella su tutti i tuoi dispositivi.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The configuration, the data to share and the KiCad requests live here. Choose the same folder on all your devices."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qui stanno la configurazione, i dati da scambiare e le richieste per KiCad. Scegli la stessa cartella su tutti i tuoi dispositivi."
+          }
+        }
+      }
+    },
+    "Raggiungibile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reachable"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raggiungibile"
+          }
+        }
+      }
+    },
+    "Refresh token": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh token"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh token"
+          }
+        }
+      }
+    },
+    "Reset": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset"
+          }
+        }
+      }
+    },
+    "Resistori": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resistors"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resistori"
+          }
+        }
+      }
+    },
+    "Ricarica": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ricarica"
+          }
+        }
+      }
+    },
+    "Ricerca": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ricerca"
+          }
+        }
+      }
+    },
+    "Ricerca catalogo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalog search"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ricerca catalogo"
+          }
+        }
+      }
+    },
+    "Ricerca in corso…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ricerca in corso…"
+          }
+        }
+      }
+    },
+    "Ricerca parametrica sul catalogo LCSC (archivio locale + live).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parametric search on the LCSC catalog (local archive + live)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ricerca parametrica sul catalogo LCSC (archivio locale + live)."
+          }
+        }
+      }
+    },
+    "Richiesta": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richiesta"
+          }
+        }
+      }
+    },
+    "Richiesta non trovata.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request not found."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richiesta non trovata."
+          }
+        }
+      }
+    },
+    "Richieste di download": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download requests"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richieste di download"
+          }
+        }
+      }
+    },
+    "Riconosce il QR delle buste LCSC/JLCPCB, il DataMatrix dei distributori (MPN e quantità) e i codici LCSC (C…).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reads the QR code on LCSC/JLCPCB bags, distributor DataMatrix labels (MPN and quantity) and LCSC codes (C…)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riconosce il QR delle buste LCSC/JLCPCB, il DataMatrix dei distributori (MPN e quantità) e i codici LCSC (C…)."
+          }
+        }
+      }
+    },
+    "Riprova": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try Again"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riprova"
+          }
+        }
+      }
+    },
+    "Riprova MPN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry MPN"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riprova MPN"
+          }
+        }
+      }
+    },
+    "Riserva stock": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserve Stock"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riserva stock"
+          }
+        }
+      }
+    },
+    "Riservati componenti per %@ (%lld righe)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserved parts for %1$@ (%2$lld lines)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Riservati componenti per %1$@ (%2$lld righe)"
+          }
+        }
+      }
+    },
+    "Riservato per %@ (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserved for %1$@ (%2$@)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Riservato per %1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "Risoluzione LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC lookup"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Risoluzione LCSC"
+          }
+        }
+      }
+    },
+    "Risolvi codici LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resolve LCSC Codes"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Risolvi codici LCSC"
+          }
+        }
+      }
+    },
+    "Risposta DigiKey non valida": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid DigiKey response"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Risposta DigiKey non valida"
+          }
+        }
+      }
+    },
+    "Risposta LCSC non valida": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid LCSC response"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Risposta LCSC non valida"
+          }
+        }
+      }
+    },
+    "Risposta non valida": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid response"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Risposta non valida"
+          }
+        }
+      }
+    },
+    "Risultati LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC results"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Risultati LCSC"
+          }
+        }
+      }
+    },
+    "Saltato": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skipped"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saltato"
+          }
+        }
+      }
+    },
+    "Salva": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salva"
+          }
+        }
+      }
+    },
+    "Salva scheda": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save Page"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salva scheda"
+          }
+        }
+      }
+    },
+    "Salva sul dispositivo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save on This Device"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salva sul dispositivo"
+          }
+        }
+      }
+    },
+    "Salvataggio fallito: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save failed: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvataggio fallito: %@"
+          }
+        }
+      }
+    },
+    "Salvate nel Portachiavi di questo dispositivo.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved in this device's Keychain."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvate nel Portachiavi di questo dispositivo."
+          }
+        }
+      }
+    },
+    "Sandbox": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox"
+          }
+        }
+      }
+    },
+    "Scambio dati": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data Exchange"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scambio dati"
+          }
+        }
+      }
+    },
+    "Scarica %lld componenti in KiCad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download %lld Parts to KiCad"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scarica %lld componenti in KiCad"
+          }
+        }
+      }
+    },
+    "Scarica 1 componente in KiCad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download 1 Part to KiCad"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scarica 1 componente in KiCad"
+          }
+        }
+      }
+    },
+    "Scarica file KiCad (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download KiCad files (%@)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scarica file KiCad (%@)"
+          }
+        }
+      }
+    },
+    "Scarica i mancanti (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download Missing (%lld)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scarica i mancanti (%lld)"
+          }
+        }
+      }
+    },
+    "Scarica in %@…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download to %@…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scarica in %@…"
+          }
+        }
+      }
+    },
+    "Scarica in KiCad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download to KiCad"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scarica in KiCad"
+          }
+        }
+      }
+    },
+    "Scarica mancanti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download Missing"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scarica mancanti"
+          }
+        }
+      }
+    },
+    "Scegli cartella…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Folder…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli cartella…"
+          }
+        }
+      }
+    },
+    "Scegli il prodotto corretto per questo componente.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the right product for this part."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli il prodotto corretto per questo componente."
+          }
+        }
+      }
+    },
+    "Scegli in Impostazioni la cartella condivisa con il Mac che ha KiCad: l'indice lo scrive il worker.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Settings, choose the folder shared with the Mac that has KiCad: the worker writes the index there."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli in Impostazioni la cartella condivisa con il Mac che ha KiCad: l'indice lo scrive il worker."
+          }
+        }
+      }
+    },
+    "Scegli prima una cartella condivisa.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a shared folder first."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli prima una cartella condivisa."
+          }
+        }
+      }
+    },
+    "Scegli un componente dalla lista.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a part from the list."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli un componente dalla lista."
+          }
+        }
+      }
+    },
+    "Scegli una cartella che vedono tutti i tuoi dispositivi, ad esempio in iCloud Drive. Senza cartella tutto resta su questo dispositivo.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a folder all your devices can see, for example in iCloud Drive. Without a folder everything stays on this device."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli una cartella che vedono tutti i tuoi dispositivi, ad esempio in iCloud Drive. Senza cartella tutto resta su questo dispositivo."
+          }
+        }
+      }
+    },
+    "Scegli una cartella condivisa in Impostazioni.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a shared folder in Settings."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli una cartella condivisa in Impostazioni."
+          }
+        }
+      }
+    },
+    "Scegli una cartella condivisa in Impostazioni: è lì che il Mac con KiCad riceve le richieste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a shared folder in Settings: that's where the Mac with KiCad receives requests."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli una cartella condivisa in Impostazioni: è lì che il Mac con KiCad riceve le richieste."
+          }
+        }
+      }
+    },
+    "Scegli…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli…"
+          }
+        }
+      }
+    },
+    "Scheda salvata — da ordinare (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page saved — to order (%@)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scheda salvata — da ordinare (%@)"
+          }
+        }
+      }
+    },
+    "Scollega": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scollega"
+          }
+        }
+      }
+    },
+    "Scorte OK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock OK"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scorte OK"
+          }
+        }
+      }
+    },
+    "Scorte basse": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Low Stock"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scorte basse"
+          }
+        }
+      }
+    },
+    "Seleziona un componente": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select a Part"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleziona un componente"
+          }
+        }
+      }
+    },
+    "Seleziona un gruppo per vedere le varianti MPN.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select a group to see its MPN variants."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleziona un gruppo per vedere le varianti MPN."
+          }
+        }
+      }
+    },
+    "Seleziona una sezione dalla sidebar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select a section in the sidebar."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleziona una sezione dalla sidebar."
+          }
+        }
+      }
+    },
+    "Seleziona…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleziona…"
+          }
+        }
+      }
+    },
+    "Senza MPN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No MPN"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senza MPN"
+          }
+        }
+      }
+    },
+    "Senza MPN: non verificabile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No MPN: can't be checked"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senza MPN: non verificabile"
+          }
+        }
+      }
+    },
+    "Si imposta dal Mac": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set from the Mac"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si imposta dal Mac"
+          }
+        }
+      }
+    },
+    "Sincronizza ora": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sync Now"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sincronizza ora"
+          }
+        }
+      }
+    },
+    "Soglia minima": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimum quantity"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soglia minima"
+          }
+        }
+      }
+    },
+    "Sostituisci se già in libreria": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace if already in library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sostituisci se già in libreria"
+          }
+        }
+      }
+    },
+    "Sotto soglia": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Below minimum"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sotto soglia"
+          }
+        }
+      }
+    },
+    "Stato": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stato"
+          }
+        }
+      }
+    },
+    "Stesso catalogo LCSC — ottimizzato per codici Cxxxxx in EasyEDA.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same LCSC catalog — tuned for Cxxxxx codes in EasyEDA."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stesso catalogo LCSC — ottimizzato per codici Cxxxxx in EasyEDA."
+          }
+        }
+      }
+    },
+    "Stock": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock"
+          }
+        }
+      }
+    },
+    "Stock LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LCSC stock"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock LCSC"
+          }
+        }
+      }
+    },
+    "Stock: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock: %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock: %lld"
+          }
+        }
+      }
+    },
+    "Storico movimenti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock history"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storico movimenti"
+          }
+        }
+      }
+    },
+    "Strumenti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tools"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strumenti"
+          }
+        }
+      }
+    },
+    "Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag"
+          }
+        }
+      }
+    },
+    "Tag & Note": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tags & Notes"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag & Note"
+          }
+        }
+      }
+    },
+    "Tipo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tipo"
+          }
+        }
+      }
+    },
+    "Token DigiKey scaduto. Inserisci un nuovo token in Impostazioni → DigiKey.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DigiKey token expired. Enter a new token in Settings → DigiKey."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token DigiKey scaduto. Inserisci un nuovo token in Impostazioni → DigiKey."
+          }
+        }
+      }
+    },
+    "Trova LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find LCSC"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trova LCSC"
+          }
+        }
+      }
+    },
+    "Trova componente — progettazione": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find part — design"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trova componente — progettazione"
+          }
+        }
+      }
+    },
+    "Trovati %lld codici LCSC.\nAncora senza C: %lld.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found %1$lld LCSC codes.\nStill without C: %2$lld."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Trovati %1$lld codici LCSC.\nAncora senza C: %2$lld."
+          }
+        }
+      }
+    },
+    "Tutta la libreria": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole library"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutta la libreria"
+          }
+        }
+      }
+    },
+    "Tutte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutte"
+          }
+        }
+      }
+    },
+    "Tutti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutti"
+          }
+        }
+      }
+    },
+    "Tutto OK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Good"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutto OK"
+          }
+        }
+      }
+    },
+    "Tutto a posto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Set"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutto a posto"
+          }
+        }
+      }
+    },
+    "Tutto disponibile: scala le quantità dal magazzino": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything available: deducts the quantities from stock"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutto disponibile: scala le quantità dal magazzino"
+          }
+        }
+      }
+    },
+    "Ultimo aggiornamento": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last updated"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ultimo aggiornamento"
+          }
+        }
+      }
+    },
+    "Ultimo scambio: %@ · Locale: %lld componenti.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last exchange: %1$@ · Local: %2$lld parts."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Ultimo scambio: %1$@ · Locale: %2$lld componenti."
+          }
+        }
+      }
+    },
+    "Un backup del database precedente è in Application Support/backups/ se disponibile.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A backup of the previous database is in Application Support/backups/ when available."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un backup del database precedente è in Application Support/backups/ se disponibile."
+          }
+        }
+      }
+    },
+    "Usa": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa"
+          }
+        }
+      }
+    },
+    "Valore": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Value"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valore"
+          }
+        }
+      }
+    },
+    "Valore | Footprint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Value | Footprint"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valore | Footprint"
+          }
+        }
+      }
+    },
+    "Var.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Var."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Var."
+          }
+        }
+      }
+    },
+    "Varianti MPN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MPN variants"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varianti MPN"
+          }
+        }
+      }
+    },
+    "completo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "complete"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "completo"
+          }
+        }
+      }
+    },
+    "costo BOM": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BOM cost"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "costo BOM"
+          }
+        }
+      }
+    },
+    "disp. %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "avail. %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "disp. %lld"
+          }
+        }
+      }
+    },
+    "es. 12": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. 12"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "es. 12"
+          }
+        }
+      }
+    },
+    "es. A": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. A"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "es. A"
+          }
+        }
+      }
+    },
+    "nuovo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "new"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nuovo"
+          }
+        }
+      }
+    },
+    "qty %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "qty %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "qty %lld"
+          }
+        }
+      }
+    },
+    "senza LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no LCSC"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "senza LCSC"
+          }
+        }
+      }
+    },
+    "senza MPN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no MPN"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "senza MPN"
+          }
+        }
+      }
+    },
+    "soglia %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "min %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "soglia %lld"
+          }
+        }
+      }
+    },
+    "stock %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "stock %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "stock %lld"
+          }
+        }
+      }
+    },
+    "·": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "·"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "·"
+          }
+        }
+      }
+    },
+    "· %lld obsoleti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %lld obsolete"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %lld obsoleti"
+          }
+        }
+      }
+    },
+    "—": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "—"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "—"
+          }
+        }
+      }
+    },
+    "→ %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "→ %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "→ %lld"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

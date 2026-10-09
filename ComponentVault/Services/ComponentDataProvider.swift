@@ -15,13 +15,13 @@ enum ProviderError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidCode:
-            "Codice LCSC non valido."
+            String(localized: "Codice LCSC non valido.")
         case .networkFailure(let detail):
-            "Errore di rete: \(detail)"
+            String(localized: "Errore di rete: \(detail)")
         case .parseFailure:
-            "Impossibile interpretare la risposta del fornitore."
+            String(localized: "Impossibile interpretare la risposta del fornitore.")
         case .notFound(let code):
-            "Componente \(code) non trovato."
+            String(localized: "Componente \(code) non trovato.")
         }
     }
 }

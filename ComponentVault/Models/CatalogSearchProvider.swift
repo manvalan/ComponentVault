@@ -3,7 +3,6 @@ import Foundation
 /// Fornitore usato nella sezione Ricerca catalogo (Impostazioni).
 enum CatalogSearchProvider: String, Codable, CaseIterable, Identifiable, Sendable {
     case lcsc
-    case digikey
     case easyeda
 
     var id: String { rawValue }
@@ -11,7 +10,6 @@ enum CatalogSearchProvider: String, Codable, CaseIterable, Identifiable, Sendabl
     var label: String {
         switch self {
         case .lcsc: "LCSC"
-        case .digikey: "DigiKey"
         case .easyeda: "EasyEDA / JLC"
         }
     }
@@ -19,19 +17,16 @@ enum CatalogSearchProvider: String, Codable, CaseIterable, Identifiable, Sendabl
     var detail: String {
         switch self {
         case .lcsc:
-            "Ricerca parametrica sul catalogo LCSC (archivio locale + live)."
-        case .digikey:
-            "Cerca su DigiKey e risolve il codice LCSC dal MPN quando possibile."
+            String(localized: "Ricerca parametrica sul catalogo LCSC (archivio locale + live).")
         case .easyeda:
-            "Stesso catalogo LCSC — ottimizzato per codici Cxxxxx in EasyEDA."
+            String(localized: "Stesso catalogo LCSC — ottimizzato per codici Cxxxxx in EasyEDA.")
         }
     }
 
     var searchButtonTitle: String {
         switch self {
-        case .lcsc: "Cerca LCSC"
-        case .digikey: "Cerca DigiKey"
-        case .easyeda: "Cerca EasyEDA"
+        case .lcsc: String(localized: "Cerca LCSC")
+        case .easyeda: String(localized: "Cerca EasyEDA")
         }
     }
 
@@ -55,12 +50,12 @@ enum SupplierCatalogSearchService {
         let trimmedValue = query.value.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedFootprint = query.footprint.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if trimmedFootprint.isEmpty, CatalogSearchQuery.looksLikeMPN(trimmedValue), provider != .digikey {
+        if trimmedFootprint.isEmpty, CatalogSearchQuery.looksLikeMPN(trimmedValue) {
             return try await searchByMPN(trimmedValue, inventory: inventory, provider: provider)
         }
 
         guard !trimmedValue.isEmpty || !trimmedFootprint.isEmpty else {
-            throw ProviderError.networkFailure("Imposta almeno valore o footprint, oppure un MPN nel campo Valore.")
+            throw ProviderError.networkFailure(String(localized: "Imposta almeno valore o footprint, oppure un MPN nel campo Valore."))
         }
 
         switch provider {
@@ -76,20 +71,9 @@ enum SupplierCatalogSearchService {
             }
             let inStock = cards.filter { ($0.lcscStock ?? 0) > 0 }.count
             let prefix = provider == .easyeda ? "EasyEDA / LCSC" : "LCSC"
-            let message = "\(cards.count) parti \(prefix) · \(inStock) con stock"
+            let message = String(localized: "\(cards.count) parti \(prefix) · \(inStock) con stock")
             return SearchOutcome(cards: cards, statusMessage: message)
 
-        case .digikey:
-            let cards: [CatalogMatchCard]
-            if CatalogSearchQuery.looksLikeMPN(trimmedValue), trimmedFootprint.isEmpty {
-                cards = try await CatalogSearchService.searchMPN(trimmedValue, inventory: inventory)
-            } else {
-                cards = try await CatalogSearchService.search(query: query, inventory: inventory)
-            }
-            let withLCSC = cards.filter(\.hasLCSC).count
-            let inStock = cards.filter { ($0.digikeyStock ?? 0) > 0 }.count
-            let message = "\(cards.count) da DigiKey · \(withLCSC) con LCSC · \(inStock) disponibili"
-            return SearchOutcome(cards: cards, statusMessage: message)
         }
     }
 
@@ -98,18 +82,12 @@ enum SupplierCatalogSearchService {
         inventory: [Component],
         provider: CatalogSearchProvider
     ) async throws -> SearchOutcome {
-        let includeDigiKey = provider == .digikey || provider == .easyeda || DigiKeyProvider.configured() != nil
-        let (cards, stats) = try await MPNLookupService.search(
-            mpn: mpn,
-            inventory: inventory,
-            includeDigiKey: includeDigiKey
-        )
+        let (cards, stats) = try await MPNLookupService.search(mpn: mpn, inventory: inventory)
 
         let withLCSC = cards.filter(\.hasLCSC).count
-        var parts = ["\(withLCSC) con codice LCSC"]
+        var parts = [String(localized: "\(withLCSC) con codice LCSC")]
         if stats.archiveCount > 0 { parts.append("\(stats.archiveCount) da archivio") }
-        if stats.liveCount > 0 { parts.append("\(stats.liveCount) da LCSC live") }
-        if stats.digikeyFound { parts.append("DigiKey OK") }
+        if stats.liveCount > 0 { parts.append(String(localized: "\(stats.liveCount) da LCSC live")) }
         let prefix = provider.label
         return SearchOutcome(
             cards: cards,

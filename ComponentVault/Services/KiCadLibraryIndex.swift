@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-/// Un simbolo della libreria KiCad MIKILAB (da mikylab_kikad_library/scripts/library_index.py).
+/// Un simbolo della libreria KiCad dell'utente (indice scritto da scripts/library_index.py).
 struct KiCadLibraryEntry: Codable, Sendable, Identifiable, Hashable {
     let name: String
     let lib: String
@@ -33,8 +33,8 @@ enum KiCadLibraryMatch: Sendable {
     case unknown
 }
 
-/// Indice della libreria KiCad: scaricato dal server (pubblicato dal worker sul Mac)
-/// e conservato in locale, così la verifica delle BOM funziona anche offline.
+/// Indice della libreria KiCad: scritto dal worker sul Mac nella cartella condivisa
+/// e copiato in locale, così la verifica delle BOM funziona anche offline.
 @MainActor
 @Observable
 final class KiCadLibraryStore {
@@ -45,14 +45,22 @@ final class KiCadLibraryStore {
     var errorMessage: String?
 
     @ObservationIgnored private var byKey: [String: KiCadLibraryEntry] = [:]
-    @ObservationIgnored private static let etagKey = "ComponentVault.kicadLibraryIndexETag"
+    @ObservationIgnored private static let dateKey = "ComponentVault.kicadLibraryIndexDate"
 
     static var cacheFile: URL {
-        AppPaths.lcscDataRoot.appendingPathComponent("kicad_library_index.json")
+        AppPaths.kicadIndexCacheFile
     }
 
     private init() {
         loadCached()
+    }
+
+    /// Nome della libreria: quello scritto dal worker nell'indice, altrimenti
+    /// la cartella impostata dal Mac, altrimenti un nome generico.
+    var displayName: String {
+        if let name = index?.library.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty { return name }
+        let folder = AppConfigIO.current().kicad.libraryName
+        return folder.isEmpty ? String(localized: "Libreria KiCad") : folder
     }
 
     var ownComponentsCount: Int {
@@ -65,26 +73,25 @@ final class KiCadLibraryStore {
         apply(decoded)
     }
 
-    /// Aggiorna dal server; se offline o non configurato resta la copia locale.
+    /// Aggiorna dalla cartella condivisa; se non raggiungibile resta la copia locale.
     func refresh() async {
         guard !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false }
         do {
-            let config = try SyncSettings.remoteConfig()
-            let etag = index == nil ? nil : UserDefaults.standard.string(forKey: Self.etagKey)
-            guard let fresh = try await RemoteAPIClient.fetchKiCadLibraryIndex(etag: etag, config: config) else {
+            let known = index == nil ? nil : UserDefaults.standard.object(forKey: Self.dateKey) as? Date
+            guard let fresh = try await KiCadQueue.libraryIndex(newerThan: known) else {
                 errorMessage = nil
                 return
             }
             let decoded = try JSONDecoder().decode(KiCadLibraryIndexFile.self, from: fresh.data)
-            try AppPaths.ensureLCSCDirectory()
+            try AppPaths.ensureLocalDirectory()
             try fresh.data.write(to: Self.cacheFile, options: .atomic)
-            UserDefaults.standard.set(fresh.etag, forKey: Self.etagKey)
+            UserDefaults.standard.set(fresh.date, forKey: Self.dateKey)
             apply(decoded)
             errorMessage = nil
         } catch is DecodingError {
-            errorMessage = "Indice libreria non interpretabile."
+            errorMessage = String(localized: "Indice libreria non interpretabile.")
         } catch {
             errorMessage = error.localizedDescription
         }

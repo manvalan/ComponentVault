@@ -50,9 +50,9 @@ enum DatabaseBootstrap {
         var errorDescription: String? {
             switch self {
             case .databaseNotFound:
-                "Database non trovato in \(defaultBasePath). Esegui prima:\npython3 Tools/lcsc_enrich.py"
+                String(localized: "Database non trovato in \(defaultBasePath). Esegui prima:\npython3 Tools/lcsc_enrich.py")
             case .emptyDatabase:
-                "Nessun componente valido trovato in \(defaultBasePath)/json_full_data"
+                String(localized: "Nessun componente valido trovato in \(defaultBasePath)/json_full_data")
             }
         }
     }

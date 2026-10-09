@@ -103,9 +103,9 @@ enum CSVImporter {
         var errorDescription: String? {
             switch self {
             case .emptyArchive:
-                "Nessun file JSON valido trovato nell'archivio."
+                String(localized: "Nessun file JSON valido trovato nell'archivio.")
             case .invalidJSON(let detail):
-                "Errore lettura JSON: \(detail)"
+                String(localized: "Errore lettura JSON: \(detail)")
             }
         }
     }

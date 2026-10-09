@@ -34,6 +34,8 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
     var digikeyLastFetched: String?
     var lcscSnapshot: SupplierSnapshot?
     var digikeySnapshot: SupplierSnapshot?
+    var storageLocation: String?
+    var storageSlot: String?
 
     enum CodingKeys: String, CodingKey {
         case lcscCode, mpn, name, description, footprint, quantity
@@ -44,6 +46,7 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         case priceBreaks, minimumOrderQuantity, leadTimeWeeks
         case digikeyProductStatus, digikeyLastFetched
         case lcscSnapshot, digikeySnapshot
+        case storageLocation, storageSlot
     }
 
     init(from decoder: Decoder) throws {
@@ -78,6 +81,8 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         digikeyLastFetched = try container.decodeIfPresent(String.self, forKey: .digikeyLastFetched)
         lcscSnapshot = try container.decodeIfPresent(SupplierSnapshot.self, forKey: .lcscSnapshot)
         digikeySnapshot = try container.decodeIfPresent(SupplierSnapshot.self, forKey: .digikeySnapshot)
+        storageLocation = try container.decodeIfPresent(String.self, forKey: .storageLocation)
+        storageSlot = try container.decodeIfPresent(String.self, forKey: .storageSlot)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -112,6 +117,8 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         try container.encodeIfPresent(digikeyLastFetched, forKey: .digikeyLastFetched)
         try container.encodeIfPresent(lcscSnapshot, forKey: .lcscSnapshot)
         try container.encodeIfPresent(digikeySnapshot, forKey: .digikeySnapshot)
+        try container.encodeIfPresent(storageLocation, forKey: .storageLocation)
+        try container.encodeIfPresent(storageSlot, forKey: .storageSlot)
     }
 
     private static func decodeDouble<K: CodingKey>(
@@ -176,7 +183,9 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         digikeyProductStatus: String? = nil,
         digikeyLastFetched: String? = nil,
         lcscSnapshot: SupplierSnapshot? = nil,
-        digikeySnapshot: SupplierSnapshot? = nil
+        digikeySnapshot: SupplierSnapshot? = nil,
+        storageLocation: String? = nil,
+        storageSlot: String? = nil
     ) {
         self.lcscCode = lcscCode
         self.mpn = mpn
@@ -208,6 +217,8 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
         self.digikeyLastFetched = digikeyLastFetched
         self.lcscSnapshot = lcscSnapshot
         self.digikeySnapshot = digikeySnapshot
+        self.storageLocation = storageLocation
+        self.storageSlot = storageSlot
     }
 
     func withLCSCCode(_ code: String) -> ComponentRecord {
@@ -249,7 +260,9 @@ struct ComponentRecord: Codable, Identifiable, Hashable, Sendable {
             digikeyProductStatus: digikeyProductStatus,
             digikeyLastFetched: digikeyLastFetched,
             lcscSnapshot: lcscSnapshot,
-            digikeySnapshot: digikeySnapshot
+            digikeySnapshot: digikeySnapshot,
+            storageLocation: storageLocation,
+            storageSlot: storageSlot
         )
     }
 

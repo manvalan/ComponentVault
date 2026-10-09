@@ -2,6 +2,19 @@ import SwiftUI
 
 // MARK: - Barra filtri: tab in alto + opzioni sempre visibili sotto
 
+/// I filtri usano "Tutte"/"Tutti" come valore interno per "nessun filtro":
+/// restano invariati nei confronti e vengono tradotti solo quando si mostrano.
+enum FilterSentinel {
+    static func display(_ value: String) -> String {
+        switch value {
+        case "Tutte": String(localized: "Tutte")
+        case "Tutti": String(localized: "Tutti")
+        case "Nessuno": String(localized: "Nessuno")
+        default: value
+        }
+    }
+}
+
 struct TopFilterTab: View {
     let title: String
     let value: String
@@ -15,7 +28,7 @@ struct TopFilterTab: View {
                 Text(title)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
-                Text(value)
+                Text(FilterSentinel.display(value))
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(isHighlighted || isOpen ? Color.accentColor : .primary)
                     .lineLimit(1)
@@ -61,7 +74,7 @@ struct TopFilterOptionStrip<Option: Hashable>: View {
                     Button {
                         onSelect(option)
                     } label: {
-                        optionLabel(label(option), selected: isSelected(option))
+                        optionLabel(FilterSentinel.display(label(option)), selected: isSelected(option))
                     }
                     .buttonStyle(.plain)
                 }
@@ -185,11 +198,11 @@ struct FilterBar: View {
 
     private func zoneTitle(_ zone: InventoryFilterZone) -> String {
         switch zone {
-        case .category: "Categoria"
-        case .footprint: "Footprint"
-        case .brand: "Brand"
-        case .tag: "Tag"
-        case .more: "Altro"
+        case .category: String(localized: "Categoria")
+        case .footprint: String(localized: "Footprint")
+        case .brand: String(localized: "Brand")
+        case .tag: String(localized: "Tag")
+        case .more: String(localized: "Altro")
         }
     }
 
@@ -222,8 +235,6 @@ struct FilterBar: View {
             HStack(spacing: 10) {
                 toggleChip("Avvisi attivi", isOn: $filter.showLowStockOnly)
                 toggleChip("Esauriti", isOn: $filter.showOutOfStockOnly)
-                toggleChip("DigiKey", isOn: $filter.requireDigiKeyData)
-                toggleChip("DK stock 0", isOn: $filter.digikeyOutOfStockOnly)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
@@ -231,7 +242,7 @@ struct FilterBar: View {
         .background(Color.primary.opacity(0.04))
     }
 
-    private func toggleChip(_ title: String, isOn: Binding<Bool>) -> some View {
+    private func toggleChip(_ title: LocalizedStringKey, isOn: Binding<Bool>) -> some View {
         Button {
             isOn.wrappedValue.toggle()
         } label: {
@@ -262,8 +273,6 @@ struct FilterBar: View {
             || filter.tag != "Tutti"
             || filter.showLowStockOnly
             || filter.showOutOfStockOnly
-            || filter.requireDigiKeyData
-            || filter.digikeyOutOfStockOnly
             || !filter.searchText.isEmpty
     }
 
@@ -283,10 +292,8 @@ struct FilterBar: View {
 
     private var moreSummary: String {
         var parts: [String] = []
-        if filter.showLowStockOnly { parts.append("Avvisi") }
-        if filter.showOutOfStockOnly { parts.append("Esauriti") }
-        if filter.requireDigiKeyData { parts.append("DigiKey") }
-        if filter.digikeyOutOfStockOnly { parts.append("DK=0") }
+        if filter.showLowStockOnly { parts.append(String(localized: "Avvisi")) }
+        if filter.showOutOfStockOnly { parts.append(String(localized: "Esauriti")) }
         return parts.isEmpty ? "—" : parts.joined(separator: ", ")
     }
 
@@ -398,10 +405,10 @@ struct CatalogDesignFilterBar: View {
 
     private func zoneTitle(_ zone: CatalogSearchZone) -> String {
         switch zone {
-        case .type: "Tipo"
-        case .value: "Valore"
-        case .footprint: "Footprint"
-        case .brand: "Produttore"
+        case .type: String(localized: "Tipo")
+        case .value: String(localized: "Valore")
+        case .footprint: String(localized: "Footprint")
+        case .brand: String(localized: "Produttore")
         }
     }
 
@@ -417,7 +424,7 @@ struct CatalogDesignFilterBar: View {
                     query.type = type
                     query.valueUnit = ComponentValueUnit.defaultUnit(for: type)
                 },
-                clearLabel: "Tutti",
+                clearLabel: String(localized: "Tutti"),
                 onClear: { query.type = nil },
                 isClearSelected: query.type == nil
             )
@@ -432,7 +439,7 @@ struct CatalogDesignFilterBar: View {
                     label: { $0 },
                     isSelected: { $0 == query.footprint },
                     onSelect: { fp in query.footprint = fp },
-                    clearLabel: "Nessuno",
+                    clearLabel: String(localized: "Nessuno"),
                     onClear: { query.footprint = "" },
                     isClearSelected: query.footprint.isEmpty
                 )
@@ -448,7 +455,7 @@ struct CatalogDesignFilterBar: View {
                     label: { $0 },
                     isSelected: { $0 == query.brand },
                     onSelect: { brand in query.brand = brand },
-                    clearLabel: "Nessuno",
+                    clearLabel: String(localized: "Nessuno"),
                     onClear: { query.brand = "" },
                     isClearSelected: query.brand.isEmpty
                 )
@@ -460,7 +467,7 @@ struct CatalogDesignFilterBar: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 TextField(
-                    query.resolvedType.usesStructuredValue ? "Quantità (es. 10)" : "MPN o keyword",
+                    query.resolvedType.usesStructuredValue ? String(localized: "Quantità (es. 10)") : "MPN o keyword",
                     text: $query.valueAmount
                 )
                 #if os(iOS)
@@ -491,7 +498,7 @@ struct CatalogDesignFilterBar: View {
         .background(Color.primary.opacity(0.04))
     }
 
-    private func emptyOptionsHint(_ text: String) -> some View {
+    private func emptyOptionsHint(_ text: LocalizedStringKey) -> some View {
         Text(text)
             .font(.caption)
             .foregroundStyle(.secondary)

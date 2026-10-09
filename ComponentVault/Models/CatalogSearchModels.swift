@@ -141,15 +141,8 @@ struct CatalogMatchCard: Identifiable, Sendable {
     let lcscStock: Int?
     let lcscURL: String?
 
-    let digikeyPartNumber: String?
-    let digikeyPrice: Double?
-    let digikeyCurrency: String?
-    let digikeyStock: Int?
-    let digikeyURL: String?
-
     let inInventory: Bool
     let inventoryQuantity: Int?
-    let digikeyRecord: ComponentRecord?
     let lcscRecord: ComponentRecord?
     let lcscSource: LCSCMatchSource?
 
@@ -157,21 +150,12 @@ struct CatalogMatchCard: Identifiable, Sendable {
         guard let lcscCode else { return false }
         return LCSCCode.isValid(lcscCode)
     }
-    var hasDigiKey: Bool { digikeyPartNumber != nil }
-    var hasBothCodes: Bool { hasLCSC && hasDigiKey }
 
     /// Codice `CV-*` proposto quando LCSC non è disponibile.
     var proposedInternalCode: String? {
         guard !hasLCSC else { return nil }
-        let seed: String
-        if let digikeyPartNumber, !digikeyPartNumber.isEmpty {
-            seed = digikeyPartNumber
-        } else if !mpn.isEmpty {
-            seed = mpn
-        } else {
-            return nil
-        }
-        return InternalComponentCode.make(from: seed)
+        guard !mpn.isEmpty else { return nil }
+        return InternalComponentCode.make(from: mpn)
     }
 
     var lcscDisplayCode: String {
@@ -186,11 +170,6 @@ struct CatalogMatchCard: Identifiable, Sendable {
     var lcscLink: URL? {
         guard let lcscCode else { return nil }
         return URL(string: "https://www.lcsc.com/product-detail/\(lcscCode).html")
-    }
-
-    var digikeyLink: URL? {
-        guard let url = digikeyURL, let parsed = URL(string: url) else { return nil }
-        return parsed
     }
 }
 

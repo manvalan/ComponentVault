@@ -1,25 +1,25 @@
 import Foundation
 
+/// Ricerca e prezzi DigiKey con le credenziali inserite a mano (Portachiavi).
+/// Disponibile solo se l'utente ha configurato DigiKey sul proprio dispositivo.
 struct DigiKeyProvider: ComponentDataProvider {
     let source: DataSource = .digikey
 
     private let auth: DigiKeyAuthService
-    private let config: DigiKeyConfig
-    private let session: URLSession
+    private let credentials: DigiKeyCredentials
 
-    init(config: DigiKeyConfig) {
-        self.config = config
-        self.auth = DigiKeyAuthService(config: config)
-        self.session = URLSession.shared
+    init(credentials: DigiKeyCredentials) {
+        self.credentials = credentials
+        self.auth = DigiKeyAuthService(credentials: credentials)
     }
 
     static func configured() -> DigiKeyProvider? {
-        guard let config = DigiKeyConfig.load() else { return nil }
-        return DigiKeyProvider(config: config)
+        guard let credentials = DigiKeyKeychain.load(), credentials.isComplete else { return nil }
+        return DigiKeyProvider(credentials: credentials)
     }
 
     func fetch(lcscCode: String) async throws -> ComponentRecord {
-        throw ProviderError.networkFailure("DigiKey cerca per MPN, non per codice LCSC.")
+        throw ProviderError.networkFailure(String(localized: "DigiKey cerca per MPN, non per codice LCSC."))
     }
 
     func searchCandidates(
@@ -27,115 +27,47 @@ struct DigiKeyProvider: ComponentDataProvider {
         lcscCode: String,
         recordCount: Int = 5
     ) async throws -> [DigiKeyCandidate] {
-        let data = try await searchRequest(mpn: mpn, recordCount: recordCount)
+        let keyword = mpn.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !keyword.isEmpty else { throw ProviderError.invalidCode }
+        let body = try JSONSerialization.data(withJSONObject: [
+            "Keywords": keyword,
+            "RecordCount": max(1, min(recordCount, 25)),
+        ] as [String: Any])
+        let data = try await apiRequest(path: "products/v4/search/keyword", method: "POST", body: body)
         return try DigiKeyParser.parseCandidates(
             data: data,
-            mpn: mpn,
+            mpn: keyword,
             lcscCode: lcscCode,
-            currency: config.currency
+            currency: credentials.currency
         )
     }
 
-    func searchCatalog(keyword: String, recordCount: Int = 8) async throws -> [DigiKeyCandidate] {
-        let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { throw ProviderError.invalidCode }
-
-        let data = try await searchRequest(mpn: trimmed, recordCount: recordCount)
-        return try DigiKeyParser.parseCandidates(
-            data: data,
-            mpn: trimmed,
-            lcscCode: InternalComponentCode.catalogSearchPlaceholder,
-            currency: config.currency
-        )
-    }
-
-    func searchBarcode(_ barcode: String) async throws -> [DigiKeyCandidate] {
-        try await searchCatalog(keyword: barcode, recordCount: 5)
-    }
-
-    func fetchSubstitutions(partNumber: String, referenceMPN: String) async throws -> [DigiKeyCrossReference] {
-        let data = try await apiRequest(
-            path: "products/v4/search/\(encodedPartNumber(partNumber))/substitutions",
-            method: "GET"
-        )
-        return try DigiKeyDiscoveryParser.parseCrossReferences(
-            data: data,
-            currency: config.currency,
-            referenceMPN: referenceMPN
-        )
-    }
-
-    func fetchAlternatePackaging(partNumber: String) async throws -> [DigiKeyAlternatePackage] {
-        let data = try await apiRequest(
-            path: "products/v4/search/\(encodedPartNumber(partNumber))/alternatepackaging",
-            method: "GET"
-        )
-        return try DigiKeyDiscoveryParser.parseAlternatePackaging(data: data)
-    }
-
-    func importCandidate(_ candidate: DigiKeyCandidate) async throws -> ComponentRecord {
-        let source = candidate.record
-        let record = ComponentRecord(
-            lcscCode: DigiKeySyntheticCode.make(from: candidate.digikeyPartNumber),
-            mpn: source.mpn,
-            name: source.name,
-            description: source.description,
-            footprint: source.footprint,
-            quantity: source.quantity,
-            category: source.category,
-            value: source.value,
-            brand: source.brand,
-            datasheetURL: source.datasheetURL,
-            imageURLs: source.imageURLs,
-            price: source.price,
-            currency: source.currency,
-            supplierStock: source.supplierStock,
-            dataSource: .digikey,
-            parameters: source.parameters,
-            notes: source.notes,
-            minQuantity: source.minQuantity,
-            tags: source.tags,
-            updatedAt: source.updatedAt,
-            digikeyPartNumber: source.digikeyPartNumber ?? candidate.digikeyPartNumber,
-            supplierProductURL: source.supplierProductURL,
-            priceBreaks: source.priceBreaks,
-            minimumOrderQuantity: source.minimumOrderQuantity,
-            leadTimeWeeks: source.leadTimeWeeks,
-            digikeyProductStatus: source.digikeyProductStatus,
-            digikeyLastFetched: source.digikeyLastFetched,
-            lcscSnapshot: source.lcscSnapshot,
-            digikeySnapshot: source.digikeySnapshot
-        )
-        return try await enrichRecord(record)
-    }
-
-    func fetchByMPN(_ mpn: String, lcscCode: String) async throws -> ComponentRecord {
-        let candidates = try await searchCandidates(mpn: mpn, lcscCode: lcscCode, recordCount: 1)
-        return candidates[0].record
-    }
-
+    /// Aggiunge scaglioni di prezzo, MOQ, lead time, stato e stock.
     func enrichRecord(_ record: ComponentRecord) async throws -> ComponentRecord {
         guard let partNumber = record.digikeyPartNumber?.trimmingCharacters(in: .whitespacesAndNewlines),
               !partNumber.isEmpty else {
             return record
         }
 
-        let pricingResult = try? await fetchPricing(partNumber: partNumber)
-        let detailsResult = try? await fetchDetails(partNumber: partNumber)
+        let pricing = try? DigiKeyCommercialParser.parsePricing(
+            data: await apiRequest(path: "products/v4/search/\(encoded(partNumber))/pricing", method: "GET")
+        )
+        let details = try? DigiKeyCommercialParser.parseDetails(
+            data: await apiRequest(path: "products/v4/search/\(encoded(partNumber))/productdetails", method: "GET")
+        )
 
-        var updated = record
-        var commercial = detailsResult ?? DigiKeyCommercialData(
+        var commercial = details ?? DigiKeyCommercialData(
             priceBreaks: [],
             minimumOrderQuantity: nil,
             leadTimeWeeks: nil,
             productStatus: nil,
             supplierStock: nil
         )
-
-        if let pricing = pricingResult {
+        if let pricing {
             commercial = DigiKeyCommercialParser.merge(commercial, pricing: pricing)
         }
 
+        var updated = record
         updated.priceBreaks = commercial.priceBreaks
         updated.minimumOrderQuantity = commercial.minimumOrderQuantity
         updated.leadTimeWeeks = commercial.leadTimeWeeks
@@ -143,77 +75,41 @@ struct DigiKeyProvider: ComponentDataProvider {
         if let stock = commercial.supplierStock {
             updated.supplierStock = stock
         }
-
         let qty = max(updated.quantity, 1)
-        if let tiered = PriceBreakCodec.unitPrice(for: qty, in: commercial.priceBreaks) {
-            updated.price = tiered
-        } else if let first = commercial.priceBreaks.first?.unitPrice {
-            updated.price = first
-        }
-
+        updated.price = PriceBreakCodec.unitPrice(for: qty, in: commercial.priceBreaks)
+            ?? commercial.priceBreaks.first?.unitPrice
+            ?? updated.price
         updated.digikeyLastFetched = ISO8601DateFormatter().string(from: Date())
         return updated
     }
 
-    private func fetchPricing(partNumber: String) async throws -> [PriceBreak] {
-        let data = try await apiRequest(
-            path: "products/v4/search/\(encodedPartNumber(partNumber))/pricing",
-            method: "GET"
-        )
-        return try DigiKeyCommercialParser.parsePricing(data: data)
-    }
-
-    private func fetchDetails(partNumber: String) async throws -> DigiKeyCommercialData {
-        let data = try await apiRequest(
-            path: "products/v4/search/\(encodedPartNumber(partNumber))/productdetails",
-            method: "GET"
-        )
-        return try DigiKeyCommercialParser.parseDetails(data: data)
-    }
-
-    private func searchRequest(mpn: String, recordCount: Int) async throws -> Data {
-        let keyword = mpn.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !keyword.isEmpty else { throw ProviderError.invalidCode }
-
-        let body: [String: Any] = [
-            "Keywords": keyword,
-            "RecordCount": max(1, min(recordCount, 25)),
-        ]
-        let bodyData = try JSONSerialization.data(withJSONObject: body)
-
-        return try await apiRequest(
-            path: "products/v4/search/keyword",
-            method: "POST",
-            body: bodyData
-        )
-    }
-
-    private func apiRequest(path: String, method: String, body: Data? = nil) async throws -> Data {
+    private func apiRequest(path: String, method: String, body: Data? = nil, retried: Bool = false) async throws -> Data {
         let token = try await auth.accessToken()
-        let url = URL(string: "\(config.apiBaseURL)/\(path)")!
-
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: URL(string: "\(credentials.apiBaseURL)/\(path)")!)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue(config.clientID, forHTTPHeaderField: "X-DIGIKEY-Client-Id")
-        request.setValue(config.language, forHTTPHeaderField: "X-DIGIKEY-Locale-Language")
-        request.setValue(config.currency, forHTTPHeaderField: "X-DIGIKEY-Locale-Currency")
-        request.setValue(config.market, forHTTPHeaderField: "X-DIGIKEY-Locale-Site")
+        request.setValue(credentials.clientID, forHTTPHeaderField: "X-DIGIKEY-Client-Id")
+        request.setValue(credentials.language, forHTTPHeaderField: "X-DIGIKEY-Locale-Language")
+        request.setValue(credentials.currency, forHTTPHeaderField: "X-DIGIKEY-Locale-Currency")
+        request.setValue(credentials.market, forHTTPHeaderField: "X-DIGIKEY-Locale-Site")
         request.httpBody = body
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else {
-            throw ProviderError.networkFailure("Risposta DigiKey non valida")
+            throw ProviderError.networkFailure(String(localized: "Risposta DigiKey non valida"))
+        }
+        if http.statusCode == 401, !retried {
+            try await auth.refresh()
+            return try await apiRequest(path: path, method: method, body: body, retried: true)
         }
         guard http.statusCode == 200 else {
-            let detail = String(data: data, encoding: .utf8) ?? "HTTP \(http.statusCode)"
-            throw ProviderError.networkFailure(detail)
+            throw ProviderError.networkFailure(String(localized: "DigiKey: errore HTTP \(http.statusCode)"))
         }
         return data
     }
 
-    private func encodedPartNumber(_ partNumber: String) -> String {
+    private func encoded(_ partNumber: String) -> String {
         var allowed = CharacterSet.urlPathAllowed
         allowed.remove(charactersIn: "/")
         return partNumber.addingPercentEncoding(withAllowedCharacters: allowed) ?? partNumber

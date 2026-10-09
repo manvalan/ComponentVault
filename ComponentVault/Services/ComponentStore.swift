@@ -97,7 +97,7 @@ final class ComponentStore {
         }
         try upsert(records: records)
         let source = DatabaseBootstrap.describeSource()
-        publishStatus("Database creato: \(records.count) componenti da \(source)")
+        publishStatus(String(localized: "Database creato: \(records.count) componenti da \(source)"))
         return DatabaseBootstrap.Result(imported: records.count, source: source)
     }
 
@@ -166,7 +166,7 @@ final class ComponentStore {
         }
 
         try upsert(records: records)
-        publishStatus("Importati \(records.count) componenti da \(url.lastPathComponent)")
+        publishStatus(String(localized: "Importati \(records.count) componenti da \(url.lastPathComponent)"))
     }
 
     func enrichFromLCSC(_ component: Component) async throws -> Component {
@@ -175,7 +175,7 @@ final class ComponentStore {
 
         let target = try await resolveAndApplyLCSC(to: component)
         try modelContext.save()
-        publishStatus("Aggiornato \(target.lcscCode) da LCSC")
+        publishStatus(String(localized: "Aggiornato \(target.lcscCode) da LCSC"))
         return target
     }
 
@@ -194,10 +194,10 @@ final class ComponentStore {
                 _ = try await enrichFromLCSC(component)
                 try await Task.sleep(for: .milliseconds(delayMs))
             } catch {
-                publishStatus("Errore su \(component.lcscCode): \(error.localizedDescription)", autoDismissAfter: 8)
+                publishStatus(String(localized: "Errore su \(component.lcscCode): \(error.localizedDescription)"), autoDismissAfter: 8)
             }
         }
-        publishStatus("Arricchimento LCSC completato (\(total) componenti)")
+        publishStatus(String(localized: "Arricchimento LCSC completato (\(total) componenti)"))
     }
 
     /// Cerca codici LCSC Cxxxxx per tutte le righe del progetto che ne sono prive.
@@ -227,149 +227,44 @@ final class ComponentStore {
 
         project.updatedAt = Date()
         try modelContext.save()
-        publishStatus("EasyEDA: \(resolved) LCSC trovati, \(stillMissing) ancora senza C")
+        publishStatus(String(localized: "EasyEDA: \(resolved) LCSC trovati, \(stillMissing) ancora senza C"))
         return (resolved, stillMissing)
     }
 
+    // MARK: DigiKey (solo con credenziali inserite sul dispositivo)
+
     func enrichFromDigiKey(_ component: Component) async throws -> DigiKeyEnrichResult {
         guard let provider = DigiKeyProvider.configured() else {
-            throw ProviderError.networkFailure(
-                "DigiKey non configurato. Autenticati da Impostazioni → DigiKey."
-            )
+            throw ProviderError.networkFailure(String(localized: "Inserisci le credenziali DigiKey in Impostazioni."))
         }
-        guard !component.mpn.isEmpty else {
-            throw ProviderError.invalidCode
-        }
+        guard !component.mpn.isEmpty else { throw ProviderError.invalidCode }
 
         isLoading = true
         defer { isLoading = false }
 
-        return try await resolveDigiKeyEnrichment(provider: provider, component: component)
-    }
-
-    private func resolveDigiKeyEnrichment(
-        provider: DigiKeyProvider,
-        component: Component
-    ) async throws -> DigiKeyEnrichResult {
-        let candidates = try await provider.searchCandidates(
-            mpn: component.mpn,
-            lcscCode: component.lcscCode
-        )
-
-        if candidates.count == 1 {
-            try await applyDigiKeyRecord(candidates[0].record, to: component, provider: provider)
+        let candidates = try await provider.searchCandidates(mpn: component.mpn, lcscCode: component.lcscCode)
+        let exact = candidates.filter { $0.mpn.caseInsensitiveCompare(component.mpn) == .orderedSame }
+        if candidates.count == 1 || exact.count == 1 {
+            try await applyDigiKeyRecord((exact.first ?? candidates[0]).record, to: component, provider: provider)
             return .applied
         }
-
-        let exact = candidates.filter {
-            $0.mpn.caseInsensitiveCompare(component.mpn) == .orderedSame
-        }
-        if exact.count == 1 {
-            try await applyDigiKeyRecord(exact[0].record, to: component, provider: provider)
-            return .applied
-        }
-
         return .chooseCandidate(candidates)
     }
 
-    func applyDigiKeyRecord(
-        _ record: ComponentRecord,
-        to component: Component,
-        provider: DigiKeyProvider? = nil
-    ) async throws {
-        let activeProvider = provider ?? DigiKeyProvider.configured()
+    func applyDigiKeyRecord(_ record: ComponentRecord, to component: Component, provider: DigiKeyProvider? = nil) async throws {
         var merged = record
         merged.quantity = component.quantity
-
-        if let activeProvider {
-            merged = try await activeProvider.enrichRecord(merged)
+        if let provider = provider ?? DigiKeyProvider.configured() {
+            merged = try await provider.enrichRecord(merged)
         }
-
         component.applyDigiKey(merged)
-
-        if component.needsLCSCCodeResolution, !component.mpn.isEmpty,
-           let lcscRecord = try await resolveLCSCRecord(forMPN: component.mpn) {
-            let target = try assignLCSCCode(to: component, record: lcscRecord)
-            target.applyLCSC(lcscRecord, preserveQuantity: true)
-        }
-
         try modelContext.save()
-        publishStatus("Aggiornato \(component.mpn) da DigiKey")
-    }
-
-    func enrichFromBoth(_ component: Component) async throws -> DigiKeyEnrichResult {
-        isLoading = true
-        defer { isLoading = false }
-
-        var target = component
-        do {
-            target = try await resolveAndApplyLCSC(to: component)
-        } catch {
-            if !component.mpn.isEmpty, let lcscRecord = try? await resolveLCSCRecord(forMPN: component.mpn) {
-                target = try assignLCSCCode(to: component, record: lcscRecord)
-                target.applyLCSC(lcscRecord, preserveQuantity: true)
-            }
-        }
-
-        guard !target.mpn.isEmpty else {
-            try modelContext.save()
-            publishStatus("LCSC aggiornato — serve MPN per DigiKey")
-            return .applied
-        }
-
-        guard let provider = DigiKeyProvider.configured() else {
-            try modelContext.save()
-            publishStatus("LCSC aggiornato — DigiKey non configurato")
-            return .applied
-        }
-
-        let result = try await resolveDigiKeyEnrichment(provider: provider, component: target)
-        publishStatus("Aggiornati LCSC + DigiKey per \(target.resolvedLCSCCode)")
-        return result
-    }
-
-    func enrichAllFromDigiKey(
-        components: [Component],
-        delayMs: Int = 800,
-        progress: ((Int, Int) -> Void)? = nil
-    ) async -> (enriched: Int, skipped: Int, ambiguous: Int) {
-        guard let provider = DigiKeyProvider.configured() else {
-            publishStatus("DigiKey non configurato. Autenticati da Impostazioni.", autoDismissAfter: 8)
-            return (0, components.count, 0)
-        }
-
-        isLoading = true
-        defer { isLoading = false }
-
-        let eligible = components.filter { !$0.mpn.isEmpty }
-        let total = eligible.count
-        var enriched = 0
-        var skipped = 0
-        var ambiguous = 0
-
-        for (index, component) in eligible.enumerated() {
-            progress?(index + 1, total)
-            do {
-                switch try await resolveDigiKeyEnrichment(provider: provider, component: component) {
-                case .applied:
-                    enriched += 1
-                case .chooseCandidate:
-                    ambiguous += 1
-                }
-                try await Task.sleep(for: .milliseconds(delayMs))
-            } catch {
-                skipped += 1
-                publishStatus("Errore su \(component.lcscCode): \(error.localizedDescription)", autoDismissAfter: 8)
-            }
-        }
-
-        publishStatus("DigiKey: \(enriched) aggiornati, \(ambiguous) ambigui, \(skipped) errori")
-        return (enriched, skipped, ambiguous)
+        publishStatus(String(localized: "Aggiornato \(component.mpn) da DigiKey"))
     }
 
     func updateQuantity(_ component: Component, to quantity: Int) throws {
         let delta = quantity - component.quantity
-        try adjustStock(component, delta: delta, reason: .manual, note: "Aggiornamento manuale")
+        try adjustStock(component, delta: delta, reason: .manual, note: String(localized: "Aggiornamento manuale"))
     }
 
     func adjustStock(
@@ -438,7 +333,7 @@ final class ComponentStore {
 
         if let recovered = try recoverLCSCCodeFromSnapshot(component) {
             try modelContext.save()
-            publishStatus("Codice LCSC assegnato: \(recovered.supplierLCSCCode ?? recovered.lcscCode)")
+            publishStatus(String(localized: "Codice LCSC assegnato: \(recovered.supplierLCSCCode ?? recovered.lcscCode)"))
             return recovered
         }
 
@@ -447,7 +342,7 @@ final class ComponentStore {
         let target = try assignLCSCCode(to: component, record: record)
         target.applyLCSC(record, preserveQuantity: true)
         try modelContext.save()
-        publishStatus("Codice LCSC assegnato: \(target.supplierLCSCCode ?? target.lcscCode)")
+        publishStatus(String(localized: "Codice LCSC assegnato: \(target.supplierLCSCCode ?? target.lcscCode)"))
         return target
     }
 
@@ -467,19 +362,11 @@ final class ComponentStore {
         let target = try assignLCSCCode(to: component, record: record)
         target.applyLCSC(record, preserveQuantity: true)
 
-        if let dkRecord = card.digikeyRecord {
-            try await applyDigiKeyRecord(dkRecord, to: target)
-        } else if card.digikeyPartNumber != nil, let provider = DigiKeyProvider.configured() {
-            var dkRecord = record
-            dkRecord.dataSource = DataSource.digikey
-            try await applyDigiKeyRecord(dkRecord, to: target, provider: provider)
-        }
-
         if target.quantity == 0 {
             markAsToOrder(target)
         }
         try modelContext.save()
-        publishStatus("Codice LCSC assegnato: \(target.supplierLCSCCode ?? target.lcscCode)")
+        publishStatus(String(localized: "Codice LCSC assegnato: \(target.supplierLCSCCode ?? target.lcscCode)"))
         return target
     }
 
@@ -501,9 +388,7 @@ final class ComponentStore {
 
         let supplierLCSC = card.lcscCode.flatMap { LCSCCode.isValid($0) ? $0 : nil }
         let inventoryCode: String
-        if let digikeyPN = card.digikeyPartNumber, !digikeyPN.isEmpty {
-            inventoryCode = InternalComponentCode.make(from: digikeyPN)
-        } else if !card.mpn.isEmpty {
+        if !card.mpn.isEmpty {
             inventoryCode = InternalComponentCode.make(from: card.mpn)
         } else if let supplierLCSC {
             inventoryCode = InternalComponentCode.make(from: supplierLCSC)
@@ -523,22 +408,14 @@ final class ComponentStore {
             if card.lcscRecord != nil || card.lcscCode != nil {
                 existing.applyLCSC(record, preserveQuantity: true)
             }
-            if let dkRecord = card.digikeyRecord {
-                try await applyDigiKeyRecord(dkRecord, to: existing)
-            } else if card.digikeyPartNumber != nil, let provider = DigiKeyProvider.configured() {
-                var dkRecord = record
-                dkRecord.dataSource = DataSource.digikey
-                try await applyDigiKeyRecord(dkRecord, to: existing, provider: provider)
-            } else {
-                try modelContext.save()
-            }
+            try modelContext.save()
             if existing.quantity == 0 {
                 markAsToOrder(existing)
                 try modelContext.save()
             }
             publishStatus(
                 existing.isToOrder
-                    ? "Scheda salvata — da ordinare (\(inventoryCode))"
+                    ? String(localized: "Scheda salvata — da ordinare (\(inventoryCode))")
                     : "Aggiornato \(inventoryCode)"
             )
             return existing
@@ -550,69 +427,12 @@ final class ComponentStore {
             predicate: #Predicate { $0.lcscCode == inventoryCode }
         )
         guard let component = try modelContext.fetch(insertedDescriptor).first else {
-            throw ProviderError.networkFailure("Import fallito per \(inventoryCode)")
-        }
-
-        if let dkRecord = card.digikeyRecord {
-            try await applyDigiKeyRecord(dkRecord, to: component)
-        } else if card.digikeyPartNumber != nil, let provider = DigiKeyProvider.configured() {
-            var dkRecord = record
-            dkRecord.dataSource = DataSource.digikey
-            try await applyDigiKeyRecord(dkRecord, to: component, provider: provider)
+            throw ProviderError.networkFailure(String(localized: "Import fallito per \(inventoryCode)"))
         }
 
         markAsToOrder(component)
         try modelContext.save()
-        publishStatus("Scheda salvata — da ordinare (\(inventoryCode))")
-        return component
-    }
-
-    func importDigiKeyCandidate(_ candidate: DigiKeyCandidate) async throws -> Component {
-        guard let provider = DigiKeyProvider.configured() else {
-            throw ProviderError.networkFailure("DigiKey non configurato.")
-        }
-
-        isLoading = true
-        defer { isLoading = false }
-
-        let record = try await provider.importCandidate(candidate)
-        let lcscCode = record.lcscCode
-
-        let descriptor = FetchDescriptor<Component>(
-            predicate: #Predicate { $0.lcscCode == lcscCode }
-        )
-        if let existing = try modelContext.fetch(descriptor).first {
-            try await applyDigiKeyRecord(record, to: existing, provider: provider)
-            if existing.quantity == 0 {
-                markAsToOrder(existing)
-                try modelContext.save()
-            }
-            publishStatus(
-                existing.isToOrder
-                    ? "Scheda salvata — da ordinare (\(lcscCode))"
-                    : "Aggiornato \(lcscCode) da DigiKey"
-            )
-            return existing
-        }
-
-        try upsert(records: [record], preserveLocalQuantity: true)
-        guard let component = try modelContext.fetch(descriptor).first else {
-            throw ProviderError.networkFailure("Import DigiKey fallito")
-        }
-
-        if component.needsLCSCCodeResolution, !component.mpn.isEmpty,
-           let lcscRecord = try? await resolveLCSCRecord(forMPN: component.mpn) {
-            let target = try assignLCSCCode(to: component, record: lcscRecord)
-            target.applyLCSC(lcscRecord, preserveQuantity: true)
-            markAsToOrder(target)
-            try modelContext.save()
-            publishStatus("Scheda salvata — \(target.lcscCode) da ordinare")
-            return target
-        }
-
-        markAsToOrder(component)
-        try modelContext.save()
-        publishStatus("Scheda salvata — da ordinare (\(lcscCode))")
+        publishStatus(String(localized: "Scheda salvata — da ordinare (\(inventoryCode))"))
         return component
     }
 
@@ -754,14 +574,14 @@ final class ComponentStore {
 
             guard let resolved = try await resolveLCSCRecord(forMPN: component.mpn) else {
                 throw ProviderError.notFound(
-                    "\(component.mpn) non è presente nel catalogo LCSC — il componente resta solo DigiKey"
+                    String(localized: "\(component.mpn) non è presente nel catalogo LCSC")
                 )
             }
             let target = try assignLCSCCode(to: component, record: resolved)
             target.applyLCSC(resolved, preserveQuantity: true)
             guard !target.needsLCSCCodeResolution else {
                 throw ProviderError.networkFailure(
-                    "Codice LCSC non assegnato — verifica connessione o MPN"
+                    String(localized: "Codice LCSC non assegnato — verifica connessione o MPN")
                 )
             }
             return target
@@ -843,7 +663,7 @@ final class ComponentStore {
                 minQuantity: lcscRecord.minQuantity,
                 tags: lcscRecord.tags,
                 updatedAt: lcscRecord.updatedAt,
-                digikeyPartNumber: lcscRecord.digikeyPartNumber ?? card.digikeyPartNumber,
+                digikeyPartNumber: lcscRecord.digikeyPartNumber,
                 supplierProductURL: lcscRecord.supplierProductURL,
                 priceBreaks: lcscRecord.priceBreaks,
                 lcscSupplierCode: {
@@ -869,57 +689,20 @@ final class ComponentStore {
             return archived.normalizedForInventory().with(inventoryCode: inventoryCode)
         }
 
-        if var digikeyRecord = card.digikeyRecord {
-            digikeyRecord = ComponentRecord(
-                lcscCode: inventoryCode,
-                mpn: digikeyRecord.mpn,
-                name: digikeyRecord.name,
-                description: digikeyRecord.description,
-                footprint: digikeyRecord.footprint,
-                quantity: digikeyRecord.quantity,
-                category: digikeyRecord.category,
-                value: digikeyRecord.value,
-                brand: digikeyRecord.brand,
-                datasheetURL: digikeyRecord.datasheetURL,
-                imageURLs: digikeyRecord.imageURLs,
-                price: digikeyRecord.price,
-                currency: digikeyRecord.currency,
-                supplierStock: digikeyRecord.supplierStock,
-                dataSource: .digikey,
-                parameters: digikeyRecord.parameters,
-                notes: digikeyRecord.notes,
-                minQuantity: digikeyRecord.minQuantity,
-                tags: digikeyRecord.tags,
-                updatedAt: digikeyRecord.updatedAt,
-                digikeyPartNumber: digikeyRecord.digikeyPartNumber,
-                supplierProductURL: digikeyRecord.supplierProductURL,
-                priceBreaks: digikeyRecord.priceBreaks,
-                lcscSupplierCode: card.lcscCode.flatMap { LCSCCode.isValid($0) ? $0 : nil },
-                minimumOrderQuantity: digikeyRecord.minimumOrderQuantity,
-                leadTimeWeeks: digikeyRecord.leadTimeWeeks,
-                digikeyProductStatus: digikeyRecord.digikeyProductStatus,
-                digikeyLastFetched: digikeyRecord.digikeyLastFetched,
-                lcscSnapshot: digikeyRecord.lcscSnapshot,
-                digikeySnapshot: digikeyRecord.digikeySnapshot
-            )
-            return digikeyRecord
-        }
-
         return ComponentRecord(
             lcscCode: inventoryCode,
             mpn: card.mpn,
             name: card.mpn,
             description: card.description,
             footprint: card.footprint == "—" ? "" : card.footprint,
-            category: card.type.label,
+            category: card.type.englishLabel,
             value: card.value == "—" ? "" : card.value,
             brand: card.brand,
-            price: card.lcscPrice ?? card.digikeyPrice,
-            currency: card.lcscCurrency ?? card.digikeyCurrency,
-            supplierStock: card.lcscStock ?? card.digikeyStock,
-            dataSource: card.hasLCSC ? .lcsc : (card.hasDigiKey ? .digikey : .manual),
-            digikeyPartNumber: card.digikeyPartNumber,
-            supplierProductURL: card.digikeyURL ?? card.lcscURL,
+            price: card.lcscPrice,
+            currency: card.lcscCurrency,
+            supplierStock: card.lcscStock,
+            dataSource: card.hasLCSC ? .lcsc : .manual,
+            supplierProductURL: card.lcscURL,
             lcscSupplierCode: card.lcscCode.flatMap { LCSCCode.isValid($0) ? $0 : nil }
         )
     }
@@ -937,67 +720,138 @@ final class ComponentStore {
         (try? modelContext.fetch(FetchDescriptor<Component>(sortBy: [SortDescriptor(\.lcscCode)]))) ?? []
     }
 
-    func pushToRemote(config: RemoteAPIConfig) async throws -> Int {
-        isLoading = true
-        defer { isLoading = false }
-
-        let descriptor = FetchDescriptor<Component>(sortBy: [SortDescriptor(\.lcscCode)])
-        let components = try modelContext.fetch(descriptor)
-        let records = components.map { $0.toRecord() }
-        let upserted = try await RemoteAPIClient.pushComponents(records, config: config)
-        publishStatus("Caricati \(upserted) componenti sul server")
-        return upserted
+    /// Componente già in inventario che corrisponde all'etichetta (LCSC, poi MPN).
+    func existingComponent(for label: ScannedLabel) -> Component? {
+        let inventory = fetchAllComponents()
+        if let lcsc = label.lcsc?.uppercased(),
+           let hit = inventory.first(where: { $0.supplierLCSCCode?.uppercased() == lcsc || $0.lcscCode.uppercased() == lcsc }) {
+            return hit
+        }
+        if let mpn = label.mpn {
+            let key = CatalogMatchNormalizer.mpn(mpn)
+            if !key.isEmpty, let hit = inventory.first(where: { CatalogMatchNormalizer.mpn($0.mpn) == key }) {
+                return hit
+            }
+        }
+        return nil
     }
 
-    func pullFromRemote(config: RemoteAPIConfig) async throws -> Int {
+    /// Carico da etichetta: se il componente c'è già aggiunge la quantità, altrimenti
+    /// lo crea (con i dati LCSC quando il codice o l'MPN si trovano nel catalogo).
+    /// La posizione indicata (dispensario e numero) sostituisce quella precedente.
+    func receiveScanned(
+        _ label: ScannedLabel,
+        quantity: Int,
+        location: String,
+        slot: String
+    ) async throws -> (component: Component, created: Bool) {
         isLoading = true
         defer { isLoading = false }
 
-        let records = try await RemoteAPIClient.fetchComponents(config: config)
-        try upsert(records: records, preserveLocalQuantity: false)
-        publishStatus("Scaricati \(records.count) componenti dal server")
-        return records.count
+        let location = location.trimmingCharacters(in: .whitespacesAndNewlines)
+        let slot = slot.trimmingCharacters(in: .whitespacesAndNewlines)
+        let note = String(localized: "Carico da etichetta")
+
+        if let existing = existingComponent(for: label) {
+            if !location.isEmpty { existing.storageLocation = location }
+            if !slot.isEmpty { existing.storageSlot = slot }
+            if existing.supplierLCSCCode == nil, let lcsc = label.lcsc { existing.lcscSupplierCode = lcsc }
+            if quantity != 0 {
+                try adjustStock(existing, delta: quantity, reason: .importAction, note: note)
+            } else {
+                existing.lastUpdated = Date()
+                try modelContext.save()
+            }
+            return (existing, false)
+        }
+
+        var record: ComponentRecord?
+        if let lcsc = label.lcsc {
+            record = try? await lcscProvider.fetch(lcscCode: lcsc)
+        }
+        if record == nil, let mpn = label.mpn,
+           let hit = try? await resolveLCSCRecord(forMPN: mpn),
+           CatalogMatchNormalizer.mpn(hit.mpn) == CatalogMatchNormalizer.mpn(mpn) {
+            record = hit
+        }
+        let seed = label.mpn ?? label.lcsc ?? label.raw
+        var base = record ?? ComponentRecord(
+            lcscCode: label.lcsc ?? InternalComponentCode.make(from: seed),
+            mpn: label.mpn ?? "",
+            brand: label.manufacturer ?? "",
+            dataSource: .manual
+        )
+        base.quantity = 0
+        base.storageLocation = location.isEmpty ? nil : location
+        base.storageSlot = slot.isEmpty ? nil : slot
+        let normalized = base.normalizedForInventory()
+        try upsert(records: [normalized], preserveLocalQuantity: false)
+
+        let code = normalized.lcscCode
+        guard let component = try modelContext.fetch(
+            FetchDescriptor<Component>(predicate: #Predicate { $0.lcscCode == code })
+        ).first else {
+            throw ProviderError.networkFailure(String(localized: "Import fallito per \(code)"))
+        }
+        component.storageLocation = normalized.storageLocation
+        component.storageSlot = normalized.storageSlot
+        if quantity != 0 {
+            try adjustStock(component, delta: quantity, reason: .importAction, note: note)
+        } else {
+            try modelContext.save()
+        }
+        return (component, true)
     }
 
-    func syncBidirectional(config: RemoteAPIConfig) async throws -> SyncBidirectionalResult {
+    /// Dispensari già usati, per suggerirli durante il carico.
+    func knownStorageLocations() -> [String] {
+        let all = fetchAllComponents().compactMap { $0.storageLocation?.trimmingCharacters(in: .whitespaces) }
+        return Array(Set(all.filter { !$0.isEmpty })).sorted()
+    }
+
+    func allRecords() throws -> [ComponentRecord] {
+        try modelContext.fetch(FetchDescriptor<Component>(sortBy: [SortDescriptor(\.lcscCode)]))
+            .map { $0.toRecord() }
+    }
+
+    /// Fonde l'inventario di un altro dispositivo (cartella condivisa): per ogni
+    /// codice vince la modifica più recente. `pushed` = record locali più nuovi.
+    func merge(remote remoteRecords: [ComponentRecord]) throws -> SyncBidirectionalResult {
         isLoading = true
         defer { isLoading = false }
 
-        let remoteRecords = try await RemoteAPIClient.fetchComponents(config: config)
-        let remoteByCode = Dictionary(uniqueKeysWithValues: remoteRecords.map { ($0.lcscCode, $0) })
+        var remoteByCode: [String: ComponentRecord] = [:]
+        for record in remoteRecords { remoteByCode[record.lcscCode] = record }
 
-        let descriptor = FetchDescriptor<Component>(sortBy: [SortDescriptor(\.lcscCode)])
-        let localComponents = try modelContext.fetch(descriptor)
-        let localByCode = Dictionary(uniqueKeysWithValues: localComponents.map { ($0.lcscCode, $0) })
+        let localComponents = try modelContext.fetch(FetchDescriptor<Component>())
+        var localByCode: [String: Component] = [:]
+        for component in localComponents { localByCode[component.lcscCode] = component }
 
-        var toPush: [ComponentRecord] = []
+        var pushed = 0
         var pulled = 0
         var unchanged = 0
 
         for (code, local) in localByCode {
-            let localRecord = local.toRecord()
             if let remote = remoteByCode[code] {
                 let localDate = local.lastUpdated
                 let remoteDate = SyncDateParser.parse(remote.updatedAt)
                 if localDate > remoteDate.addingTimeInterval(1) {
-                    toPush.append(localRecord)
+                    pushed += 1
                 } else if remoteDate > localDate.addingTimeInterval(1) {
                     local.apply(remote, preserveQuantity: false)
+                    local.lastUpdated = remoteDate
                     pulled += 1
                 } else {
                     unchanged += 1
                 }
             } else {
-                toPush.append(localRecord)
+                pushed += 1
             }
         }
 
-        for (code, remote) in remoteByCode where localByCode[code] == nil {
-            try upsert(records: [remote], preserveLocalQuantity: false)
-            pulled += 1
-        }
-
-        let pushed = toPush.isEmpty ? 0 : try await RemoteAPIClient.pushComponents(toPush, config: config)
+        let newRecords = remoteByCode.filter { localByCode[$0.key] == nil }.map(\.value)
+        try upsert(records: newRecords, preserveLocalQuantity: false)
+        pulled += newRecords.count
         try modelContext.save()
 
         let result = SyncBidirectionalResult(pushed: pushed, pulled: pulled, unchanged: unchanged)

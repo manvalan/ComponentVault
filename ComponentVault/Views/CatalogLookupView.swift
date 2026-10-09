@@ -23,7 +23,7 @@ struct CatalogLookupView: View {
     @State private var addDesignator = ""
     @State private var addQuantity = 1
     @State private var importedComponent: Component?
-    @State private var kicadMessage: String?
+    @State private var kicadFetchItems: [KiCadFetchItem]?
 
     var body: some View {
         resultsPanel
@@ -48,10 +48,13 @@ struct CatalogLookupView: View {
         .sheet(item: $importedComponent) { component in
             ComponentDetailSheet(component: component, store: store)
         }
-        .alert("KiCad", isPresented: .constant(kicadMessage != nil)) {
-            Button("OK") { kicadMessage = nil }
-        } message: {
-            Text(kicadMessage ?? "")
+        .sheet(isPresented: Binding(
+            get: { kicadFetchItems != nil },
+            set: { if !$0 { kicadFetchItems = nil } }
+        )) {
+            if let kicadFetchItems {
+                KiCadFetchView(items: kicadFetchItems)
+            }
         }
     }
 
@@ -154,7 +157,7 @@ struct CatalogLookupView: View {
         ZStack {
             if results.isEmpty && !isSearching {
                 ContentUnavailableView(
-                    "Catalogo fornitori",
+                    String(localized: "Catalogo fornitori"),
                     systemImage: "cpu",
                     description: Text(emptyStateDescription)
                 )
@@ -210,7 +213,7 @@ struct CatalogLookupView: View {
             results = outcome.cards
             statusMessage = outcome.statusMessage
             if results.isEmpty {
-                statusMessage = (statusMessage ?? "") + " · nessun risultato"
+                statusMessage = (statusMessage ?? "") + String(localized: " · nessun risultato")
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -224,7 +227,7 @@ struct CatalogLookupView: View {
             let component = try await store.importCatalogMatch(card)
             importedComponent = component
             statusMessage = component.isToOrder
-                ? "Scheda salvata — da ordinare (\(component.lcscCode))"
+                ? String(localized: "Scheda salvata — da ordinare (\(component.lcscCode))")
                 : "Aggiornato \(component.lcscCode)"
         } catch {
             errorMessage = error.localizedDescription
@@ -284,16 +287,12 @@ struct CatalogLookupView: View {
     }
 
     private func addCardToKiCad(_ card: CatalogMatchCard) {
-        do {
-            if let record = card.lcscRecord {
-                let url = try KiCadExportService.appendToPersonalLibrary(record: record)
-                kicadMessage = "Simbolo aggiunto a \(url.lastPathComponent)"
-            } else {
-                kicadMessage = "Serve un codice LCSC valido per KiCad."
-            }
-        } catch {
-            kicadMessage = error.localizedDescription
-        }
+        guard !card.mpn.isEmpty else { return }
+        kicadFetchItems = [KiCadFetchItem(
+            mpn: String(card.mpn.prefix(128)),
+            lcsc: card.hasLCSC ? card.lcscCode : nil,
+            funzione: String(card.description.prefix(256))
+        )]
     }
 
     private func projectID(_ project: Project) -> String {
@@ -319,7 +318,7 @@ struct CatalogMatchCardView: View {
         .background(.background)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(card.hasBothCodes ? Color.purple.opacity(0.35) : Color.secondary.opacity(0.2), lineWidth: 1)
+                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
@@ -346,19 +345,8 @@ struct CatalogMatchCardView: View {
                 }
             }
             Spacer()
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("\(card.value) · \(card.footprint)")
-                    .font(.caption.weight(.semibold).monospacedDigit())
-                if card.hasBothCodes {
-                    Text("LCSC + DigiKey")
-                        .font(.caption2.weight(.bold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color.purple.opacity(0.15))
-                        .foregroundStyle(.purple)
-                        .clipShape(Capsule())
-                }
-            }
+            Text("\(card.value) · \(card.footprint)")
+                .font(.caption.weight(.semibold).monospacedDigit())
         }
     }
 
@@ -372,16 +360,6 @@ struct CatalogMatchCardView: View {
                 currency: card.lcscCurrency,
                 stock: card.lcscStock,
                 url: card.lcscLink
-            )
-
-            SupplierCodeTile(
-                title: "DigiKey",
-                code: card.digikeyPartNumber ?? "—",
-                tint: .red,
-                price: card.digikeyPrice,
-                currency: card.digikeyCurrency,
-                stock: card.digikeyStock,
-                url: card.digikeyLink
             )
         }
     }
@@ -404,9 +382,9 @@ struct CatalogMatchCardView: View {
 
     private func sourceLabel(_ source: LCSCMatchSource) -> String {
         switch source {
-        case .inventory: "Dal tuo inventario"
-        case .archive: "Archivio LCSC locale"
-        case .live: "LCSC live"
+        case .inventory: String(localized: "Dal tuo inventario")
+        case .archive: String(localized: "Archivio LCSC locale")
+        case .live: String(localized: "LCSC live")
         }
     }
 
@@ -426,17 +404,11 @@ struct CatalogMatchCardView: View {
                 }
                 .font(.caption)
             }
-            if let dkURL = card.digikeyLink {
-                Link(destination: dkURL) {
-                    Label("DigiKey", systemImage: "arrow.up.right")
-                }
-                .font(.caption)
-            }
             Spacer()
-            if let onAddToKiCad, card.hasLCSC {
+            if let onAddToKiCad, !card.mpn.isEmpty {
                 Button("KiCad", action: onAddToKiCad)
                     .buttonStyle(.bordered)
-                    .platformHelp("Aggiunge il simbolo alla libreria KiCad personale")
+                    .platformHelp("Chiede il componente al Mac con la libreria KiCad")
             }
             Button("Salva scheda", action: onImport)
                 .buttonStyle(.bordered)
@@ -616,10 +588,7 @@ struct LCSCSearchResultsTable: View {
             if card.hasLCSC, let lcsc = card.lcscCode {
                 codeChip(lcsc, tint: .orange)
             }
-            if card.hasDigiKey, let dk = card.digikeyPartNumber {
-                codeChip(dk, tint: .red)
-            }
-            if !card.hasLCSC && !card.hasDigiKey {
+            if !card.hasLCSC {
                 Text("—")
                     .font(.caption.monospaced())
                     .foregroundStyle(.tertiary)
@@ -649,12 +618,7 @@ struct LCSCSearchResultsTable: View {
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(stock > 0 ? Color.orange : Color.secondary)
             }
-            if card.hasDigiKey, let stock = card.digikeyStock {
-                Text("DK \(stock)")
-                    .font(.caption2.monospacedDigit())
-                    .foregroundStyle(stock > 0 ? Color.red : Color.secondary)
-            }
-            if !card.hasLCSC && !card.hasDigiKey {
+            if !card.hasLCSC {
                 Text("—")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -667,7 +631,7 @@ struct LCSCSearchResultsTable: View {
         HStack(spacing: 8) {
             Button("Salva") { onImport(card) }
                 .buttonStyle(.bordered)
-            if card.hasLCSC {
+            if !card.mpn.isEmpty {
                 Button("KiCad") { onAddToKiCad(card) }
                     .buttonStyle(.bordered)
             }

@@ -8,9 +8,9 @@ enum BOMFocus: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .stock: "Magazzino"
+        case .stock: String(localized: "Magazzino")
         case .kicad: "KiCad"
-        case .price: "Prezzi"
+        case .price: String(localized: "Prezzi")
         }
     }
 
@@ -108,7 +108,7 @@ struct BOMRow: View {
     let price: String?
 
     private var title: String {
-        guard let component = item.component else { return "Componente non in inventario" }
+        guard let component = item.component else { return String(localized: "Componente non in inventario") }
         if !component.value.isEmpty { return component.value }
         return component.displayTitle
     }
@@ -152,7 +152,7 @@ struct BOMRow: View {
                 StatusDot(
                     systemImage: "shippingbox",
                     ok: item.isAvailable,
-                    help: item.isAvailable ? "Disponibile in magazzino" : "Da ordinare: mancano \(item.shortage)"
+                    help: item.isAvailable ? String(localized: "Disponibile in magazzino") : String(localized: "Da ordinare: mancano \(item.shortage)")
                 )
                 StatusDot(systemImage: "books.vertical", ok: kicadOK, help: kicadHelp)
             }
@@ -171,10 +171,10 @@ struct BOMRow: View {
 
     private var kicadHelp: String {
         switch kicad {
-        case .present(let entry): "In libreria KiCad: \(entry.lib)"
-        case .missing: "Non in libreria KiCad"
-        case .noPartNumber: "Senza MPN: non verificabile"
-        case .unknown: "Indice libreria KiCad non ancora disponibile"
+        case .present(let entry): String(localized: "In libreria KiCad: \(entry.lib)")
+        case .missing: String(localized: "Non in libreria KiCad")
+        case .noPartNumber: String(localized: "Senza MPN: non verificabile")
+        case .unknown: String(localized: "Indice libreria KiCad non ancora disponibile")
         }
     }
 }

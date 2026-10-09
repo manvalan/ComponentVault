@@ -10,18 +10,16 @@ enum MPNLookupService {
     struct LookupStats: Sendable {
         let archiveCount: Int
         let liveCount: Int
-        let digikeyFound: Bool
     }
 
     /// Cerca il codice LCSC (Cxxxxx) a partire da un MPN.
-    /// Ordine: inventario → archivio JSON locale → API LCSC live → DigiKey (opzionale).
+    /// Ordine: inventario → archivio JSON locale → API LCSC live.
     static func search(
         mpn rawMPN: String,
-        inventory: [Component],
-        includeDigiKey: Bool = true
+        inventory: [Component]
     ) async throws -> (cards: [CatalogMatchCard], stats: LookupStats) {
         let mpn = rawMPN.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !mpn.isEmpty else { return ([], LookupStats(archiveCount: 0, liveCount: 0, digikeyFound: false)) }
+        guard !mpn.isEmpty else { return ([], LookupStats(archiveCount: 0, liveCount: 0)) }
 
         var records: [(record: ComponentRecord, source: LCSCMatchSource)] = []
         var seen = Set<String>()
@@ -63,37 +61,11 @@ enum MPNLookupService {
             return lhs.record.lcscCode < rhs.record.lcscCode
         }
 
-        var digikeyCandidate: DigiKeyCandidate?
-        if includeDigiKey, let provider = DigiKeyProvider.configured() {
-            if let candidates = try? await provider.searchCandidates(
-                mpn: mpn,
-                lcscCode: "MPN-LOOKUP",
-                recordCount: 5
-            ) {
-                digikeyCandidate = pickBestDigiKey(candidates, mpn: mpn)
-            }
-        }
-
-        if records.isEmpty, let digikey = digikeyCandidate {
-            let card = makeCard(
-                mpn: mpn,
-                lcsc: nil,
-                lcscSource: nil,
-                digikey: digikey,
-                inventory: inventory
-            )
-            return (
-                [card],
-                LookupStats(archiveCount: 0, liveCount: 0, digikeyFound: true)
-            )
-        }
-
         let cards = records.map { item in
             makeCard(
                 mpn: mpn,
                 lcsc: item.record,
                 lcscSource: item.source,
-                digikey: digikeyCandidate,
                 inventory: inventory
             )
         }
@@ -102,31 +74,20 @@ enum MPNLookupService {
             cards,
             LookupStats(
                 archiveCount: archiveCount,
-                liveCount: liveCount,
-                digikeyFound: digikeyCandidate != nil
+                liveCount: liveCount
             )
         )
-    }
-
-    private static func pickBestDigiKey(_ candidates: [DigiKeyCandidate], mpn: String) -> DigiKeyCandidate? {
-        guard !candidates.isEmpty else { return nil }
-        let target = CatalogMatchNormalizer.mpn(mpn)
-        if let exact = candidates.first(where: { CatalogMatchNormalizer.mpn($0.mpn) == target }) {
-            return exact
-        }
-        return candidates.first
     }
 
     private static func makeCard(
         mpn: String,
         lcsc: ComponentRecord?,
         lcscSource: LCSCMatchSource?,
-        digikey: DigiKeyCandidate?,
         inventory: [Component]
     ) -> CatalogMatchCard {
-        let type = ComponentType.from(category: lcsc?.category ?? digikey?.record.category ?? "")
-        let value = displayValue(from: lcsc ?? digikey?.record)
-        let footprint = displayFootprint(from: lcsc ?? digikey?.record)
+        let type = ComponentType.from(category: lcsc?.category ?? "")
+        let value = displayValue(from: lcsc)
+        let footprint = displayFootprint(from: lcsc)
         let lcscCode = lcsc?.lcscCode
         let inventoryItem = lcscCode.flatMap { code in
             inventory.first { $0.lcscCode == code }
@@ -134,7 +95,6 @@ enum MPNLookupService {
 
         let cardID = [
             lcscCode ?? "",
-            digikey?.digikeyPartNumber ?? "",
             CatalogMatchNormalizer.mpn(mpn),
             lcscSource?.rawValue ?? "",
         ].joined(separator: "|")
@@ -144,23 +104,17 @@ enum MPNLookupService {
             type: type,
             value: value,
             footprint: footprint,
-            mpn: lcsc?.mpn.isEmpty == false ? lcsc!.mpn : (digikey?.mpn ?? mpn),
-            description: lcsc?.description ?? digikey?.description ?? "",
-            brand: lcsc?.brand ?? digikey?.manufacturer ?? "",
+            mpn: lcsc?.mpn.isEmpty == false ? lcsc!.mpn : mpn,
+            description: lcsc?.description ?? "",
+            brand: lcsc?.brand ?? "",
             lcscCode: lcscCode,
             lcscPrice: lcsc?.price,
             lcscCurrency: lcsc?.currency,
             lcscStock: lcsc?.supplierStock,
             lcscURL: lcsc?.supplierProductURL
                 ?? lcscCode.map { "https://www.lcsc.com/product-detail/\($0).html" },
-            digikeyPartNumber: digikey?.digikeyPartNumber,
-            digikeyPrice: digikey?.unitPrice,
-            digikeyCurrency: digikey?.currency,
-            digikeyStock: digikey?.stock,
-            digikeyURL: digikey?.productURL,
             inInventory: inventoryItem != nil,
             inventoryQuantity: inventoryItem?.quantity,
-            digikeyRecord: digikey?.record,
             lcscRecord: lcsc,
             lcscSource: lcscSource
         )

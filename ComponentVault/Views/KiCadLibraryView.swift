@@ -1,13 +1,14 @@
 import SwiftUI
 
-/// Sezione "Libreria KiCad": consultazione della libreria MIKILAB (copia locale
-/// dell'indice, aggiornata dal server) e stato delle richieste di download.
+/// Sezione "Libreria KiCad": consultazione della libreria dell'utente (copia locale
+/// dell'indice, aggiornata dalla cartella condivisa) e stato delle richieste di download.
 struct KiCadLibraryView: View {
     @State private var library = KiCadLibraryStore.shared
     @State private var searchText = ""
     @State private var ownOnly = true
     @State private var jobs: [KiCadFetchJob] = []
     @State private var jobsError: String?
+    @State private var worker: KiCadWorkerStatus?
 
     private var results: [KiCadLibraryEntry] {
         library.search(searchText, ownOnly: ownOnly)
@@ -19,7 +20,7 @@ struct KiCadLibraryView: View {
                 Section {
                     indexSummary
                     Picker("Mostra", selection: $ownOnly) {
-                        Text("Componenti MIKILAB").tag(true)
+                        Text("Componenti di \(library.displayName)").tag(true)
                         Text("Tutta la libreria").tag(false)
                     }
                     .pickerStyle(.segmented)
@@ -28,9 +29,9 @@ struct KiCadLibraryView: View {
                 Section(header: Text(results.count >= 500 ? "Primi 500 risultati" : "\(results.count) simboli")) {
                     if library.index == nil {
                         ContentUnavailableView(
-                            "Indice non disponibile",
+                            String(localized: "Indice non disponibile"),
                             systemImage: "books.vertical",
-                            description: Text("Configura server e API key, poi aggiorna. L'indice lo pubblica il worker sul Mac.")
+                            description: Text("Scegli in Impostazioni la cartella condivisa con il Mac che ha KiCad: l'indice lo scrive il worker.")
                         )
                     }
                     ForEach(results) { entry in
@@ -50,7 +51,7 @@ struct KiCadLibraryView: View {
                 }
             }
             .searchable(text: $searchText, prompt: "Nome, MPN, LCSC o footprint")
-            .navigationTitle("Libreria KiCad")
+            .navigationTitle(library.displayName)
             .toolbar {
                 ToolbarItem {
                     Button {
@@ -62,7 +63,7 @@ struct KiCadLibraryView: View {
                             Label("Aggiorna", systemImage: "arrow.clockwise")
                         }
                     }
-                    .disabled(library.isRefreshing || !SyncSettings.isConfigured)
+                    .disabled(library.isRefreshing || !KiCadQueue.isAvailable)
                 }
             }
             .task { await reload() }
@@ -72,11 +73,21 @@ struct KiCadLibraryView: View {
     private var indexSummary: some View {
         VStack(alignment: .leading, spacing: 4) {
             if let index = library.index {
-                Text("\(index.count) simboli · \(library.ownComponentsCount) componenti MIKILAB")
+                Text("\(index.count) simboli · \(library.ownComponentsCount) componenti di \(library.displayName)")
                     .font(.headline)
                 Text("Indice del \(index.generatedAt) · copia locale disponibile offline")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+            if let worker {
+                Label(
+                    worker.isActive
+                        ? String(localized: "Mac con KiCad attivo: \(worker.host)")
+                        : String(localized: "Mac con KiCad non attivo (\(worker.host), visto \(worker.lastSeenDate.formatted(.relative(presentation: .named))))"),
+                    systemImage: "desktopcomputer"
+                )
+                .font(.caption)
+                .foregroundStyle(worker.isActive ? .green : .secondary)
             }
             if let error = library.errorMessage {
                 Text(error).font(.caption).foregroundStyle(.orange)
@@ -122,7 +133,7 @@ struct KiCadLibraryView: View {
             HStack {
                 Text(jobStatus(job.status))
                 Spacer()
-                Text("\(job.result?.components?.count ?? 0) componenti")
+                Text("\(job.result?.components?.count ?? job.itemCount) componenti")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -131,19 +142,20 @@ struct KiCadLibraryView: View {
 
     private func jobStatus(_ status: String) -> String {
         switch status {
-        case "queued": "In coda"
-        case "running": "In lavorazione"
-        case "done": "Completata"
-        case "partial": "Completata in parte"
-        case "failed": "Non riuscita"
+        case "queued": String(localized: "In coda")
+        case "running": String(localized: "In lavorazione")
+        case "done": String(localized: "Completata")
+        case "partial": String(localized: "Completata in parte")
+        case "failed": String(localized: "Non riuscita")
         default: status
         }
     }
 
     private func reload() async {
         await library.refresh()
+        worker = await KiCadQueue.workerStatus()
         do {
-            jobs = try await RemoteAPIClient.listKiCadFetchJobs(config: SyncSettings.remoteConfig())
+            jobs = try await KiCadQueue.listJobs()
             jobsError = nil
         } catch {
             jobsError = error.localizedDescription
@@ -203,7 +215,7 @@ struct ProjectKiCadCheckView: View {
                     LabeledContent("In libreria", value: "\(present) / \(all.count)")
                     LabeledContent("Da scaricare", value: "\(missing.count)")
                     if library.index == nil {
-                        Text("Indice libreria non disponibile: aggiorna con server raggiungibile.")
+                        Text("Indice libreria non disponibile: serve la cartella condivisa con il Mac che ha KiCad.")
                             .font(.caption).foregroundStyle(.orange)
                     } else if let generated = library.index?.generatedAt {
                         Text("Indice del \(generated)").font(.caption).foregroundStyle(.secondary)
@@ -213,14 +225,14 @@ struct ProjectKiCadCheckView: View {
                     } label: {
                         Label("Scarica i mancanti (\(missing.count))", systemImage: "square.and.arrow.down.on.square")
                     }
-                    .disabled(missing.isEmpty || !SyncSettings.isConfigured)
+                    .disabled(missing.isEmpty || !KiCadQueue.isAvailable)
                 }
 
                 Section("Componenti") {
                     ForEach(rows) { row in
                         HStack(alignment: .firstTextBaseline) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(row.mpn.isEmpty ? "senza MPN" : row.mpn).font(.body.monospaced())
+                                Text(row.mpn.isEmpty ? String(localized: "senza MPN") : row.mpn).font(.body.monospaced())
                                 Text(row.designators.joined(separator: ", "))
                                     .font(.caption).foregroundStyle(.secondary).lineLimit(1)
                             }
@@ -255,7 +267,7 @@ struct ProjectKiCadCheckView: View {
                             funzione: String($0.category.prefix(256))
                         )
                     },
-                    title: "Scarica mancanti"
+                    title: String(localized: "Scarica mancanti")
                 )
             }
         }

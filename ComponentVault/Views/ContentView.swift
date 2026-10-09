@@ -21,13 +21,13 @@ enum AppSection: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .inventory: "Inventario"
-        case .catalog: "Catalogo"
-        case .projects: "Progetti"
-        case .alerts: "Scorte basse"
-        case .search: "Ricerca"
-        case .kicadLibrary: "Libreria KiCad"
-        case .settings: "Impostazioni"
+        case .inventory: String(localized: "Inventario")
+        case .catalog: String(localized: "Catalogo")
+        case .projects: String(localized: "Progetti")
+        case .alerts: String(localized: "Scorte basse")
+        case .search: String(localized: "Ricerca")
+        case .kicadLibrary: String(localized: "Libreria KiCad")
+        case .settings: String(localized: "Impostazioni")
         }
     }
 
@@ -103,7 +103,7 @@ struct AppSectionSidebar: View {
         .background(.bar)
     }
 
-    private func sidebarGroup(_ title: String, items: [AppSection]) -> some View {
+    private func sidebarGroup(_ title: LocalizedStringKey, items: [AppSection]) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title)
                 .font(.caption2.weight(.semibold))
@@ -153,12 +153,12 @@ struct InventoryView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     private var lcscRequestDelayMs: Int { AppConfigIO.current().lcsc.requestDelayMs }
-    private var digikeyRequestDelayMs: Int { AppConfigIO.current().digikey.requestDelayMs }
 
     @State private var store: ComponentStore?
     @State private var selection: Component?
     @State private var filter = ComponentFilter()
     @State private var showImportPanel = false
+    @State private var showScanImport = false
     @State private var showExport = false
     @State private var exportDocument = CSVDocument()
     @State private var enrichProgress: (label: String, current: Int, total: Int)?
@@ -179,7 +179,7 @@ struct InventoryView: View {
                 emptyState
             } else {
                 ContentUnavailableView(
-                    "Seleziona un componente",
+                    String(localized: "Seleziona un componente"),
                     systemImage: "cpu",
                     description: Text("Scegli un componente dalla lista.")
                 )
@@ -206,6 +206,13 @@ struct InventoryView: View {
             ToolbarItem(placement: .topBarLeading) {
                 Button("Ricarica") {
                     Task { await reloadInventory() }
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showScanImport = true
+                } label: {
+                    Label("Carica da etichetta", systemImage: "barcode.viewfinder")
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
@@ -239,23 +246,6 @@ struct InventoryView: View {
                         Label("Arricchisci LCSC", systemImage: "arrow.triangle.2.circlepath")
                     }
                     .disabled(filteredComponents.isEmpty || store?.isLoading == true)
-                    Button {
-                        guard let store else { return }
-                        let eligible = filteredComponents.filter { !$0.mpn.isEmpty }
-                        Task {
-                            enrichProgress = ("DigiKey", 0, eligible.count)
-                            _ = await store.enrichAllFromDigiKey(
-                                components: filteredComponents,
-                                delayMs: digikeyRequestDelayMs
-                            ) { c, t in
-                                enrichProgress = ("DigiKey", c, t)
-                            }
-                            enrichProgress = nil
-                        }
-                    } label: {
-                        Label("Arricchisci DigiKey", systemImage: "arrow.triangle.2.circlepath")
-                    }
-                    .disabled(filteredComponents.isEmpty || store?.isLoading == true)
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -278,10 +268,11 @@ struct InventoryView: View {
         .onChange(of: filter.tag) { _, _ in refreshFilteredComponents() }
         .onChange(of: filter.showLowStockOnly) { _, _ in refreshFilteredComponents() }
         .onChange(of: filter.showOutOfStockOnly) { _, _ in refreshFilteredComponents() }
-        .onChange(of: filter.requireDigiKeyData) { _, _ in refreshFilteredComponents() }
-        .onChange(of: filter.digikeyOutOfStockOnly) { _, _ in refreshFilteredComponents() }
         .onReceive(NotificationCenter.default.publisher(for: .importCSV)) { _ in
             showImportPanel = true
+        }
+        .sheet(isPresented: $showScanImport) {
+            ScanImportView()
         }
         .fileImporter(
             isPresented: $showImportPanel,
@@ -333,6 +324,8 @@ struct InventoryView: View {
                 Task { await reloadInventory() }
             }
             Button("Importa") { showImportPanel = true }
+            Button("Etichetta") { showScanImport = true }
+                .help("Carica da etichetta (lettore USB o codice)")
             Button("Esporta") {
                 exportDocument = CSVDocument(text: ExportService.inventoryCSV(components: filteredComponents))
                 showExport = true
@@ -347,22 +340,6 @@ struct InventoryView: View {
                         delayMs: lcscRequestDelayMs
                     ) { c, t in
                         enrichProgress = ("LCSC", c, t)
-                    }
-                    enrichProgress = nil
-                }
-            }
-            .disabled(filteredComponents.isEmpty || store?.isLoading == true)
-
-            Button("DigiKey") {
-                guard let store else { return }
-                let eligible = filteredComponents.filter { !$0.mpn.isEmpty }
-                Task {
-                    enrichProgress = ("DigiKey", 0, eligible.count)
-                    _ = await store.enrichAllFromDigiKey(
-                        components: filteredComponents,
-                        delayMs: digikeyRequestDelayMs
-                    ) { c, t in
-                        enrichProgress = ("DigiKey", c, t)
                     }
                     enrichProgress = nil
                 }
@@ -519,6 +496,14 @@ struct ComponentRowView: View {
 
             Spacer()
 
+            if let place = component.storageLabel {
+                Label(place, systemImage: "archivebox")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .labelStyle(.titleAndIcon)
+            }
+
             Text("\(component.quantity)")
                 .font(.system(.body, design: .rounded, weight: .semibold))
                 .foregroundStyle(component.quantity > 0 ? .primary : .secondary)
@@ -536,7 +521,7 @@ struct ComponentRowView: View {
         .modelContainer(for: [Component.self, Project.self], inMemory: true)
 }
 
-/// Riga codici inventario CV, LCSC Cxxxxx e DigiKey P/N.
+/// Riga codici inventario CV e LCSC Cxxxxx.
 struct ComponentCodesRow: View {
     let component: Component
     var compact: Bool = false
@@ -556,13 +541,6 @@ struct ComponentCodesRow: View {
                 dimmed: component.supplierLCSCCode == nil,
                 compact: compact,
                 copyOnTap: component.supplierLCSCCode
-            )
-            CodeChip(
-                title: "DK",
-                code: component.digikeyPartNumber?.isEmpty == false ? component.digikeyPartNumber! : "—",
-                tint: .red,
-                dimmed: component.digikeyPartNumber?.isEmpty != false,
-                compact: compact
             )
         }
     }

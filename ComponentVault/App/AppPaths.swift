@@ -1,23 +1,23 @@
 import Foundation
 
-/// Percorsi dati LCSC/DigiKey — macOS usa ~/LCSC; iPad usa Documents/LCSC o cartella scelta dall'utente.
+/// Percorsi dati. Due radici:
+/// - `localRoot`: solo di questo dispositivo (configurazione senza cartella, cache);
+/// - `lcscDataRoot`: archivio LCSC/CSV, la cartella condivisa se scelta, altrimenti quella locale.
 enum AppPaths {
-    private static let lcscRootOverrideKey = "lcscDataRootPath"
-
-    static var lcscDataRoot: URL {
+    /// macOS: Application Support del container; iPad: Documents/LCSC (visibile nell'app File).
+    static var localRoot: URL {
         #if os(macOS)
-        URL(fileURLWithPath: macDefaultBasePath, isDirectory: true)
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("ComponentVault", isDirectory: true)
         #else
-        if let custom = UserDefaults.standard.string(forKey: lcscRootOverrideKey),
-           !custom.isEmpty {
-            return URL(fileURLWithPath: custom, isDirectory: true)
-        }
-        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("LCSC", isDirectory: true)
         #endif
     }
 
-    static let macDefaultBasePath = "/Users/michelebigi/LCSC"
+    static var lcscDataRoot: URL {
+        SharedFolder.url ?? localRoot
+    }
 
     static var jsonArchiveDirectory: URL {
         lcscDataRoot.appendingPathComponent("json_full_data", isDirectory: true)
@@ -31,32 +31,33 @@ enum AppPaths {
         lcscDataRoot.appendingPathComponent("bom_riepilogo.csv")
     }
 
-    static var digiKeyConfigFile: URL {
-        appConfigFile
+    static var localConfigFile: URL {
+        localRoot.appendingPathComponent(AppConfig.fileName)
     }
 
+    /// Con una cartella scelta la configurazione sta lì (uguale per tutti i
+    /// dispositivi); altrimenti resta su questo dispositivo.
     static var appConfigFile: URL {
-        lcscDataRoot.appendingPathComponent("componentvault_config.yml")
+        SharedFolder.url?.appendingPathComponent(AppConfig.fileName) ?? localConfigFile
     }
 
-    static var digiKeyTokenCacheFile: URL {
-        lcscDataRoot.appendingPathComponent("digikey_token_cache.json")
+    static var kicadIndexCacheFile: URL {
+        localRoot.appendingPathComponent("kicad_library_index.json")
     }
 
     static var defaultCSVPath: String { defaultCSV.path }
     static var jsonArchivePath: String { jsonArchiveDirectory.path }
-    static var digiKeyConfigPath: String { appConfigFile.path }
-    static var digiKeyTokenCachePath: String { digiKeyTokenCacheFile.path }
-
-    static func setLCSCDataRoot(_ path: String) {
-        UserDefaults.standard.set(path, forKey: lcscRootOverrideKey)
-    }
 
     static func defaultPaths() -> (csv: URL, json: URL, bom: URL) {
         (defaultCSV, jsonArchiveDirectory, bomCSV)
     }
 
+    static func ensureLocalDirectory() throws {
+        try FileManager.default.createDirectory(at: localRoot, withIntermediateDirectories: true)
+    }
+
     static func ensureLCSCDirectory() throws {
+        try ensureLocalDirectory()
         try FileManager.default.createDirectory(at: lcscDataRoot, withIntermediateDirectories: true)
     }
 }
