@@ -369,6 +369,22 @@
         }
       }
     },
+    "%lld in magazzino": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld in inventory"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld in magazzino"
+          }
+        }
+      }
+    },
     "%lld mancanti": {
       "localizations": {
         "en": {
@@ -5554,6 +5570,22 @@
         }
       }
     },
+    "Non disponibile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not available"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non disponibile"
+          }
+        }
+      }
+    },
     "Non impostata": {
       "extractionState": "manual",
       "localizations": {
@@ -7080,18 +7112,34 @@
         }
       }
     },
-    "Scegli in Impostazioni la cartella condivisa con il Mac che ha KiCad: l'indice lo scrive il worker.": {
+    "Scegli in Impostazioni la stessa cartella condivisa del Mac con la libreria: l'indice lo pubblica il Mac.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "In Settings, choose the folder shared with the Mac that has KiCad: the worker writes the index there."
+            "value": "In Settings, choose the same shared folder as the Mac with the library: the Mac publishes the index."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scegli in Impostazioni la cartella condivisa con il Mac che ha KiCad: l'indice lo scrive il worker."
+            "value": "Scegli in Impostazioni la stessa cartella condivisa del Mac con la libreria: l'indice lo pubblica il Mac."
+          }
+        }
+      }
+    },
+    "Scegli la cartella della tua libreria in Impostazioni → KiCad → Libreria: l'app la legge direttamente.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose your library folder in Settings → KiCad → Library: the app reads it directly."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli la cartella della tua libreria in Impostazioni → KiCad → Libreria: l'app la legge direttamente."
           }
         }
       }

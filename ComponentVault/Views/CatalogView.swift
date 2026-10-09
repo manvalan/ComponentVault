@@ -149,7 +149,7 @@ struct CatalogView: View {
     #if os(macOS)
     private var catalogGroupsTable: some View {
         Table(filteredGroups, selection: $selectedGroupID) {
-            TableColumn("Valore") { group in
+            TableColumn(selectedType?.usesStructuredValue == false ? "Componente" : "Valore") { group in
                 Text(group.value)
                     .font(.body.monospacedDigit().weight(.medium))
                     .lineLimit(1)

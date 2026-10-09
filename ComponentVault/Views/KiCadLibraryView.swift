@@ -31,7 +31,13 @@ struct KiCadLibraryView: View {
                         ContentUnavailableView(
                             String(localized: "Indice non disponibile"),
                             systemImage: "books.vertical",
-                            description: Text("Scegli in Impostazioni la cartella condivisa con il Mac che ha KiCad: l'indice lo scrive il worker.")
+                            description: {
+                                #if os(macOS)
+                                Text("Scegli la cartella della tua libreria in Impostazioni → KiCad → Libreria: l'app la legge direttamente.")
+                                #else
+                                Text("Scegli in Impostazioni la stessa cartella condivisa del Mac con la libreria: l'indice lo pubblica il Mac.")
+                                #endif
+                            }()
                         )
                     }
                     ForEach(results) { entry in

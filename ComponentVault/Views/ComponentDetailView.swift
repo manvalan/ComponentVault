@@ -202,48 +202,60 @@ struct ComponentDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
+    /// Prima di tutto: che cos'è. MPN grande, produttore e descrizione breve,
+    /// poi i codici e lo stato in piccolo.
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let type = component.componentType
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 14) {
+                Image(systemName: type.icon)
+                    .font(.title2)
+                    .foregroundStyle(type.tint)
+                    .frame(width: 48, height: 48)
+                    .background(type.tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(component.displayTitle)
+                        .font(.title2.weight(.semibold))
+                        .textSelection(.enabled)
+                        .lineLimit(2)
+                    Text([component.brand, type.label].filter { !$0.isEmpty }.joined(separator: " · "))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            if !component.displayCommonName.isEmpty, component.displayCommonName != component.displayTitle {
+                Text(component.displayCommonName)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             HStack(spacing: 8) {
-                ComponentCodesRow(component: component)
-                SourceBadge(source: component.source)
+                Label(component.quantity > 0
+                      ? String(localized: "\(component.quantity) in magazzino")
+                      : String(localized: "Non disponibile"),
+                      systemImage: "shippingbox.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(component.quantity > 0 ? .green : .orange)
+                if let storage = component.storageLabel {
+                    Label(storage, systemImage: "archivebox")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
                 if component.isToOrder {
                     ToOrderBadge()
                 }
-                if component.isInternalComponentCode {
-                    Text("CV interno")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.teal)
-                } else if component.needsLCSCForEasyEDA {
+            }
+            HStack(spacing: 8) {
+                ComponentCodesRow(component: component)
+                SourceBadge(source: component.source)
+                if component.needsLCSCForEasyEDA {
                     Text("LCSC per EasyEDA")
                         .font(.caption2)
                         .foregroundStyle(.orange)
                 }
             }
-            if !component.displayCommonName.isEmpty {
-                Text(component.displayCommonName)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            if !component.mpn.isEmpty {
-                Text(component.mpn)
-                    .font(.caption.monospaced())
-                    .foregroundStyle(.tertiary)
-            }
-            if !component.brand.isEmpty {
-                Text(component.brand)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            if !component.category.isEmpty {
-                Text(component.category)
-                    .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.accentColor.opacity(0.12))
-                    .clipShape(Capsule())
-            }
+            .opacity(0.85)
         }
     }
 

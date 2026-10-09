@@ -312,11 +312,13 @@ struct CatalogGroup: Identifiable {
     }
 
     static func build(from components: [Component], type: ComponentType) -> [CatalogGroup] {
-        // Senza valore (IC, regolatori, moduli…) si raggruppa per MPN: altrimenti
-        // parti diverse con lo stesso package finirebbero nella stessa riga "—".
+        // Solo resistori, condensatori e induttori hanno un "valore" che li identifica.
+        // Per IC, moduli, regolatori… il valore LCSC è un parametro qualsiasi
+        // (es. "3V~3.6V"): si raggruppa e si mostra per MPN.
         let grouped = Dictionary(grouping: components) { c in
             let value = c.displayValue.trimmingCharacters(in: .whitespaces)
-            let label = value.isEmpty || value == "—" ? (c.mpn.isEmpty ? c.lcscCode : c.mpn) : value
+            let byValue = type.usesStructuredValue && !value.isEmpty && value != "—"
+            let label = byValue ? value : (c.mpn.isEmpty ? (value.isEmpty ? c.lcscCode : value) : c.mpn)
             return "\(label)|\(c.displayFootprint)"
         }
 
