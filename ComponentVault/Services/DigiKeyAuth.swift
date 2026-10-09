@@ -42,12 +42,12 @@ private extension String {
     var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }
 }
 
-/// Portachiavi locale: un solo elemento, mai sincronizzato con iCloud.
-enum DigiKeyKeychain {
-    private static let service = "it.michelebigi.ComponentVault.digikey"
-    private static let account = "credentials"
+/// Portachiavi locale per le credenziali dei fornitori: elementi mai sincronizzati
+/// con iCloud, mai inclusi nei backup, leggibili solo su questo dispositivo.
+enum SupplierKeychain {
+    private static let service = "it.michelebigi.ComponentVault.suppliers"
 
-    private static var baseQuery: [String: Any] {
+    private static func query(_ account: String) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -57,36 +57,51 @@ enum DigiKeyKeychain {
         ]
     }
 
-    static func load() -> DigiKeyCredentials? {
-        var query = baseQuery
-        query[kSecReturnData as String] = true
-        query[kSecMatchLimit as String] = kSecMatchLimitOne
+    static func load<T: Decodable>(_ type: T.Type, account: String) -> T? {
+        var q = query(account)
+        q[kSecReturnData as String] = true
+        q[kSecMatchLimit as String] = kSecMatchLimitOne
         var item: CFTypeRef?
-        guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
+        guard SecItemCopyMatching(q as CFDictionary, &item) == errSecSuccess,
               let data = item as? Data else { return nil }
-        return try? JSONDecoder().decode(DigiKeyCredentials.self, from: data)
+        return try? JSONDecoder().decode(T.self, from: data)
     }
 
-    static func save(_ credentials: DigiKeyCredentials) throws {
-        let data = try JSONEncoder().encode(credentials)
+    static func save<T: Encodable>(_ value: T, account: String) throws {
+        let data = try JSONEncoder().encode(value)
         let attributes: [String: Any] = [
             kSecValueData as String: data,
-            // Solo questo dispositivo: niente backup né migrazione su altri dispositivi.
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
         ]
-        var status = SecItemUpdate(baseQuery as CFDictionary, attributes as CFDictionary)
+        var status = SecItemUpdate(query(account) as CFDictionary, attributes as CFDictionary)
         if status == errSecItemNotFound {
-            var query = baseQuery
-            query.merge(attributes) { _, new in new }
-            status = SecItemAdd(query as CFDictionary, nil)
+            var q = query(account)
+            q.merge(attributes) { _, new in new }
+            status = SecItemAdd(q as CFDictionary, nil)
         }
         guard status == errSecSuccess else {
             throw ProviderError.networkFailure(String(localized: "Impossibile salvare nel Portachiavi (\(status))."))
         }
     }
 
+    static func delete(account: String) {
+        SecItemDelete(query(account) as CFDictionary)
+    }
+}
+
+enum DigiKeyKeychain {
+    private static let account = "digikey"
+
+    static func load() -> DigiKeyCredentials? {
+        SupplierKeychain.load(DigiKeyCredentials.self, account: account)
+    }
+
+    static func save(_ credentials: DigiKeyCredentials) throws {
+        try SupplierKeychain.save(credentials, account: account)
+    }
+
     static func delete() {
-        SecItemDelete(baseQuery as CFDictionary)
+        SupplierKeychain.delete(account: account)
     }
 
     static var isConfigured: Bool {

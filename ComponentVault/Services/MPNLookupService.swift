@@ -13,7 +13,7 @@ enum MPNLookupService {
     }
 
     /// Cerca il codice LCSC (Cxxxxx) a partire da un MPN.
-    /// Ordine: inventario → archivio JSON locale → API LCSC live.
+    /// Inventario e archivio JSON locale (nessuna ricerca live su LCSC).
     static func search(
         mpn rawMPN: String,
         inventory: [Component]
@@ -41,18 +41,7 @@ enum MPNLookupService {
 
         let archiveCount = records.filter { $0.source == .archive || $0.source == .inventory }.count
 
-        var liveCount = 0
-        do {
-            let liveHits = try await LCSCCatalogProvider.searchByMPN(mpn, limit: 8)
-            for hit in liveHits {
-                if seen.insert(hit.lcscCode).inserted {
-                    records.append((hit, .live))
-                    liveCount += 1
-                }
-            }
-        } catch {
-            if records.isEmpty { throw error }
-        }
+        let liveCount = 0
 
         records.sort { lhs, rhs in
             let leftExact = CatalogMatchNormalizer.mpn(lhs.record.mpn) == CatalogMatchNormalizer.mpn(mpn)

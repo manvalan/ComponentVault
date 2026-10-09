@@ -352,6 +352,24 @@ struct CatalogMatchCardView: View {
 
     private var codesRow: some View {
         HStack(spacing: 12) {
+            if let offer = card.offer {
+                SupplierCodeTile(
+                    title: offer.supplier,
+                    code: offer.supplierPartNumber.isEmpty ? "—" : offer.supplierPartNumber,
+                    tint: offer.supplier == "Mouser" ? .blue : .red,
+                    price: offer.unitPrice(for: 1),
+                    currency: offer.currency,
+                    stock: offer.stock,
+                    url: offer.productURL
+                )
+            } else {
+                lcscTile
+            }
+        }
+    }
+
+    private var lcscTile: some View {
+        HStack(spacing: 12) {
             SupplierCodeTile(
                 title: card.usesInternalLCSCPlaceholder ? "CV interno" : "LCSC",
                 code: card.lcscDisplayCode,
@@ -588,7 +606,9 @@ struct LCSCSearchResultsTable: View {
             if card.hasLCSC, let lcsc = card.lcscCode {
                 codeChip(lcsc, tint: .orange)
             }
-            if !card.hasLCSC {
+            if let offer = card.offer, !offer.supplierPartNumber.isEmpty {
+                codeChip(offer.supplierPartNumber, tint: .blue)
+            } else if !card.hasLCSC {
                 Text("—")
                     .font(.caption.monospaced())
                     .foregroundStyle(.tertiary)
@@ -618,7 +638,11 @@ struct LCSCSearchResultsTable: View {
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(stock > 0 ? Color.orange : Color.secondary)
             }
-            if !card.hasLCSC {
+            if let stock = card.offer?.stock {
+                Text("\(card.offer?.supplier ?? "") \(stock)")
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(stock > 0 ? Color.blue : Color.secondary)
+            } else if !card.hasLCSC {
                 Text("—")
                     .font(.caption)
                     .foregroundStyle(.tertiary)

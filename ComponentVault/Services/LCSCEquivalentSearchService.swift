@@ -54,12 +54,22 @@ enum LCSCEquivalentSearchService {
             )
         }
 
-        let encap = CatalogMatchNormalizer.footprintToken(component.displayFootprint)
-        let records = try await LCSCCatalogProvider.searchEquivalents(
-            keyword: keyword,
-            encap: encap.isEmpty ? nil : encap,
-            limit: limit
-        )
+        // Archivio locale: stesso tipo e footprint, poi stesso valore.
+        var query = CatalogSearchQuery()
+        query.type = component.componentType
+        query.valueAmount = ""
+        query.footprint = component.displayFootprint
+        let wantedValue = CatalogMatchNormalizer.valueToken(component.displayValue)
+        let ownCodes = Set([component.lcscCode, component.supplierLCSCCode].compactMap { $0?.uppercased() })
+        let records = LCSCArchiveSearcher.search(query: query, inventory: inventory, limit: 200)
+            .filter { !ownCodes.contains($0.lcscCode.uppercased()) }
+            .filter { record in
+                let value = record.value.isEmpty || record.value == "N/A"
+                    ? (record.parameters["Resistance"] ?? record.parameters["Capacitance"] ?? record.parameters["Inductance"] ?? "")
+                    : record.value
+                return wantedValue.isEmpty || CatalogMatchNormalizer.valueToken(value) == wantedValue
+            }
+            .prefix(limit)
 
         let cards = records.map { record in
             makeCard(record: record, component: component, inventory: inventory)

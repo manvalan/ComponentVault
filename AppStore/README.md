@@ -17,10 +17,12 @@ Un'unica app universale: lo stesso bundle `it.michelebigi.ComponentVault` per iP
 | iPad | tutte le orientazioni (multitasking e Stage Manager) |
 | Server | eliminato: niente backend da tenere online per la revisione |
 | Archive | `xcodebuild archive` Release riuscito per iOS e macOS |
+| Crittografia | solo HTTPS del sistema, `ITSAppUsesNonExemptEncryption = NO` |
+| Servizi di terzi | solo API ufficiali (Mouser, DigiKey) con chiavi dell'utente nel Portachiavi; niente scraping né immagini da siti senza autorizzazione |
 
 ## Da fare (decisioni tue)
 
-1. **Crittografia (export compliance).** L'app usa HTTPS, che è esente, ma cifra anche le richieste di ricerca LCSC con **SM2**, l'algoritmo richiesto dall'API web di LCSC (`LCSCCatalogProvider.swift`). SM2 non è una cifratura del sistema Apple. App Store Connect ti chiederà se usi cifratura "non esente". Valuta la risposta (o chiedi a chi segue la compliance). Per questo non ho impostato `ITSAppUsesNonExemptEncryption` nell'Info.plist.
+1. **Crittografia (export compliance): risolta.** L'app usa solo HTTPS del sistema. Ho rimosso SM2 e la ricerca live sull'API web di LCSC. `ITSAppUsesNonExemptEncryption = NO` è impostato: niente documenti da allegare.
 2. **Email di supporto.** Sostituisci `SUPPORT_EMAIL` in `Web/privacy.html` e `Web/support.html`.
 3. **Pubblica le pagine statiche** di `Web/` su un sito HTTPS (GitHub Pages, michelebigi.it…). Su App Store Connect servono:
    - Privacy Policy URL → `privacy.html`

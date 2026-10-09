@@ -36,6 +36,7 @@ struct ComponentDetailView: View {
                     imageGallery
                     inventoryCard
                 }
+                SupplierOffersSection(mpn: component.mpn, quantity: max(component.minQuantity, 1))
                 descriptionSection
                 tagsSection
                 parametersSection
@@ -307,18 +308,19 @@ struct ComponentDetailView: View {
 
     private var imageGallery: some View {
         VStack(spacing: 8) {
-            if component.imageURLs.isEmpty {
+            let imageURLs = component.imageURLs.filter { RemoteImagePolicy.isAllowed(URL(string: $0)) }
+            if imageURLs.isEmpty {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.gray.opacity(0.1))
                     .frame(width: 220, height: 220)
                     .overlay {
-                        Image(systemName: "photo")
+                        Image(systemName: component.componentType.icon)
                             .font(.largeTitle)
                             .foregroundStyle(.tertiary)
                     }
             } else {
                 TabView(selection: $selectedImageIndex) {
-                    ForEach(Array(component.imageURLs.enumerated()), id: \.offset) { index, urlString in
+                    ForEach(Array(imageURLs.enumerated()), id: \.offset) { index, urlString in
                         AsyncImage(url: URL(string: urlString)) { phase in
                             switch phase {
                             case .success(let image):
@@ -721,7 +723,7 @@ struct ComponentThumbnail: View {
 
     var body: some View {
         Group {
-            if let url {
+            if let url, RemoteImagePolicy.isAllowed(url) {
                 AsyncImage(url: url) { phase in
                     if case .success(let image) = phase {
                         image.resizable().scaledToFill()

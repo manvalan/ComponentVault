@@ -470,14 +470,7 @@ final class ComponentStore {
             return first
         }
 
-        let liveHits = try await LCSCCatalogProvider.searchByMPN(trimmed, limit: 5)
-            .filter { LCSCCode.isValid($0.lcscCode) }
-        if let exact = liveHits.first(where: {
-            CatalogMatchNormalizer.mpn($0.mpn) == normalized
-        }) {
-            return exact
-        }
-        return liveHits.first
+        return nil
     }
 
     private func recoverLCSCCodeFromSnapshot(_ component: Component) throws -> Component? {

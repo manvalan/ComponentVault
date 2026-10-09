@@ -1,57 +1,21 @@
 import Foundation
 
+/// Dati LCSC dall'archivio locale (`json_full_data/Cxxxxx.json`). Nessun accesso
+/// al sito LCSC: non esiste un'API pubblica autorizzata per farlo dall'app.
 struct LCSCProvider: ComponentDataProvider {
     let source: DataSource = .lcsc
 
     private static var localArchivePath: String { AppPaths.jsonArchivePath }
 
-    private let session: URLSession
-
-    init(session: URLSession = .shared) {
-        self.session = session
-    }
-
     func fetch(lcscCode: String) async throws -> ComponentRecord {
         let code = lcscCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        guard code.hasPrefix("C"), code.count >= 4 else {
+        guard LCSCCode.isValid(code) else {
             throw ProviderError.invalidCode
         }
-
-        do {
-            return try await fetchLive(lcscCode: code)
-        } catch ProviderError.parseFailure {
-            if let local = Self.loadLocalArchive(lcscCode: code) {
-                return local
-            }
-            throw ProviderError.parseFailure
+        guard let local = Self.loadLocalArchive(lcscCode: code) else {
+            throw ProviderError.notFound(code)
         }
-    }
-
-    private func fetchLive(lcscCode: String) async throws -> ComponentRecord {
-        let url = URL(string: "https://www.lcsc.com/product-detail/\(lcscCode).html")!
-        var request = URLRequest(url: url)
-        request.setValue(
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            forHTTPHeaderField: "User-Agent"
-        )
-        request.setValue("it-IT,it;q=0.9,en;q=0.8", forHTTPHeaderField: "Accept-Language")
-
-        let (data, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse else {
-            throw ProviderError.networkFailure(String(localized: "Risposta non valida"))
-        }
-        guard http.statusCode == 200 else {
-            if let local = Self.loadLocalArchive(lcscCode: lcscCode) {
-                return local
-            }
-            throw ProviderError.notFound(lcscCode)
-        }
-
-        guard let html = String(data: data, encoding: .utf8) else {
-            throw ProviderError.parseFailure
-        }
-
-        return try LCSCParser.parse(html: html, lcscCode: lcscCode)
+        return local
     }
 
     private static func loadLocalArchive(lcscCode: String) -> ComponentRecord? {
@@ -61,5 +25,16 @@ struct LCSCProvider: ComponentDataProvider {
             return nil
         }
         return record
+    }
+}
+
+/// Immagini remote solo da fornitori con API autorizzata (le loro condizioni ne
+/// consentono la visualizzazione); niente immagini prese dal sito LCSC.
+enum RemoteImagePolicy {
+    private static let allowedHosts = ["mouser.com", "digikey.com", "digikey.it"]
+
+    static func isAllowed(_ url: URL?) -> Bool {
+        guard let host = url?.host?.lowercased(), url?.scheme == "https" else { return false }
+        return allowedHosts.contains { host == $0 || host.hasSuffix("." + $0) }
     }
 }

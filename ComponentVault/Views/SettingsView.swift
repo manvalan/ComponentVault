@@ -19,6 +19,8 @@ struct SettingsView: View {
     @State private var digiKey = DigiKeyKeychain.load() ?? DigiKeyCredentials()
     @State private var digiKeySaved = DigiKeyKeychain.isConfigured
     @State private var digiKeyMessage: String?
+    @State private var mouserKey = ""
+    @State private var mouserSaved = MouserKeychain.isConfigured
 
     private var hasFolder: Bool { !folderPath.isEmpty }
 
@@ -184,13 +186,8 @@ struct SettingsView: View {
     private var searchSection: some View {
         Section {
             Picker("Catalogo", selection: $config.catalog.searchProvider) {
-                ForEach(CatalogSearchProvider.allCases) { provider in
+                ForEach(CatalogSearchProvider.available) { provider in
                     Text(provider.label).tag(provider)
-                }
-            }
-            LabeledContent("Pausa tra richieste LCSC") {
-                Stepper(value: $config.lcsc.requestDelayMs, in: 200...3000, step: 100) {
-                    Text("\(config.lcsc.requestDelayMs) ms").monospacedDigit()
                 }
             }
         } header: {
@@ -204,6 +201,27 @@ struct SettingsView: View {
 
     private var digiKeySection: some View {
         Section {
+            DisclosureGroup {
+                SecureField(mouserSaved ? String(localized: "Chiave salvata — inseriscine una nuova per sostituirla") : String(localized: "Search API key"), text: $mouserKey)
+                HStack {
+                    Button("Salva sul dispositivo") { saveMouser() }
+                        .disabled(mouserKey.trimmingCharacters(in: .whitespaces).isEmpty)
+                    if mouserSaved {
+                        Spacer()
+                        Button("Elimina", role: .destructive) {
+                            MouserKeychain.delete()
+                            mouserSaved = false
+                        }
+                    }
+                }
+                Link("Richiedi una chiave gratuita su mouser.com", destination: URL(string: "https://www.mouser.com/api-hub/")!)
+                    .font(.caption)
+            } label: {
+                LabeledContent("Mouser") {
+                    Text(mouserSaved ? "Configurato" : "Non usato")
+                        .foregroundStyle(mouserSaved ? .green : .secondary)
+                }
+            }
             DisclosureGroup {
                 TextField("Client ID", text: $digiKey.clientID)
                     .autocorrectionDisabled()
@@ -241,7 +259,7 @@ struct SettingsView: View {
         } header: {
             Text("Fornitori")
         } footer: {
-            Text("Facoltativo. Le credenziali e i token DigiKey li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.digikey.com.")
+            Text("Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com e api.digikey.com.")
         }
     }
 
@@ -250,6 +268,16 @@ struct SettingsView: View {
             try DigiKeyKeychain.save(digiKey)
             digiKeySaved = true
             digiKeyMessage = String(localized: "Salvate nel Portachiavi di questo dispositivo.")
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func saveMouser() {
+        do {
+            try MouserKeychain.save(mouserKey)
+            mouserKey = ""
+            mouserSaved = true
         } catch {
             errorMessage = error.localizedDescription
         }

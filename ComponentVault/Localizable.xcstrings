@@ -33,6 +33,22 @@
         }
       }
     },
+    "%@ %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ %2$lld"
+          }
+        }
+      }
+    },
     "%@ %lld/%lld": {
       "localizations": {
         "en": {
@@ -306,6 +322,7 @@
       }
     },
     "%lld ms": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -365,6 +382,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld righe"
+          }
+        }
+      }
+    },
+    "%lld settimane": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld weeks"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld settimane"
           }
         }
       }
@@ -830,6 +863,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Annulla"
+          }
+        }
+      }
+    },
+    "Apri": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri"
           }
         }
       }
@@ -1347,6 +1396,54 @@
         }
       }
     },
+    "Cerca su %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca su %@"
+          }
+        }
+      }
+    },
+    "Cerca su DigiKey": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search DigiKey"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca su DigiKey"
+          }
+        }
+      }
+    },
+    "Cerca su Mouser": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search Mouser"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca su Mouser"
+          }
+        }
+      }
+    },
     "Cerca valore, footprint, MPN…": {
       "localizations": {
         "en": {
@@ -1380,6 +1477,7 @@
       }
     },
     "Chiave pubblica LCSC non trovata — il sito potrebbe essere cambiato": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1391,6 +1489,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chiave pubblica LCSC non trovata — il sito potrebbe essere cambiato"
+          }
+        }
+      }
+    },
+    "Chiave salvata — inseriscine una nuova per sostituirla": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key saved — enter a new one to replace it"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chiave salvata — inseriscine una nuova per sostituirla"
           }
         }
       }
@@ -2807,6 +2921,7 @@
       }
     },
     "Facoltativo. Le credenziali e i token DigiKey li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.digikey.com.": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2818,6 +2933,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Facoltativo. Le credenziali e i token DigiKey li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.digikey.com."
+          }
+        }
+      }
+    },
+    "Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com e api.digikey.com.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional: prices, availability and search from distributors with an official API. You enter the keys and tokens yourself; they stay in this device's Keychain, never go to the folder or anywhere else, and are only used for requests to api.mouser.com and api.digikey.com."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com e api.digikey.com."
           }
         }
       }
@@ -3320,6 +3451,7 @@
       }
     },
     "Impossibile caricare homepage LCSC": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3800,6 +3932,7 @@
       }
     },
     "LCSC product list HTTP %lld": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3816,6 +3949,7 @@
       }
     },
     "LCSC product list fallita": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3832,6 +3966,7 @@
       }
     },
     "LCSC search HTTP %lld": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3848,6 +3983,7 @@
       }
     },
     "LCSC search fallita": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -4248,6 +4384,38 @@
         }
       }
     },
+    "Mouser": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mouser"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mouser"
+          }
+        }
+      }
+    },
+    "Mouser: errore HTTP %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mouser: HTTP error %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mouser: errore HTTP %lld"
+          }
+        }
+      }
+    },
     "Nel progetto": {
       "localizations": {
         "en": {
@@ -4308,6 +4476,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nessun dato locale. Scegli una cartella condivisa in Impostazioni oppure importa un CSV dell'inventario."
+          }
+        }
+      }
+    },
+    "Nessun distributore configurato. Inserisci la tua chiave Mouser o le credenziali DigiKey in Impostazioni → Fornitori.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No distributor set up. Enter your Mouser key or DigiKey credentials in Settings → Suppliers."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun distributore configurato. Inserisci la tua chiave Mouser o le credenziali DigiKey in Impostazioni → Fornitori."
           }
         }
       }
@@ -4404,6 +4588,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nessun tipo"
+          }
+        }
+      }
+    },
+    "Nessuna offerta trovata.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No offers found."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessuna offerta trovata."
           }
         }
       }
@@ -4794,6 +4994,7 @@
       }
     },
     "Pausa tra richieste LCSC": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -4841,6 +5042,22 @@
         }
       }
     },
+    "Prezzi e disponibilità": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prices and Availability"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prezzi e disponibilità"
+          }
+        }
+      }
+    },
     "Prezzo LCSC": {
       "localizations": {
         "en": {
@@ -4853,6 +5070,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prezzo LCSC"
+          }
+        }
+      }
+    },
+    "Prezzo n/d": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price n/a"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prezzo n/d"
           }
         }
       }
@@ -5210,7 +5443,24 @@
         }
       }
     },
+    "Ricerca nel tuo inventario e nell'archivio LCSC locale.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searches your inventory and the local LCSC archive."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ricerca nel tuo inventario e nell'archivio LCSC locale."
+          }
+        }
+      }
+    },
     "Ricerca parametrica sul catalogo LCSC (archivio locale + live).": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5222,6 +5472,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ricerca parametrica sul catalogo LCSC (archivio locale + live)."
+          }
+        }
+      }
+    },
+    "Ricerca, prezzi e disponibilità da DigiKey (API ufficiale con le tue credenziali).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search, prices and availability from DigiKey (official API with your credentials)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ricerca, prezzi e disponibilità da DigiKey (API ufficiale con le tue credenziali)."
+          }
+        }
+      }
+    },
+    "Ricerca, prezzi e disponibilità da Mouser (API ufficiale con la tua chiave).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search, prices and availability from Mouser (official API with your key)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ricerca, prezzi e disponibilità da Mouser (API ufficiale con la tua chiave)."
+          }
+        }
+      }
+    },
+    "Richiedi una chiave gratuita su mouser.com": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get a free key at mouser.com"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richiedi una chiave gratuita su mouser.com"
           }
         }
       }
@@ -5419,6 +5717,7 @@
       }
     },
     "Risposta LCSC non valida": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5434,7 +5733,24 @@
         }
       }
     },
+    "Risposta Mouser non valida": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid Mouser response"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Risposta Mouser non valida"
+          }
+        }
+      }
+    },
     "Risposta non valida": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5915,6 +6231,22 @@
         }
       }
     },
+    "Search API key": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search API key"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search API key"
+          }
+        }
+      }
+    },
     "Seleziona un componente": {
       "localizations": {
         "en": {
@@ -6007,6 +6339,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Senza MPN: non verificabile"
+          }
+        }
+      }
+    },
+    "Serve un MPN per cercare prezzi e disponibilità.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An MPN is needed to look up prices and availability."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serve un MPN per cercare prezzi e disponibilità."
           }
         }
       }
@@ -6152,6 +6500,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stock LCSC"
+          }
+        }
+      }
+    },
+    "Stock n/d": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock n/a"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock n/d"
           }
         }
       }
@@ -6537,6 +6901,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Varianti MPN"
+          }
+        }
+      }
+    },
+    "a qty %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "at qty %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a qty %lld"
           }
         }
       }

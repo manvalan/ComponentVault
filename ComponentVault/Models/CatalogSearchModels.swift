@@ -145,6 +145,8 @@ struct CatalogMatchCard: Identifiable, Sendable {
     let inventoryQuantity: Int?
     let lcscRecord: ComponentRecord?
     let lcscSource: LCSCMatchSource?
+    /// Offerta di un distributore autorizzato (ricerca Mouser/DigiKey).
+    var offer: SupplierOffer? = nil
 
     var hasLCSC: Bool {
         guard let lcscCode else { return false }
