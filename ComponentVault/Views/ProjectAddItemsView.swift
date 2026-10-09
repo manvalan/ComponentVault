@@ -57,9 +57,14 @@ struct ProjectAddItemsView: View {
             #endif
             .searchable(text: $query, prompt: Text("Magazzino, valore, MPN o codice LCSC"))
             .onSubmit(of: .search) { Task { await searchCatalog() } }
-            .onChange(of: query) { _, _ in
+            .task(id: query) {
+                // Ricerca nel catalogo mentre si scrive (dopo una breve pausa).
                 catalogCards = []
                 catalogMessage = nil
+                guard trimmedQuery.count >= 3 else { return }
+                try? await Task.sleep(for: .milliseconds(700))
+                guard !Task.isCancelled else { return }
+                await searchCatalog()
             }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -101,7 +106,7 @@ struct ProjectAddItemsView: View {
     private var hintSection: some View {
         Section {
             Label("Cerca nel magazzino per valore, footprint, MPN o posizione.", systemImage: "shippingbox")
-            Label("Premi Invio per cercare anche nel catalogo (\(provider.label)).", systemImage: "magnifyingglass")
+            Label("Cerca anche nel catalogo: un MPN si cerca nell'archivio LCSC e su tutti i distributori configurati.", systemImage: "magnifyingglass")
             Label("Se non c'è, aggiungi l'MPN o il codice LCSC come componente nuovo: finisce in magazzino come «da ordinare».", systemImage: "plus.circle")
         }
         .font(.callout)

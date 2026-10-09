@@ -257,6 +257,22 @@
         }
       }
     },
+    "%lld dall'archivio LCSC": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld from the LCSC archive"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld dall'archivio LCSC"
+          }
+        }
+      }
+    },
     "%lld gruppi": {
       "localizations": {
         "en": {
@@ -1440,6 +1456,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cerca LCSC"
+          }
+        }
+      }
+    },
+    "Cerca anche nel catalogo: un MPN si cerca nell'archivio LCSC e su tutti i distributori configurati.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also searches the catalog: an MPN is looked up in the LCSC archive and on every configured distributor."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca anche nel catalogo: un MPN si cerca nell'archivio LCSC e su tutti i distributori configurati."
           }
         }
       }
@@ -4914,6 +4946,22 @@
         }
       }
     },
+    "Nessun risultato per %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No results for %@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun risultato per %@."
+          }
+        }
+      }
+    },
     "Nessun tipo": {
       "localizations": {
         "en": {
@@ -5187,6 +5235,22 @@
         }
       }
     },
+    "Non è nell'archivio LCSC locale. Per cercare online inserisci le chiavi Mouser, DigiKey o Nexar in Impostazioni → Fornitori.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not in the local LCSC archive. To search online, enter your Mouser, DigiKey or Nexar keys in Settings → Suppliers."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è nell'archivio LCSC locale. Per cercare online inserisci le chiavi Mouser, DigiKey o Nexar in Impostazioni → Fornitori."
+          }
+        }
+      }
+    },
     "Note personali…": {
       "localizations": {
         "en": {
@@ -5440,22 +5504,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Portachiavi iCloud: le stesse chiavi su Mac e iPad"
-          }
-        }
-      }
-    },
-    "Premi Invio per cercare anche nel catalogo (%@).": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Press Return to also search the catalog (%@)."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Premi Invio per cercare anche nel catalogo (%@)."
           }
         }
       }

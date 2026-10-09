@@ -77,12 +77,12 @@ enum SupplierCatalogSearchService {
         let trimmedValue = query.value.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedFootprint = query.footprint.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if provider == .mouser || provider == .digikey || provider == .nexar {
-            return try await searchSupplier(provider, query: query, inventory: inventory)
-        }
-
         if trimmedFootprint.isEmpty, CatalogSearchQuery.looksLikeMPN(trimmedValue) {
             return try await searchByMPN(trimmedValue, inventory: inventory, provider: provider)
+        }
+
+        if provider == .mouser || provider == .digikey || provider == .nexar {
+            return try await searchSupplier(provider, query: query, inventory: inventory)
         }
 
         guard !trimmedValue.isEmpty || !trimmedFootprint.isEmpty else {
@@ -123,7 +123,50 @@ enum SupplierCatalogSearchService {
         if outcome.offers.isEmpty, let error = outcome.errors.first {
             throw ProviderError.networkFailure(error)
         }
-        let cards = outcome.offers.map { offer in
+        let cards = offerCards(outcome.offers, query: query, inventory: inventory)
+        let inStock = cards.filter { ($0.offer?.stock ?? 0) > 0 }.count
+        return SearchOutcome(
+            cards: cards,
+            statusMessage: String(localized: "\(cards.count) parti \(provider.label) · \(inStock) con stock")
+        )
+    }
+
+    /// Un MPN si cerca ovunque: archivio LCSC locale e tutti i distributori configurati.
+    private static func searchByMPN(
+        _ mpn: String,
+        inventory: [Component],
+        provider: CatalogSearchProvider
+    ) async throws -> SearchOutcome {
+        async let supplierOutcome = SupplierOfferService.offers(forMPN: mpn)
+        let (archiveCards, _) = try await MPNLookupService.search(mpn: mpn, inventory: inventory)
+        let suppliers = await supplierOutcome
+
+        let query = CatalogSearchQuery(type: nil, valueAmount: mpn)
+        let cards = archiveCards + offerCards(suppliers.offers, query: query, inventory: inventory)
+
+        var parts: [String] = []
+        if !archiveCards.isEmpty {
+            parts.append(String(localized: "\(archiveCards.count) dall'archivio LCSC"))
+        }
+        for name in SupplierOfferService.configuredSuppliers {
+            let count = suppliers.offers.filter { ($0.source ?? $0.supplier) == name }.count
+            if count > 0 { parts.append("\(count) \(name)") }
+        }
+        parts += suppliers.errors
+        if cards.isEmpty, SupplierOfferService.configuredSuppliers.isEmpty {
+            parts.append(String(localized: "Non è nell'archivio LCSC locale. Per cercare online inserisci le chiavi Mouser, DigiKey o Nexar in Impostazioni → Fornitori."))
+        } else if cards.isEmpty {
+            parts.append(String(localized: "Nessun risultato per \(mpn)."))
+        }
+        return SearchOutcome(cards: cards, statusMessage: parts.joined(separator: " · "))
+    }
+
+    private static func offerCards(
+        _ offers: [SupplierOffer],
+        query: CatalogSearchQuery,
+        inventory: [Component]
+    ) -> [CatalogMatchCard] {
+        offers.map { offer in
             let inventoryItem = inventory.first {
                 !offer.mpn.isEmpty && CatalogMatchNormalizer.mpn($0.mpn) == CatalogMatchNormalizer.mpn(offer.mpn)
             }
@@ -147,29 +190,6 @@ enum SupplierCatalogSearchService {
                 offer: offer
             )
         }
-        let inStock = cards.filter { ($0.offer?.stock ?? 0) > 0 }.count
-        return SearchOutcome(
-            cards: cards,
-            statusMessage: String(localized: "\(cards.count) parti \(provider.label) · \(inStock) con stock")
-        )
-    }
-
-    private static func searchByMPN(
-        _ mpn: String,
-        inventory: [Component],
-        provider: CatalogSearchProvider
-    ) async throws -> SearchOutcome {
-        let (cards, stats) = try await MPNLookupService.search(mpn: mpn, inventory: inventory)
-
-        let withLCSC = cards.filter(\.hasLCSC).count
-        var parts = [String(localized: "\(withLCSC) con codice LCSC")]
-        if stats.archiveCount > 0 { parts.append("\(stats.archiveCount) da archivio") }
-        if stats.liveCount > 0 { parts.append(String(localized: "\(stats.liveCount) da LCSC live")) }
-        let prefix = provider.label
-        return SearchOutcome(
-            cards: cards,
-            statusMessage: "\(prefix): " + parts.joined(separator: " · ")
-        )
     }
 }
 
