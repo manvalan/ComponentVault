@@ -25,6 +25,7 @@ struct ProjectDetailView: View {
     @State private var showKiCadCheck = false
     @State private var showKiCadFetch = false
     @State private var focus: BOMFocus?
+    @State private var openedComponent: Component?
     @State private var library = KiCadLibraryStore.shared
 
     private var bomSummary: BOMCostSummary {
@@ -108,8 +109,14 @@ struct ProjectDetailView: View {
                         .listRowSeparator(.hidden)
                 }
                 ForEach(visibleItems, id: \.persistentModelID) { item in
-                    BOMRow(item: item, kicad: kicadMatch(item), price: hasPrice(item) ? priceLabel(for: item) : nil)
-                        .contextMenu { rowMenu(for: item) }
+                    Button {
+                        openedComponent = item.component
+                    } label: {
+                        BOMRow(item: item, kicad: kicadMatch(item), price: hasPrice(item) ? priceLabel(for: item) : nil)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu { rowMenu(for: item) }
                         #if os(iOS)
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
@@ -200,6 +207,9 @@ struct ProjectDetailView: View {
         }
         .onAppear {
             if store == nil { store = ComponentStore(modelContext: modelContext) }
+        }
+        .sheet(item: $openedComponent) { component in
+            ComponentDetailSheet(component: component, store: store)
         }
         .sheet(isPresented: $showAddComponent) {
             ProjectAddItemsView(project: project, projectStore: projectStore, store: store)
@@ -385,6 +395,13 @@ struct ProjectDetailView: View {
 
     @ViewBuilder
     private func rowMenu(for item: ProjectItem) -> some View {
+        if let component = item.component {
+            Button {
+                openedComponent = component
+            } label: {
+                Label("Apri scheda", systemImage: "doc.text.magnifyingglass")
+            }
+        }
         if let lcsc = item.component?.supplierLCSCCode {
             Button {
                 PlatformPasteboard.copy(lcsc)

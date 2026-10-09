@@ -963,6 +963,22 @@
         }
       }
     },
+    "Apri scheda": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open details"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri scheda"
+          }
+        }
+      }
+    },
     "Apri su LCSC": {
       "localizations": {
         "en": {
