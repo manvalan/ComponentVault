@@ -52,14 +52,37 @@ enum SupplierKeychain {
     private static let shareDefaultsKey = "suppliers.shareViaICloudKeychain"
 
     private static func query(_ account: String, synchronizable: CFTypeRef) -> [String: Any] {
-        [
+        var q: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
-            kSecAttrSynchronizable as String: synchronizable,
+        ]
+        if usesDataProtectionKeychain {
+            q[kSecAttrSynchronizable as String] = synchronizable
+            q[kSecUseDataProtectionKeychain as String] = true
+        }
+        return q
+    }
+
+    /// Sul Mac il Portachiavi moderno (e quello iCloud) richiede che l'app sia firmata con
+    /// un profilo: senza (errSecMissingEntitlement) si usa il Portachiavi classico del Mac,
+    /// sempre locale.
+    static let usesDataProtectionKeychain: Bool = {
+        #if os(macOS)
+        let probe: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: "probe",
             kSecUseDataProtectionKeychain as String: true,
         ]
-    }
+        return SecItemCopyMatching(probe as CFDictionary, nil) != errSecMissingEntitlement
+        #else
+        return true
+        #endif
+    }()
+
+    /// La condivisione tra dispositivi passa dal Portachiavi iCloud.
+    static var canShareAcrossDevices: Bool { usesDataProtectionKeychain }
 
     private static func data(account: String, synchronizable: CFTypeRef = kSecAttrSynchronizableAny) -> Data? {
         var q = query(account, synchronizable: synchronizable)
@@ -73,9 +96,11 @@ enum SupplierKeychain {
     private static func add(_ data: Data, account: String, shared: Bool) -> OSStatus {
         var q = query(account, synchronizable: shared ? kCFBooleanTrue! : kCFBooleanFalse!)
         q[kSecValueData as String] = data
-        q[kSecAttrAccessible as String] = shared
-            ? kSecAttrAccessibleAfterFirstUnlock
-            : kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        if usesDataProtectionKeychain {
+            q[kSecAttrAccessible as String] = shared
+                ? kSecAttrAccessibleAfterFirstUnlock
+                : kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        }
         return SecItemAdd(q as CFDictionary, nil)
     }
 
@@ -91,7 +116,7 @@ enum SupplierKeychain {
         var status = SecItemUpdate(query(account, synchronizable: kSecAttrSynchronizableAny) as CFDictionary,
                                    attributes as CFDictionary)
         if status == errSecItemNotFound {
-            status = add(data, account: account, shared: sharesAcrossDevices)
+            status = add(data, account: account, shared: canShareAcrossDevices && sharesAcrossDevices)
         }
         guard status == errSecSuccess else {
             throw ProviderError.networkFailure(String(localized: "Impossibile salvare nel Portachiavi (\(status))."))
@@ -104,13 +129,15 @@ enum SupplierKeychain {
 
     /// Vero se le chiavi stanno (o andranno) nel Portachiavi iCloud.
     static var sharesAcrossDevices: Bool {
-        UserDefaults.standard.bool(forKey: shareDefaultsKey)
+        guard canShareAcrossDevices else { return false }
+        return UserDefaults.standard.bool(forKey: shareDefaultsKey)
             || accounts.contains { data(account: $0, synchronizable: kCFBooleanTrue!) != nil }
     }
 
     /// Sposta le chiavi già salvate nel Portachiavi iCloud o di nuovo solo su questo
     /// dispositivo. Togliendo la condivisione spariscono anche dagli altri dispositivi.
     static func setSharesAcrossDevices(_ shared: Bool) throws {
+        guard canShareAcrossDevices else { return }
         UserDefaults.standard.set(shared, forKey: shareDefaultsKey)
         let from: CFTypeRef = shared ? kCFBooleanFalse! : kCFBooleanTrue!
         for account in accounts {

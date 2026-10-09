@@ -214,8 +214,11 @@ struct SettingsView: View {
         Section {
             Toggle(isOn: Binding(get: { shareKeys }, set: { setShareKeys($0) })) {
                 Text("Condividi con i miei dispositivi")
-                Text("Portachiavi iCloud: le stesse chiavi su Mac e iPad")
+                Text(SupplierKeychain.canShareAcrossDevices
+                     ? "Portachiavi iCloud: le stesse chiavi su Mac e iPad"
+                     : "Non disponibile in questa build del Mac: le chiavi restano nel Portachiavi del Mac")
             }
+            .disabled(!SupplierKeychain.canShareAcrossDevices)
             DisclosureGroup {
                 SecureField(mouserSaved ? String(localized: "Chiave salvata — inseriscine una nuova per sostituirla") : String(localized: "Search API key"), text: $mouserKey)
                     .textContentType(.password)

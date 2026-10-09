@@ -5586,6 +5586,22 @@
         }
       }
     },
+    "Non disponibile in questa build del Mac: le chiavi restano nel Portachiavi del Mac": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not available in this Mac build: keys stay in the Mac's Keychain"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non disponibile in questa build del Mac: le chiavi restano nel Portachiavi del Mac"
+          }
+        }
+      }
+    },
     "Non impostata": {
       "extractionState": "manual",
       "localizations": {
