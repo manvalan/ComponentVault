@@ -14,7 +14,7 @@ LOAD FROM LABEL
 Point the camera at the QR code of LCSC/JLCPCB bags or the DataMatrix of distributor labels: code, MPN and quantity fill in by themselves. Set the storage unit and drawer number and move to the next bag. On the Mac it also works with a USB barcode scanner.
 
 COMPLETE PART PAGES
-Description, parameters and datasheet from your archive; live prices and availability from Mouser and DigiKey with your own API keys.
+Description, parameters and datasheet from your archive; live prices and availability from Mouser, DigiKey and Nexar/Octopart with your own API keys.
 
 PROJECTS AS CHECKLISTS
 Import the BOM from EasyEDA/JLC and watch three rings: stock, KiCad library and prices. Tap a ring to see only what's missing, then order, reserve stock or download to KiCad with a single button.

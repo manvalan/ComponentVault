@@ -1,7 +1,7 @@
 # ComponentVault
 
 App per iPad e Mac per l'archivio personale di componenti elettronici:
-- schede dall'archivio LCSC locale e prezzi e disponibilità da Mouser e DigiKey (API ufficiali, con le tue chiavi);
+- schede dall'archivio LCSC locale e prezzi e disponibilità da Mouser, DigiKey e Nexar/Octopart (API ufficiali, con le tue chiavi);
 - magazzino con dispensari e cassetti;
 - progetti BOM;
 - carico da etichetta con la fotocamera;
@@ -19,7 +19,7 @@ Nessun server e nessun account. Ogni dispositivo ha il proprio database locale (
   - i codici LCSC `Cxxxxx`.
 - **Progetti BOM** a checklist (magazzino, KiCad, prezzi LCSC), con import BOM EasyEDA/JLC
 - **Libreria KiCad**: verifica la BOM sulla tua libreria e chiede i componenti mancanti al Mac che ha KiCad
-- **Ricerca** nell'archivio locale e, con le tue chiavi, su Mouser e DigiKey; la sezione "Prezzi e disponibilità" nella scheda interroga i distributori configurati
+- **Ricerca** nell'archivio locale e, con le tue chiavi, su Mouser, DigiKey e Nexar; la sezione "Prezzi e disponibilità" nella scheda interroga i distributori configurati
 - **Solo fonti autorizzate**: nessuno scraping di siti; chiavi e token nel Portachiavi del dispositivo
 - **Italiano e inglese** (String Catalog `Localizable.xcstrings`); le altre lingue usano l'inglese
 

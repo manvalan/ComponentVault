@@ -6,6 +6,7 @@ enum CatalogSearchProvider: String, Codable, CaseIterable, Identifiable, Sendabl
     case easyeda
     case mouser
     case digikey
+    case nexar
 
     var id: String { rawValue }
 
@@ -15,6 +16,7 @@ enum CatalogSearchProvider: String, Codable, CaseIterable, Identifiable, Sendabl
         case .easyeda: "EasyEDA / JLC"
         case .mouser: "Mouser"
         case .digikey: "DigiKey"
+        case .nexar: "Nexar"
         }
     }
 
@@ -28,6 +30,8 @@ enum CatalogSearchProvider: String, Codable, CaseIterable, Identifiable, Sendabl
             String(localized: "Ricerca, prezzi e disponibilità da Mouser (API ufficiale con la tua chiave).")
         case .digikey:
             String(localized: "Ricerca, prezzi e disponibilità da DigiKey (API ufficiale con le tue credenziali).")
+        case .nexar:
+            String(localized: "Prezzi e disponibilità di molti distributori autorizzati tramite Nexar (Octopart), con le tue credenziali.")
         }
     }
 
@@ -37,6 +41,7 @@ enum CatalogSearchProvider: String, Codable, CaseIterable, Identifiable, Sendabl
         case .easyeda: String(localized: "Cerca EasyEDA")
         case .mouser: String(localized: "Cerca su Mouser")
         case .digikey: String(localized: "Cerca su DigiKey")
+        case .nexar: String(localized: "Cerca su Nexar")
         }
     }
 
@@ -47,6 +52,7 @@ enum CatalogSearchProvider: String, Codable, CaseIterable, Identifiable, Sendabl
             case .lcsc, .easyeda: true
             case .mouser: MouserKeychain.isConfigured
             case .digikey: DigiKeyKeychain.isConfigured
+            case .nexar: NexarKeychain.isConfigured
             }
         }
     }
@@ -71,7 +77,7 @@ enum SupplierCatalogSearchService {
         let trimmedValue = query.value.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedFootprint = query.footprint.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if provider == .mouser || provider == .digikey {
+        if provider == .mouser || provider == .digikey || provider == .nexar {
             return try await searchSupplier(provider, query: query, inventory: inventory)
         }
 
@@ -99,7 +105,7 @@ enum SupplierCatalogSearchService {
             let message = String(localized: "\(cards.count) parti \(prefix) · \(inStock) con stock")
             return SearchOutcome(cards: cards, statusMessage: message)
 
-        case .mouser, .digikey:
+        case .mouser, .digikey, .nexar:
             return try await searchSupplier(provider, query: query, inventory: inventory)
         }
     }

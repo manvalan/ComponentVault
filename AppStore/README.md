@@ -18,7 +18,7 @@ Un'unica app universale: lo stesso bundle `it.michelebigi.ComponentVault` per iP
 | Server | eliminato: niente backend da tenere online per la revisione |
 | Archive | `xcodebuild archive` Release riuscito per iOS e macOS |
 | Crittografia | solo HTTPS del sistema, `ITSAppUsesNonExemptEncryption = NO` |
-| Servizi di terzi | solo API ufficiali (Mouser, DigiKey) con chiavi dell'utente nel Portachiavi; niente scraping né immagini da siti senza autorizzazione |
+| Servizi di terzi | solo API ufficiali (Mouser, DigiKey, Nexar) con chiavi dell'utente nel Portachiavi; niente scraping né immagini da siti senza autorizzazione |
 
 ## Da fare (decisioni tue)
 

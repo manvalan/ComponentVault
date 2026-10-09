@@ -14,7 +14,7 @@ CARICO DA ETICHETTA
 Inquadra il QR delle buste LCSC/JLCPCB o il DataMatrix dei distributori: codice, MPN e quantità si compilano da soli. Indica dispensario e numero cassetto e passa alla busta successiva. Sul Mac funziona anche con un lettore di codici USB.
 
 SCHEDE COMPLETE
-Descrizione, parametri e datasheet dal tuo archivio; prezzi e disponibilità in tempo reale da Mouser e DigiKey con le tue chiavi API.
+Descrizione, parametri e datasheet dal tuo archivio; prezzi e disponibilità in tempo reale da Mouser, DigiKey e Nexar/Octopart con le tue chiavi API.
 
 PROGETTI A CHECKLIST
 Importa la BOM da EasyEDA/JLC e guarda tre anelli: magazzino, libreria KiCad e prezzi. Tocca un anello per vedere solo ciò che manca, poi ordina, riserva lo stock o scarica in KiCad con un solo pulsante.

@@ -21,6 +21,8 @@ struct SettingsView: View {
     @State private var digiKeyMessage: String?
     @State private var mouserKey = ""
     @State private var mouserSaved = MouserKeychain.isConfigured
+    @State private var nexar = NexarKeychain.load() ?? NexarCredentials()
+    @State private var nexarSaved = NexarKeychain.isConfigured
 
     private var hasFolder: Bool { !folderPath.isEmpty }
 
@@ -223,6 +225,37 @@ struct SettingsView: View {
                 }
             }
             DisclosureGroup {
+                TextField("Client ID", text: $nexar.clientID)
+                    .autocorrectionDisabled()
+                SecureField("Client Secret", text: $nexar.clientSecret)
+                LabeledContent("Paese · valuta") {
+                    HStack {
+                        TextField("IT", text: $nexar.country).frame(maxWidth: 50)
+                        TextField("EUR", text: $nexar.currency).frame(maxWidth: 60)
+                    }
+                    .multilineTextAlignment(.trailing)
+                }
+                HStack {
+                    Button("Salva sul dispositivo") { saveNexar() }
+                        .disabled(!nexar.isComplete)
+                    if nexarSaved {
+                        Spacer()
+                        Button("Elimina", role: .destructive) {
+                            NexarKeychain.delete()
+                            nexar = NexarCredentials()
+                            nexarSaved = false
+                        }
+                    }
+                }
+                Link("Crea un'app gratuita su nexar.com", destination: URL(string: "https://nexar.com/api")!)
+                    .font(.caption)
+            } label: {
+                LabeledContent("Nexar (Octopart)") {
+                    Text(nexarSaved ? "Configurato" : "Non usato")
+                        .foregroundStyle(nexarSaved ? .green : .secondary)
+                }
+            }
+            DisclosureGroup {
                 TextField("Client ID", text: $digiKey.clientID)
                     .autocorrectionDisabled()
                 SecureField("Client Secret", text: $digiKey.clientSecret)
@@ -259,7 +292,7 @@ struct SettingsView: View {
         } header: {
             Text("Fornitori")
         } footer: {
-            Text("Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com e api.digikey.com.")
+            Text("Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com, api.digikey.com e api.nexar.com.")
         }
     }
 
@@ -268,6 +301,18 @@ struct SettingsView: View {
             try DigiKeyKeychain.save(digiKey)
             digiKeySaved = true
             digiKeyMessage = String(localized: "Salvate nel Portachiavi di questo dispositivo.")
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func saveNexar() {
+        do {
+            var credentials = nexar
+            credentials.accessToken = ""
+            credentials.expiresAt = nil
+            try NexarKeychain.save(credentials)
+            nexarSaved = true
         } catch {
             errorMessage = error.localizedDescription
         }

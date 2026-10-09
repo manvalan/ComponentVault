@@ -78,6 +78,7 @@
 		A10000010000000000000060 /* DigiKeyCandidateSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000060 /* DigiKeyCandidateSheet.swift */; };
 		A10000010000000000000061 /* SupplierOffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000061 /* SupplierOffers.swift */; };
 		A10000010000000000000062 /* SupplierOffersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000062 /* SupplierOffersView.swift */; };
+		A10000010000000000000063 /* NexarProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000063 /* NexarProvider.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -156,6 +157,7 @@
 		A20000010000000000000060 /* DigiKeyCandidateSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigiKeyCandidateSheet.swift; sourceTree = "<group>"; };
 		A20000010000000000000061 /* SupplierOffers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupplierOffers.swift; sourceTree = "<group>"; };
 		A20000010000000000000062 /* SupplierOffersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupplierOffersView.swift; sourceTree = "<group>"; };
+		A20000010000000000000063 /* NexarProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NexarProvider.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -239,6 +241,7 @@
 		A50000010000000000000006 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				A20000010000000000000063 /* NexarProvider.swift */,
 				A20000010000000000000061 /* SupplierOffers.swift */,
 				A2000001000000000000005E /* DigiKeyEnrichResult.swift */,
 				A2000001000000000000005D /* DigiKeyCommercialParser.swift */,
@@ -371,6 +374,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000010000000000000063 /* NexarProvider.swift in Sources */,
 				A10000010000000000000062 /* SupplierOffersView.swift in Sources */,
 				A10000010000000000000061 /* SupplierOffers.swift in Sources */,
 				A10000010000000000000060 /* DigiKeyCandidateSheet.swift in Sources */,

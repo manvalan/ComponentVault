@@ -18,6 +18,8 @@ struct SupplierOffer: Identifiable, Sendable {
     let productURL: URL?
     let datasheetURL: URL?
     let imageURL: URL?
+    /// Aggregatore da cui arriva l'offerta (es. "Nexar"), nil se dal distributore.
+    var source: String? = nil
 
     func unitPrice(for quantity: Int) -> Double? {
         PriceBreakCodec.unitPrice(for: max(quantity, 1), in: priceBreaks)
@@ -192,6 +194,7 @@ enum SupplierOfferService {
         var names: [String] = []
         if MouserKeychain.isConfigured { names.append("Mouser") }
         if DigiKeyKeychain.isConfigured { names.append("DigiKey") }
+        if NexarKeychain.isConfigured { names.append("Nexar") }
         return names
     }
 
@@ -199,38 +202,47 @@ enum SupplierOfferService {
 
     /// Offerte per un MPN esatto da tutti i fornitori configurati.
     static func offers(forMPN mpn: String) async -> Outcome {
-        await collect { mouser in
-            try await mouser.searchPartNumber(mpn)
-        } digikey: { digikey in
-            try await digikey.searchCandidates(mpn: mpn, lcscCode: InternalComponentCode.catalogSearchPlaceholder)
-        }
+        await collect(
+            mouser: { try await $0.searchPartNumber(mpn) },
+            digikey: { try await $0.searchCandidates(mpn: mpn, lcscCode: InternalComponentCode.catalogSearchPlaceholder) },
+            nexar: { try await $0.searchMPN(mpn) }
+        )
     }
 
     /// Ricerca per parola chiave (catalogo) sui fornitori configurati (o solo su `only`).
     static func search(keyword: String, only: String? = nil) async -> Outcome {
-        await collect(only: only) { mouser in
-            try await mouser.searchKeyword(keyword)
-        } digikey: { digikey in
-            try await digikey.searchCandidates(mpn: keyword, lcscCode: InternalComponentCode.catalogSearchPlaceholder, recordCount: 20)
-        }
+        await collect(
+            only: only,
+            mouser: { try await $0.searchKeyword(keyword) },
+            digikey: { try await $0.searchCandidates(mpn: keyword, lcscCode: InternalComponentCode.catalogSearchPlaceholder, recordCount: 20) },
+            nexar: { try await $0.searchKeyword(keyword) }
+        )
     }
 
     private static func collect(
         only: String? = nil,
         mouser mouserSearch: @escaping @Sendable (MouserProvider) async throws -> [SupplierOffer],
-        digikey digikeySearch: @escaping @Sendable (DigiKeyProvider) async throws -> [DigiKeyCandidate]
+        digikey digikeySearch: @escaping @Sendable (DigiKeyProvider) async throws -> [DigiKeyCandidate],
+        nexar nexarSearch: @escaping @Sendable (NexarProvider) async throws -> [SupplierOffer]
     ) async -> Outcome {
+        func wanted(_ name: String) -> Bool { only == nil || only == name }
+
         async let mouserResult: Result<[SupplierOffer], Error>? = {
-            guard only == nil || only == "Mouser", let provider = MouserProvider.configured() else { return nil }
+            guard wanted("Mouser"), let provider = MouserProvider.configured() else { return nil }
             do { return .success(try await mouserSearch(provider)) } catch { return .failure(error) }
         }()
         async let digikeyResult: Result<[SupplierOffer], Error>? = {
-            guard only == nil || only == "DigiKey", let provider = DigiKeyProvider.configured() else { return nil }
+            guard wanted("DigiKey"), let provider = DigiKeyProvider.configured() else { return nil }
             do { return .success(try await digikeySearch(provider).map(\.offer)) } catch { return .failure(error) }
+        }()
+        async let nexarResult: Result<[SupplierOffer], Error>? = {
+            guard wanted("Nexar"), let provider = NexarProvider.configured() else { return nil }
+            do { return .success(try await nexarSearch(provider)) } catch { return .failure(error) }
         }()
 
         var outcome = Outcome()
-        for (name, result) in [("Mouser", await mouserResult), ("DigiKey", await digikeyResult)] {
+        let results = [("Mouser", await mouserResult), ("DigiKey", await digikeyResult), ("Nexar", await nexarResult)]
+        for (name, result) in results {
             switch result {
             case .success(let offers): outcome.offers += offers
             case .failure(let error): outcome.errors.append("\(name): \(error.localizedDescription)")

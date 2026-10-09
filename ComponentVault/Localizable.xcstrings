@@ -1444,6 +1444,22 @@
         }
       }
     },
+    "Cerca su Nexar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search Nexar"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca su Nexar"
+          }
+        }
+      }
+    },
     "Cerca valore, footprint, MPN…": {
       "localizations": {
         "en": {
@@ -2049,6 +2065,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Crea un progetto per gestire la distinta base\ne verificare disponibilità componenti."
+          }
+        }
+      }
+    },
+    "Crea un'app gratuita su nexar.com": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a free app at nexar.com"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea un'app gratuita su nexar.com"
           }
         }
       }
@@ -2938,6 +2970,7 @@
       }
     },
     "Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com e api.digikey.com.": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2949,6 +2982,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com e api.digikey.com."
+          }
+        }
+      }
+    },
+    "Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com, api.digikey.com e api.nexar.com.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional: prices, availability and search from distributors with an official API. You enter the keys and tokens yourself; they stay in this device's Keychain, never go to the folder or anywhere else, and are only used for requests to api.mouser.com, api.digikey.com and api.nexar.com."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facoltativo: prezzi, disponibilità e ricerca dai distributori con API ufficiale. Chiavi e token li inserisci tu; restano nel Portachiavi di questo dispositivo, non vanno nella cartella né altrove e servono solo per le richieste ad api.mouser.com, api.digikey.com e api.nexar.com."
           }
         }
       }
@@ -4481,6 +4530,7 @@
       }
     },
     "Nessun distributore configurato. Inserisci la tua chiave Mouser o le credenziali DigiKey in Impostazioni → Fornitori.": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -4492,6 +4542,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nessun distributore configurato. Inserisci la tua chiave Mouser o le credenziali DigiKey in Impostazioni → Fornitori."
+          }
+        }
+      }
+    },
+    "Nessun distributore configurato. Inserisci le tue chiavi Mouser, DigiKey o Nexar in Impostazioni → Fornitori.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No distributor set up. Enter your Mouser, DigiKey or Nexar keys in Settings → Suppliers."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun distributore configurato. Inserisci le tue chiavi Mouser, DigiKey o Nexar in Impostazioni → Fornitori."
           }
         }
       }
@@ -4652,6 +4718,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nessuno"
+          }
+        }
+      }
+    },
+    "Nexar (Octopart)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nexar (Octopart)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nexar (Octopart)"
+          }
+        }
+      }
+    },
+    "Nexar ha rifiutato client ID o secret.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nexar rejected the client ID or secret."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nexar ha rifiutato client ID o secret."
+          }
+        }
+      }
+    },
+    "Nexar: errore HTTP %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nexar: HTTP error %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nexar: errore HTTP %lld"
           }
         }
       }
@@ -4961,6 +5075,22 @@
         }
       }
     },
+    "Paese · valuta": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Country · currency"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paese · valuta"
+          }
+        }
+      }
+    },
     "Pagina LCSC": {
       "localizations": {
         "en": {
@@ -5054,6 +5184,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prezzi e disponibilità"
+          }
+        }
+      }
+    },
+    "Prezzi e disponibilità di molti distributori autorizzati tramite Nexar (Octopart), con le tue credenziali.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prices and availability from many authorized distributors through Nexar (Octopart), with your credentials."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prezzi e disponibilità di molti distributori autorizzati tramite Nexar (Octopart), con le tue credenziali."
           }
         }
       }
@@ -5745,6 +5891,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Risposta Mouser non valida"
+          }
+        }
+      }
+    },
+    "Risposta Nexar non valida": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid Nexar response"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Risposta Nexar non valida"
           }
         }
       }
@@ -7093,6 +7255,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "stock %lld"
+          }
+        }
+      }
+    },
+    "via %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "via %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "via %@"
           }
         }
       }

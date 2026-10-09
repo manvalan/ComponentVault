@@ -15,7 +15,7 @@ struct SupplierOffersSection: View {
         GroupBox("Prezzi e disponibilità") {
             VStack(alignment: .leading, spacing: 10) {
                 if suppliers.isEmpty {
-                    Text("Nessun distributore configurato. Inserisci la tua chiave Mouser o le credenziali DigiKey in Impostazioni → Fornitori.")
+                    Text("Nessun distributore configurato. Inserisci le tue chiavi Mouser, DigiKey o Nexar in Impostazioni → Fornitori.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -41,7 +41,7 @@ struct SupplierOffersSection: View {
                         if outcome.offers.isEmpty, outcome.errors.isEmpty {
                             Text("Nessuna offerta trovata.").foregroundStyle(.secondary)
                         }
-                        ForEach(outcome.offers) { offer in
+                        ForEach(sortedOffers(outcome.offers)) { offer in
                             offerRow(offer)
                             Divider()
                         }
@@ -56,6 +56,9 @@ struct SupplierOffersSection: View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(offer.supplier).font(.headline)
+                if let source = offer.source {
+                    Text("via \(source)").font(.caption2).foregroundStyle(.secondary)
+                }
                 Text(offer.supplierPartNumber.isEmpty ? offer.mpn : offer.supplierPartNumber)
                     .font(.caption.monospaced())
                     .foregroundStyle(.secondary)
@@ -86,6 +89,15 @@ struct SupplierOffersSection: View {
                     .font(.caption)
                 }
             }
+        }
+    }
+
+    /// Prima chi ha stock, poi il prezzo più basso alla quantità richiesta.
+    private func sortedOffers(_ offers: [SupplierOffer]) -> [SupplierOffer] {
+        offers.sorted { a, b in
+            let aStock = (a.stock ?? 0) > 0, bStock = (b.stock ?? 0) > 0
+            if aStock != bStock { return aStock }
+            return (a.unitPrice(for: quantity) ?? .infinity) < (b.unitPrice(for: quantity) ?? .infinity)
         }
     }
 
