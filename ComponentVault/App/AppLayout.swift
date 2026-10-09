@@ -15,8 +15,8 @@ enum AppLayout {
     static let inventoryListMin: CGFloat = 280
     static let inventoryListIdeal: CGFloat = 320
 
-    static let catalogTypeMin: CGFloat = 168
-    static let catalogTypeIdeal: CGFloat = 188
+    static let catalogTypeMin: CGFloat = 200
+    static let catalogTypeIdeal: CGFloat = 220
     static let catalogGroupMin: CGFloat = 340
     static let catalogGroupIdeal: CGFloat = 420
 

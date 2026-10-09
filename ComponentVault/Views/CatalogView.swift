@@ -152,8 +152,10 @@ struct CatalogView: View {
             TableColumn("Valore") { group in
                 Text(group.value)
                     .font(.body.monospacedDigit().weight(.medium))
+                    .lineLimit(1)
+                    .platformHelp(group.value)
             }
-            .width(min: 90, ideal: 110)
+            .width(min: 90, ideal: 130)
 
             TableColumn("Footprint") { group in
                 Text(group.footprint)
@@ -174,6 +176,7 @@ struct CatalogView: View {
                     .lineLimit(1)
                     .platformHelp(group.components.map(\.mpn).joined(separator: ", "))
             }
+            .width(min: 120, ideal: 160)
 
             TableColumn("Var.") { group in
                 if group.componentCount > 1 {
@@ -254,7 +257,7 @@ struct CatalogView: View {
         .navigationSplitViewColumnWidth(
             min: AppLayout.catalogTypeMin,
             ideal: AppLayout.catalogTypeIdeal,
-            max: 220
+            max: 260
         )
     }
 
@@ -300,33 +303,33 @@ struct CatalogView: View {
     }
 
     private func catalogHeader(for type: ComponentType) -> some View {
-        VStack(spacing: 10) {
+        let groupCount = filteredGroups.count
+        let componentCount = index.typeCounts[type, default: 0]
+        return VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
                 Image(systemName: type.icon)
-                    .font(.title2)
+                    .font(.title3)
                     .foregroundStyle(type.tint)
-                    .frame(width: 36, height: 36)
+                    .frame(width: 32, height: 32)
                     .background(type.tint.opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 1) {
                     Text(type.label)
                         .font(.headline)
-                    Text("\(filteredGroups.count) gruppi · \(index.typeCounts[type, default: 0]) componenti")
+                        .lineLimit(1)
+                    Text(groupCount == componentCount
+                         ? String(localized: "\(componentCount) componenti")
+                         : String(localized: "\(componentCount) componenti in \(groupCount) gruppi"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
-
-                Spacer()
-
-                TextField("Cerca valore, footprint, MPN…", text: $searchText)
-                    .textFieldStyle(.roundedBorder)
-                    #if os(macOS)
-                    .frame(minWidth: 180, maxWidth: 260)
-                    #else
-                    .frame(maxWidth: 280)
-                    #endif
+                Spacer(minLength: 0)
             }
+
+            TextField("Cerca valore, footprint, MPN…", text: $searchText)
+                .textFieldStyle(.roundedBorder)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)

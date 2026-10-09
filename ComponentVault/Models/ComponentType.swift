@@ -312,8 +312,12 @@ struct CatalogGroup: Identifiable {
     }
 
     static func build(from components: [Component], type: ComponentType) -> [CatalogGroup] {
+        // Senza valore (IC, regolatori, moduli…) si raggruppa per MPN: altrimenti
+        // parti diverse con lo stesso package finirebbero nella stessa riga "—".
         let grouped = Dictionary(grouping: components) { c in
-            "\(c.displayValue)|\(c.displayFootprint)"
+            let value = c.displayValue.trimmingCharacters(in: .whitespaces)
+            let label = value.isEmpty || value == "—" ? (c.mpn.isEmpty ? c.lcscCode : c.mpn) : value
+            return "\(label)|\(c.displayFootprint)"
         }
 
         return grouped.map { key, items in

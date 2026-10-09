@@ -257,6 +257,22 @@
         }
       }
     },
+    "%lld componenti in %lld gruppi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld components in %2$lld groups"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld componenti in %lld gruppi"
+          }
+        }
+      }
+    },
     "%lld con codice LCSC": {
       "localizations": {
         "en": {
@@ -333,22 +349,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld gruppi"
-          }
-        }
-      }
-    },
-    "%lld gruppi · %lld componenti": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$lld groups · %2$lld parts"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$lld gruppi · %2$lld componenti"
           }
         }
       }
