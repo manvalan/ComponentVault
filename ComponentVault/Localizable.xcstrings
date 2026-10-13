@@ -162,6 +162,7 @@
       }
     },
     "%@ · %@ — %@": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -274,6 +275,7 @@
       }
     },
     "%lld con codice LCSC": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -290,6 +292,7 @@
       }
     },
     "%lld da LCSC live": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1525,6 +1528,7 @@
       }
     },
     "Catalogo & Progetti": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1648,6 +1652,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cerca anche su %@"
+          }
+        }
+      }
+    },
+    "Cerca i modelli 3D": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find 3D models"
+          }
+        }
+      }
+    },
+    "Cerca i modelli 3D mancanti (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find missing 3D models (%lld)"
+          }
+        }
+      }
+    },
+    "Cerca modello 3D": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find 3D model"
           }
         }
       }
@@ -2481,6 +2515,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "DA ORDINARE"
+          }
+        }
+      }
+    },
+    "Da Ultra Librarian e SnapEDA, quando disponibili. Li scarica il Mac con la libreria.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From Ultra Librarian and SnapEDA, when available. The Mac with the library downloads them."
           }
         }
       }
@@ -3542,6 +3586,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "IT"
+          }
+        }
+      }
+    },
+    "Il Mac con la libreria cerca il modello STEP su Ultra Librarian e SnapEDA, lo collega al footprint esistente e ne verifica la posizione. Captcha e pulsante Download vanno completati a mano nella finestra che si apre sul Mac.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Mac with the library looks for the STEP model on Ultra Librarian and SnapEDA, links it to the existing footprint and checks its placement. Captchas and the Download button must be completed by hand in the window that opens on the Mac."
           }
         }
       }
@@ -5009,6 +5063,36 @@
         }
       }
     },
+    "Modelli 3D": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3D models"
+          }
+        }
+      }
+    },
+    "Modelli 3D mancanti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing 3D models"
+          }
+        }
+      }
+    },
+    "Modello 3D aggiunto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3D model added"
+          }
+        }
+      }
+    },
     "Modello 3D da verificare": {
       "localizations": {
         "en": {
@@ -5021,6 +5105,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modello 3D da verificare"
+          }
+        }
+      }
+    },
+    "Modello 3D mancante": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3D model missing"
           }
         }
       }
@@ -7675,6 +7769,7 @@
       }
     },
     "Strumenti": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -7846,6 +7941,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tutti"
+          }
+        }
+      }
+    },
+    "Tutti i componenti hanno il modello 3D": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every component has a 3D model"
           }
         }
       }

@@ -9,6 +9,18 @@ struct KiCadLibraryView: View {
     @State private var jobs: [KiCadFetchJob] = []
     @State private var jobsError: String?
     @State private var worker: KiCadWorkerStatus?
+    @State private var modelRequest: ModelRequest?
+
+    /// Componenti per cui chiedere i modelli 3D al Mac.
+    private struct ModelRequest: Identifiable {
+        let names: [String]
+        var id: String { names.joined(separator: ",") }
+    }
+
+    /// Componenti propri con footprint ma senza modello 3D.
+    private var missingModels: [KiCadLibraryEntry] {
+        (library.index?.components ?? []).filter { $0.own == true && $0.footprint != nil && $0.model3d == false }
+    }
 
     private var results: [KiCadLibraryEntry] {
         library.search(searchText, ownOnly: ownOnly)
@@ -24,6 +36,27 @@ struct KiCadLibraryView: View {
                         Text("Tutta la libreria").tag(false)
                     }
                     .pickerStyle(.segmented)
+                }
+
+                if library.index != nil {
+                    Section {
+                        let missing = missingModels
+                        if missing.isEmpty {
+                            Label("Tutti i componenti hanno il modello 3D", systemImage: "cube.fill")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Button {
+                                modelRequest = ModelRequest(names: missing.map(\.name))
+                            } label: {
+                                Label("Cerca i modelli 3D mancanti (\(missing.count))", systemImage: "cube.transparent")
+                            }
+                            .disabled(!KiCadQueue.isAvailable)
+                        }
+                    } header: {
+                        Text("Modelli 3D")
+                    } footer: {
+                        Text("Da Ultra Librarian e SnapEDA, quando disponibili. Li scarica il Mac con la libreria.")
+                    }
                 }
 
                 Section(header: Text(results.count >= 500 ? "Primi 500 risultati" : "\(results.count) simboli")) {
@@ -73,6 +106,9 @@ struct KiCadLibraryView: View {
                 }
             }
             .task { await reload() }
+            .sheet(item: $modelRequest, onDismiss: { Task { await reload() } }) { request in
+                KiCadFetchView(missingModels: request.names)
+            }
         }
     }
 
@@ -111,12 +147,23 @@ struct KiCadLibraryView: View {
                 }
                 if entry.model3d == true {
                     Image(systemName: "cube").foregroundStyle(.secondary).platformHelp("Modello 3D presente")
+                } else if entry.model3d == false, entry.own == true {
+                    Image(systemName: "cube.transparent").foregroundStyle(.orange).platformHelp("Modello 3D mancante")
                 }
             }
             Text(entry.lib + (entry.footprint.map { " · " + $0 } ?? ""))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+        }
+        .contextMenu {
+            if entry.model3d == false, entry.own == true, KiCadQueue.isAvailable {
+                Button {
+                    modelRequest = ModelRequest(names: [entry.name])
+                } label: {
+                    Label("Cerca modello 3D", systemImage: "cube.transparent")
+                }
+            }
         }
     }
 
@@ -137,6 +184,9 @@ struct KiCadLibraryView: View {
             }
         } label: {
             HStack {
+                if job.isModelsRequest {
+                    Image(systemName: "cube.transparent").foregroundStyle(.secondary)
+                }
                 Text(jobStatus(job.status))
                 Spacer()
                 Text("\(job.result?.components?.count ?? job.itemCount) componenti")

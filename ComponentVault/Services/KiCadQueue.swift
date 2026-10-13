@@ -50,6 +50,9 @@ private struct KiCadJobRequest: Codable {
     let device: String
     let update: Bool
     let items: [KiCadFetchItem]
+    /// nil: componenti da scaricare; "models3d": modelli 3D mancanti dei componenti `names`.
+    var kind: String?
+    var names: [String]?
 }
 
 private struct KiCadJobStatus: Decodable {
@@ -67,6 +70,7 @@ struct KiCadFetchJob: Sendable, Identifiable {
     let itemCount: Int
     let error: String?
     let result: KiCadFetchResult?
+    var isModelsRequest = false
 
     var isFinished: Bool { ["done", "partial", "failed"].contains(status) }
 }
@@ -151,6 +155,31 @@ enum KiCadQueue {
         }
     }
 
+    /// Chiede al worker i modelli 3D mancanti (SnapEDA / Ultra Librarian) dei componenti indicati.
+    static func createModelsJob(names: [String]) async throws -> KiCadFetchJob {
+        let device = deviceName
+        let names = names.map { String($0.prefix(128)) }.prefix(100).map { $0 }
+        return try await background {
+            let id = UUID().uuidString.lowercased()
+            let request = KiCadJobRequest(
+                id: id,
+                createdAt: ISO8601DateFormatter().string(from: Date()),
+                device: device,
+                update: false,
+                items: [],
+                kind: "models3d",
+                names: names
+            )
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            try CoordinatedFile.write(
+                try encoder.encode(request),
+                to: try jobDirectory(id).appendingPathComponent("request.json")
+            )
+            return try readJob(id)
+        }
+    }
+
     static func job(id: String) async throws -> KiCadFetchJob {
         try await background { try readJob(id) }
     }
@@ -182,9 +211,10 @@ enum KiCadQueue {
             id: request.id,
             status: status?.status ?? "queued",
             createdAt: SyncDateParser.parse(request.createdAt),
-            itemCount: request.items.count,
+            itemCount: request.kind == "models3d" ? (request.names?.count ?? 0) : request.items.count,
             error: status?.error,
-            result: status?.result
+            result: status?.result,
+            isModelsRequest: request.kind == "models3d"
         )
     }
 

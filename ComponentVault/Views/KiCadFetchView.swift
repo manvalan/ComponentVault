@@ -6,11 +6,19 @@ import SwiftUI
 struct KiCadFetchView: View {
     let items: [KiCadFetchItem]
     var title: String = String(localized: "Libreria KiCad")
+    /// Se impostato, la richiesta riguarda solo i modelli 3D mancanti di questi componenti della libreria.
+    private var modelNames: [String]?
     @Environment(\.dismiss) private var dismiss
 
     init(items: [KiCadFetchItem], title: String = String(localized: "Libreria KiCad")) {
         self.items = items
         self.title = title
+    }
+
+    init(missingModels names: [String]) {
+        self.items = []
+        self.title = String(localized: "Modelli 3D mancanti")
+        self.modelNames = names
     }
 
     init(component: Component) {
@@ -32,13 +40,21 @@ struct KiCadFetchView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(items.count == 1 ? "Componente" : "Componenti (\(items.count))") {
-                    ForEach(Array(items.enumerated()), id: \.offset) { _, item in
-                        LabeledContent(item.mpn.isEmpty ? "—" : item.mpn, value: item.lcsc ?? String(localized: "senza LCSC"))
-                            .font(.callout.monospaced())
+                if let modelNames {
+                    Section(modelNames.count == 1 ? "Componente" : "Componenti (\(modelNames.count))") {
+                        ForEach(modelNames, id: \.self) { name in
+                            Label(name, systemImage: "cube.transparent").font(.callout.monospaced())
+                        }
                     }
-                    Toggle("Sostituisci se già in libreria", isOn: $replaceExisting)
-                        .disabled(job != nil)
+                } else {
+                    Section(items.count == 1 ? "Componente" : "Componenti (\(items.count))") {
+                        ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                            LabeledContent(item.mpn.isEmpty ? "—" : item.mpn, value: item.lcsc ?? String(localized: "senza LCSC"))
+                                .font(.callout.monospaced())
+                        }
+                        Toggle("Sostituisci se già in libreria", isOn: $replaceExisting)
+                            .disabled(job != nil)
+                    }
                 }
 
                 if let job {
@@ -65,14 +81,20 @@ struct KiCadFetchView: View {
                         } label: {
                             if isSubmitting {
                                 ProgressView()
+                            } else if modelNames != nil {
+                                Label("Cerca i modelli 3D", systemImage: "cube.transparent")
                             } else {
                                 Label("Aggiungi alla libreria KiCad", systemImage: "square.and.arrow.down.on.square")
                             }
                         }
-                        .disabled(isSubmitting || items.isEmpty || items.contains { $0.mpn.isEmpty } || !KiCadQueue.isAvailable)
+                        .disabled(isSubmitting || !canSubmit || !KiCadQueue.isAvailable)
                         workerLabel
                     } footer: {
-                        Text("Il download da SnapEDA, Ultra Librarian o JLCPCB/EasyEDA viene eseguito dal Mac con la libreria: le credenziali dei fornitori non passano mai da questo dispositivo.")
+                        if modelNames != nil {
+                            Text("Il Mac con la libreria cerca il modello STEP su Ultra Librarian e SnapEDA, lo collega al footprint esistente e ne verifica la posizione. Captcha e pulsante Download vanno completati a mano nella finestra che si apre sul Mac.")
+                        } else {
+                            Text("Il download da SnapEDA, Ultra Librarian o JLCPCB/EasyEDA viene eseguito dal Mac con la libreria: le credenziali dei fornitori non passano mai da questo dispositivo.")
+                        }
                     }
                 }
 
@@ -154,18 +176,27 @@ struct KiCadFetchView: View {
         case "done": String(localized: "Completata")
         case "partial": String(localized: "Completata in parte")
         case "failed", "FAILED": String(localized: "Non riuscita")
-        case "IMPORTED": String(localized: "Importato")
+        case "IMPORTED": modelNames != nil ? String(localized: "Modello 3D aggiunto") : String(localized: "Importato")
         case "PRESENT": String(localized: "Già in libreria")
         case "SKIPPED": String(localized: "Saltato")
         default: status
         }
     }
 
+    private var canSubmit: Bool {
+        if let modelNames { return !modelNames.isEmpty }
+        return !items.isEmpty && !items.contains { $0.mpn.isEmpty }
+    }
+
     private func submit() async {
         isSubmitting = true
         defer { isSubmitting = false }
         do {
-            job = try await KiCadQueue.createJob(items, update: replaceExisting)
+            if let modelNames {
+                job = try await KiCadQueue.createModelsJob(names: modelNames)
+            } else {
+                job = try await KiCadQueue.createJob(items, update: replaceExisting)
+            }
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
