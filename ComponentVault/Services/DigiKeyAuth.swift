@@ -89,8 +89,37 @@ enum SupplierKeychain {
         q[kSecReturnData as String] = true
         q[kSecMatchLimit as String] = kSecMatchLimitOne
         var item: CFTypeRef?
-        guard SecItemCopyMatching(q as CFDictionary, &item) == errSecSuccess else { return nil }
-        return item as? Data
+        if SecItemCopyMatching(q as CFDictionary, &item) == errSecSuccess, let data = item as? Data {
+            return data
+        }
+        guard CFEqual(synchronizable, kSecAttrSynchronizableAny) else { return nil }
+        return migrateFromLegacyKeychain(account: account)
+    }
+
+    /// Le chiavi salvate da una build del Mac senza profilo stanno nel Portachiavi classico.
+    /// La prima volta che il Portachiavi moderno è disponibile si spostano lì (e in iCloud,
+    /// se la condivisione è attiva), così non vanno reinserite.
+    private static func migrateFromLegacyKeychain(account: String) -> Data? {
+        #if os(macOS)
+        guard usesDataProtectionKeychain else { return nil }
+        let legacy: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+        ]
+        var item: CFTypeRef?
+        guard SecItemCopyMatching(legacy as CFDictionary, &item) == errSecSuccess,
+              let data = item as? Data else { return nil }
+        let shared = UserDefaults.standard.bool(forKey: shareDefaultsKey)
+        if add(data, account: account, shared: shared) == errSecSuccess {
+            SecItemDelete(legacy as CFDictionary)
+        }
+        return data
+        #else
+        return nil
+        #endif
     }
 
     private static func add(_ data: Data, account: String, shared: Bool) -> OSStatus {
